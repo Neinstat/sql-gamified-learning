@@ -1,6 +1,6 @@
 # Kafe Warisan — Dokumen Desain Game
 
-> Game web interaktif untuk belajar SQL sambil belajar **berpikir seperti analis Business Intelligence (BI)**.
+> Game web 2D *top-down* untuk belajar SQL sambil belajar **berpikir seperti analis Business Intelligence (BI)**: pemain berjalan menjelajahi kafe warisannya, bertemu tokoh, dan menyelesaikan tugas dengan menulis SQL di konsol yang tersebar di berbagai sudut kafe.
 > Status: desain awal (MVP). Dokumen ini adalah sumber kebenaran untuk keputusan desain — perbarui saat ada keputusan baru.
 
 ---
@@ -39,10 +39,27 @@ Pemain mewarisi **kafe milik nenek** yang sedang kesulitan. Catatan kafe tersimp
 
 **Tokoh** (pemberi permintaan): Nenek (pemilik), barista, supplier, pelanggan tetap. Masing-masing punya gaya bicara sendiri.
 
+### Dunia top-down
+Game ditampilkan sebagai **dunia 2D dengan kamera dari atas** (genre seperti game simulasi/bertani top-down, dengan visual dan karakter **orisinal**). Skalanya kecil dan fokus — bukan open world besar.
+
+- Pemain **berjalan bebas** di dalam kafe dan sekitarnya, berbicara dengan tokoh untuk menerima tugas.
+- **Konsol SQL hanya bisa dibuka di stasiun tertentu.** Di luar stasiun, pemain tidak bisa menulis SQL.
+- Setiap stasiun terhubung ke **domain data yang berbeda** — mengajarkan secara alami bahwa data perusahaan tersebar di banyak sistem, dan JOIN adalah cara menyatukannya.
+
+| Lokasi | Stasiun / konsol | Tabel yang bisa diakses |
+|---|---|---|
+| 🧾 Meja kasir | Mesin kasir | `penjualan`, `pelanggan` |
+| 🍳 Dapur | Buku resep | `menu`, `resep` |
+| 📦 Gudang | Catatan stok | `stok`, `supplier` |
+| 🗂 Kantor belakang | Komputer Nenek | Semua tabel (Kasus Analisis) |
+
+- **Ruangan terbuka bertahap** mengikuti bab — membuka ruangan baru adalah bagian dari sistem progres.
+- Konsol tampil sebagai **panel overlay** di atas dunia game (dunia tetap terlihat di belakang).
+
 ## 4. Core loop (per level)
 
-1. **Permintaan** — tokoh meminta sesuatu lewat dialog, disertai target yang jelas.
-2. **Eksplorasi** — pemain melihat daftar tabel, kolom, dan isi tabel.
+1. **Permintaan** — pemain menemui tokoh di dunia game; tokoh meminta sesuatu lewat dialog, disertai target yang jelas dan petunjuk stasiun mana yang harus didatangi.
+2. **Eksplorasi** — pemain berjalan ke stasiun yang tepat, membuka konsol, lalu melihat daftar tabel, kolom, dan isi tabel.
 3. **Query** — pemain menulis SQL lalu menjalankannya; hasil ditampilkan dengan **animasi** (baris tersaring memudar, dua tabel menyatu saat JOIN, baris berkelompok saat GROUP BY).
 4. **Validasi** — hasil dibandingkan dengan jawaban benar. Jika salah, umpan balik spesifik (mis. "hasilmu 12 baris, seharusnya 3", "kolom `harga` belum ada").
 5. **Reward** — koin, XP, dan bintang 1–3.
@@ -101,8 +118,9 @@ Di luar MVP (nanti): subquery, CTE, window function, analisis waktu lanjutan (Mo
 
 ## 9. Kafe yang tumbuh
 
-- **Penting, tapi sederhana**: ilustrasi kafe 2D dengan beberapa tahap visual.
-- Upgrade dengan koin: kursi bertambah, dekorasi, papan menu baru, pelanggan makin ramai.
+- **Penting, tapi sederhana**: kafe di dunia top-down berubah dalam beberapa tahap visual.
+- Upgrade dengan koin: kursi bertambah, dekorasi, papan menu baru, pelanggan (NPC) makin ramai berjalan di kafe.
+- Ruangan baru (dapur, gudang, kantor) terbuka mengikuti bab.
 - Kafe yang tumbuh = bukti visual progres belajar pemain.
 
 ## 10. Keputusan teknis
@@ -110,6 +128,9 @@ Di luar MVP (nanti): subquery, CTE, window function, analisis waktu lanjutan (Mo
 | Topik | Keputusan | Alasan |
 |---|---|---|
 | Platform | **Web app** di browser | Mudah diakses, mudah dibagikan |
+| Dunia game | **Game engine 2D untuk web** (kandidat utama: Phaser) + tilemap | Dunia top-down, karakter berjalan, NPC, animasi |
+| Konsol SQL | **UI HTML di atas canvas game** (editor kode di DOM) | Editor, autocomplete, dan tabel hasil jauh lebih mudah dibuat dengan HTML daripada di dalam canvas |
+| Arsitektur | **Inti SQL terpisah dari dunia game** | Inti SQL (database, validasi, data level) bisa dibangun dan dites lebih dulu, lalu dipanggil oleh dunia game |
 | Backend | **Tanpa backend** untuk MVP | Gratis di-hosting, cepat jadi; progres disimpan lokal di browser |
 | Engine SQL | **PostgreSQL di browser via PGlite** | Dialek paling dekat dengan dunia kerja BI (Postgres, Redshift, BigQuery, Snowflake) |
 | Kompetisi | **Jam Sibuk + skor terbaik pribadi** | Leaderboard antar pemain menyusul setelah ada backend |
@@ -121,10 +142,22 @@ Di luar MVP (nanti): subquery, CTE, window function, analisis waktu lanjutan (Mo
 - Sengaja diberi **data kotor** (nilai kosong, duplikat, salah ketik) di level tertentu — karena itu kenyataan di dunia kerja.
 - Data Kasus Analisis dirancang dengan pola tersembunyi yang bisa ditemukan lewat query.
 
-## 12. Pertanyaan terbuka
+## 12. Roadmap
 
-- [ ] Framework frontend (diputuskan saat perencanaan implementasi)
-- [ ] Gaya visual / ilustrasi kafe
+Dibangun bertahap — setiap fase menghasilkan sesuatu yang bisa dimainkan.
+
+| Fase | Isi | Selesai jika… |
+|---|---|---|
+| **1. Inti SQL** | PGlite + data kafe, pengecek jawaban, format data level, konsol SQL (input blok → isi kosong → bebas), Bab 0–1 | Bab 0–1 bisa dimainkan lengkap di halaman sederhana, dan rasa belajarnya sudah enak |
+| **2. Dunia pertama** | Game engine, satu ruangan (area depan + meja kasir), karakter berjalan, Nenek sebagai NPC, dialog, konsol terbuka dari stasiun | Pemain bisa jalan → bicara dengan Nenek → ke kasir → menyelesaikan level Bab 0–1 di dalam dunia game |
+| **3. Kafe tumbuh** | Dapur, gudang, kantor; Bab 2–5; koin, upgrade, bintang, streak, Jam Sibuk, Kasus Analisis | MVP lengkap Bab 0–5 |
+| **Nanti** | Uji Kemampuan, materi lanjutan, leaderboard (butuh backend), audio, polesan | — |
+
+## 13. Pertanyaan terbuka
+
+- [ ] Game engine final (kandidat: Phaser) dan framework untuk UI konsol — diputuskan saat perencanaan Fase 1–2
+- [ ] Gaya visual (mis. pixel art) dan sumber aset — sprite/tileset orisinal atau asset pack berlisensi jelas
+- [ ] Kontrol: keyboard (WASD/panah) saja, atau juga klik/tap untuk berjalan (mobile)?
 - [ ] Isi detail tiap level (dialog, data, jawaban) per bab
 - [ ] Bentuk Uji Kemampuan (berapa soal, bagaimana menentukan bab awal)
 - [ ] Hosting (mis. GitHub Pages / Vercel / Netlify)
