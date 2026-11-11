@@ -1,0 +1,24 @@
+# macOS
+.DS_Store
+
+# Dependencies & builds
+node_modules/
+dist/
+build/
+.cache/
+
+# Environment / secrets
+.env
+.env.*
+!.env.example
+
+# Logs
+*.log
+npm-debug.log*
+
+# Editors
+.vscode/
+.idea/
+
+# Claude Code local settings
+.claude/settings.local.json
