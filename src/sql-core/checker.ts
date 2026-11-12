@@ -15,6 +15,11 @@ export type CheckOptions = {
    * Default: false — names are only used to line up columns.
    */
   checkColumnNames?: boolean;
+  /**
+   * Must the query end with a semicolon? Default: true — a habit worth
+   * building from day one. Only checked once the result itself is right.
+   */
+  requireSemicolon?: boolean;
 };
 
 export type Verdict = { correct: true } | { correct: false; feedback: Feedback };
@@ -47,7 +52,10 @@ export async function checkAnswer(
   }
 
   const orderMatters = options.orderMatters ?? usesOrderBy(solutionSql);
-  const verdict = compareResults(result, expected, { ...options, orderMatters });
+  let verdict = compareResults(result, expected, { ...options, orderMatters });
+  if (verdict.correct && (options.requireSemicolon ?? true) && !endsWithSemicolon(playerSql)) {
+    verdict = { correct: false, feedback: { kind: 'missing-semicolon' } };
+  }
   return { result, verdict };
 }
 
@@ -97,13 +105,22 @@ export function compareResults(
   return { correct: true };
 }
 
+/** SQL with comments removed and string contents blanked out. */
+function stripCommentsAndStrings(sql: string): string {
+  return sql
+    .replace(/'(?:[^']|'')*'/g, "''")
+    .replace(/--[^\n]*/g, ' ')
+    .replace(/\/\*[\s\S]*?\*\//g, ' ');
+}
+
 /** True if the SQL contains ORDER BY outside of quotes and comments. */
 export function usesOrderBy(sql: string): boolean {
-  const stripped = sql
-    .replace(/--[^\n]*/g, ' ')
-    .replace(/\/\*[\s\S]*?\*\//g, ' ')
-    .replace(/'(?:[^']|'')*'/g, "''");
-  return /\border\s+by\b/i.test(stripped);
+  return /\border\s+by\b/i.test(stripCommentsAndStrings(sql));
+}
+
+/** True if the last thing in the SQL (ignoring comments and spaces) is `;`. */
+export function endsWithSemicolon(sql: string): boolean {
+  return stripCommentsAndStrings(sql).trimEnd().endsWith(';');
 }
 
 type ColumnAlignment =

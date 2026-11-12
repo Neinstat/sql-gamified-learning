@@ -71,6 +71,7 @@ Game ditampilkan sebagai **dunia 2D dengan kamera dari atas** (genre seperti gam
 - Yang dinilai adalah **hasil query**, bukan teks query — banyak cara benar menulis SQL.
 - Urutan baris hanya dinilai bila permintaan memang menuntut urutan (ada `ORDER BY` di jawaban).
 - Nama kolom/alias dinilai longgar kecuali level secara eksplisit mengajarkan alias.
+- **Query wajib diakhiri titik koma `;`** — kebiasaan penting sejak hari pertama. Dicek setelah hasilnya benar, dengan pesan ramah ("hasilnya sudah benar, tinggal akhiri dengan `;`"). Mode blok selalu menyediakan blok `;`; template isi-kosong sudah diakhiri `;`.
 
 ## 5. Jenis level
 

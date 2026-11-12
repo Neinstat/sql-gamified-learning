@@ -14,7 +14,7 @@ export const chapter0Id: ChapterTranslation = {
         title: 'Tabel',
         body: [
           'Database menyimpan informasi dalam tabel, seperti lembar di spreadsheet: tiap baris adalah satu hal (satu menu), tiap kolom adalah satu detail tentangnya (nama, harga…).',
-          'Untuk melihat tabel, pilih kolom dengan SELECT dan sebut nama tabelnya dengan FROM. Tanda bintang * artinya "semua kolom".',
+          'Untuk melihat tabel, pilih kolom dengan SELECT dan sebut nama tabelnya dengan FROM. Tanda bintang * artinya "semua kolom". Setiap query diakhiri titik koma ; — tanda bagi database bahwa query-mu sudah selesai.',
         ],
       },
       dialogue: [
@@ -47,7 +47,7 @@ export const chapter0Id: ChapterTranslation = {
       hints: [
         'Kali ini Grandma hanya butuh satu kolom.',
         'Tulis nama kolomnya tepat setelah SELECT, sebagai ganti *.',
-        'SELECT name FROM …',
+        'SELECT name FROM …;',
       ],
       success: 'Jauh lebih baik! Espresso, Latte, Croissant… ya ampun, banyak juga yang kita jual.',
     },
@@ -68,7 +68,7 @@ export const chapter0Id: ChapterTranslation = {
       hints: [
         'Kali ini kamu butuh dua kolom: nama menu dan harga yang dibayar pelanggan.',
         'Tulis kedua nama kolom setelah SELECT, dengan koma di antaranya.',
-        'SELECT name, price FROM …',
+        'SELECT name, price FROM …;',
       ],
       success: 'Daftar harga sungguhan! Akhirnya Nenek tidak perlu menebak lagi.',
     },
@@ -89,7 +89,7 @@ export const chapter0Id: ChapterTranslation = {
       hints: [
         'Kamu butuh tiga kolom: nama menu, harga untuk pelanggan, dan biaya pembuatannya.',
         'Tulis tiga kolom setelah SELECT, dengan koma di antaranya.',
-        'SELECT name, price, cost FROM …',
+        'SELECT name, price, cost FROM …;',
       ],
       success:
         'Lihat itu — Avocado Toast butuh hampir tiga dolar untuk membuatnya! Dan Banana Bread tidak punya cost sama sekali? Kita harus cek itu nanti.',

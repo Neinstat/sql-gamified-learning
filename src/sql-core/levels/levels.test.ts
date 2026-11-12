@@ -37,6 +37,12 @@ describe('level data', () => {
         for (const hint of level.hints) expect(hint.trim()).not.toBe('');
       });
 
+      it('ends its solution (and template) with a semicolon', () => {
+        expect(level.solution.trimEnd()).toMatch(/;$/);
+        if (level.input.kind === 'fill-blank') expect(level.input.template.trimEnd()).toMatch(/;$/);
+        if (level.lesson?.example) expect(level.lesson.example.trimEnd()).toMatch(/;$/);
+      });
+
       it('has a solution that runs and returns rows', async () => {
         const { verdict, result } = await checkAnswer(db, level.solution, level.solution, level.check);
         expect(verdict).toEqual({ correct: true });

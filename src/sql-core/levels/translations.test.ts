@@ -41,8 +41,8 @@ describe('getChapters', () => {
   it('returns Indonesian text but keeps SQL and solution in English', () => {
     const level = getChapters('id')[0].levels[0];
     expect(level.title).toBe('Buku Menu');
-    expect(level.solution).toBe('SELECT * FROM menu_items');
-    expect(level.lesson?.example).toBe('SELECT * FROM table_name');
+    expect(level.solution).toBe('SELECT * FROM menu_items;');
+    expect(level.lesson?.example).toBe('SELECT * FROM table_name;');
     expect(level.input).toEqual(allLevels[0].input);
   });
 });

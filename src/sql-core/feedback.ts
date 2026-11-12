@@ -22,7 +22,9 @@ export type Feedback =
   | { kind: 'row-count'; actual: number; expected: number }
   | { kind: 'unexpected-row'; row: string }
   | { kind: 'check-columns'; actual: string[]; expected: string[] }
-  | { kind: 'wrong-order' };
+  | { kind: 'wrong-order' }
+  /** The result is right, but the query doesn't end with a semicolon. */
+  | { kind: 'missing-semicolon' };
 
 const code = (names: string[]) => names.map((n) => `\`${n}\``).join(', ');
 
@@ -58,6 +60,8 @@ const en = (fb: Feedback): string => {
       return `Check your columns: expected ${code(fb.expected)} but got ${code(fb.actual)}.`;
     case 'wrong-order':
       return 'You have the right rows, but in the wrong order.';
+    case 'missing-semicolon':
+      return 'Your result is right — now end the query with a semicolon `;`.';
   }
 };
 
@@ -87,6 +91,8 @@ const id = (fb: Feedback): string => {
       return `Cek kolommu: seharusnya ${code(fb.expected)}, tapi yang ada ${code(fb.actual)}.`;
     case 'wrong-order':
       return 'Barisnya sudah benar, tapi urutannya salah.';
+    case 'missing-semicolon':
+      return 'Hasilnya sudah benar — sekarang akhiri query dengan titik koma `;`.';
   }
 };
 

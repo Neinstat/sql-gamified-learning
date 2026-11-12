@@ -25,7 +25,7 @@ export const chapter1Id: ChapterTranslation = {
       hints: [
         'Kamu membandingkan satu kolom dengan angka 3.',
         'Kolom mana yang berisi harga yang dibayar pelanggan?',
-        '… WHERE price < 3',
+        '… WHERE price < 3;',
       ],
       success: 'Espresso, Green Tea, Earl Grey… Hmm, mungkin anak-anak juga mau kue yang murah.',
     },
@@ -46,7 +46,7 @@ export const chapter1Id: ChapterTranslation = {
       hints: [
         'Bandingkan kolom category dengan kata coffee.',
         'coffee adalah teks, jadi perlu tanda kutip tunggal di sekelilingnya.',
-        "… WHERE category = 'coffee'",
+        "… WHERE category = 'coffee';",
       ],
       success: 'Sempurna! Eh tunggu… Pumpkin Spice Latte ada di sini, padahal sudah berminggu-minggu kita tidak membuatnya.',
     },
@@ -67,7 +67,7 @@ export const chapter1Id: ChapterTranslation = {
       hints: [
         'Kedua syarat harus benar pada saat yang sama.',
         'Kata apa yang menggabungkan dua syarat sehingga keduanya wajib terpenuhi?',
-        "… WHERE category = 'coffee' AND is_available = TRUE",
+        "… WHERE category = 'coffee' AND is_available = TRUE;",
       ],
       success: 'Delapan minuman. Papannya siap — tidak ada lagi penggemar pumpkin yang kecewa!',
     },
@@ -88,7 +88,7 @@ export const chapter1Id: ChapterTranslation = {
       hints: [
         'Kategorinya bisa salah satu dari dua nilai.',
         'Kata apa yang mencocokkan nilai dengan daftar di dalam kurung?',
-        "… WHERE category IN ('tea', 'dessert')",
+        "… WHERE category IN ('tea', 'dessert');",
       ],
       success: 'Bagus sekali. Seteko Earl Grey dan sepotong Apple Pie — klub buku pasti senang.',
     },
@@ -109,7 +109,7 @@ export const chapter1Id: ChapterTranslation = {
       hints: [
         'Nama menu saja tidak cukup: cari di kolom yang menjelaskan tiap menu.',
         'Pakai kolom description, dan pola dengan % di kedua sisi katanya.',
-        "… WHERE description LIKE '%chocolate%'",
+        "… WHERE description LIKE '%chocolate%';",
       ],
       success: 'Mocha! Aku tidak pernah tahu ada cokelatnya. Kamu bikin mingguku jadi menyenangkan.',
     },
@@ -130,7 +130,7 @@ export const chapter1Id: ChapterTranslation = {
       hints: [
         'Nilai yang hilang adalah NULL. Kolom mana saja bisa jadi yang kosong.',
         '= NULL tidak pernah cocok dengan apa pun. Ada cara khusus untuk mengecek NULL.',
-        '… WHERE price IS NULL OR cost IS NULL',
+        '… WHERE price IS NULL OR cost IS NULL;',
       ],
       success:
         'Hot Chocolate tanpa harga, dan Banana Bread tanpa cost. Pantas saja hitungan Nenek tidak pernah cocok! Besok Nenek tanya ke pemasok.',

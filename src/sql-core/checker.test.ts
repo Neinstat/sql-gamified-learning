@@ -1,6 +1,6 @@
 import { beforeAll, describe, expect, it } from 'vitest';
 import { createCafeDatabase, type CafeDatabase } from './db';
-import { checkAnswer, compareResults, usesOrderBy, type Verdict } from './checker';
+import { checkAnswer, compareResults, endsWithSemicolon, usesOrderBy, type Verdict } from './checker';
 import { formatFeedback } from './feedback';
 
 /** Verdict with the English message, for readable assertions. */
@@ -106,6 +106,20 @@ describe('compareResults', () => {
   });
 });
 
+describe('endsWithSemicolon', () => {
+  it('finds a final semicolon, ignoring spaces and comments', () => {
+    expect(endsWithSemicolon('SELECT 1;')).toBe(true);
+    expect(endsWithSemicolon('SELECT 1;  \n')).toBe(true);
+    expect(endsWithSemicolon('SELECT 1; -- done')).toBe(true);
+  });
+
+  it('is false when the semicolon is missing or only inside a string', () => {
+    expect(endsWithSemicolon('SELECT 1')).toBe(false);
+    expect(endsWithSemicolon("SELECT ';'")).toBe(false);
+    expect(endsWithSemicolon('SELECT 1 -- ;')).toBe(false);
+  });
+});
+
 describe('usesOrderBy', () => {
   it('finds ORDER BY', () => {
     expect(usesOrderBy('SELECT * FROM menu_items ORDER BY price')).toBe(true);
@@ -139,7 +153,7 @@ describe('checkAnswer (on the café database)', () => {
   it('accepts IN instead of OR', async () => {
     const { verdict } = await checkAnswer(
       db,
-      "SELECT name FROM menu_items WHERE category IN ('tea', 'dessert')",
+      "SELECT name FROM menu_items WHERE category IN ('tea', 'dessert');",
       "SELECT name FROM menu_items WHERE category = 'tea' OR category = 'dessert'",
     );
     expect(said(verdict)).toEqual({ correct: true });
@@ -169,10 +183,28 @@ describe('checkAnswer (on the café database)', () => {
   it('handles NULL questions (dirty data)', async () => {
     const { verdict } = await checkAnswer(
       db,
-      'SELECT name FROM menu_items WHERE cost IS NULL',
+      'SELECT name FROM menu_items WHERE cost IS NULL;',
       "SELECT name FROM menu_items WHERE name = 'Banana Bread'",
     );
     expect(said(verdict)).toEqual({ correct: true });
+  });
+
+  it('asks for a semicolon once the result is right', async () => {
+    const { verdict } = await checkAnswer(db, 'SELECT name, price FROM menu_items WHERE price < 3', cheapItems);
+    expect(said(verdict)).toEqual({
+      correct: false,
+      message: 'Your result is right — now end the query with a semicolon `;`.',
+    });
+  });
+
+  it('reports a wrong result before a missing semicolon', async () => {
+    const { verdict } = await checkAnswer(db, 'SELECT name, price FROM menu_items', cheapItems);
+    expect(said(verdict)).toEqual({ correct: false, message: 'Your result has 28 rows — expected 3.' });
+  });
+
+  it('can skip the semicolon rule', async () => {
+    const { verdict } = await checkAnswer(db, cheapItems, cheapItems, { requireSemicolon: false });
+    expect(verdict).toEqual({ correct: true });
   });
 
   it('throws when the level solution itself is broken', async () => {
