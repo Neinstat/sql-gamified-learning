@@ -3,14 +3,13 @@ import type { CellValue } from '../sql-core/db';
 type Props = {
   columns: string[];
   rows: CellValue[][];
+  rowsLabel: (n: number) => string;
 };
 
-export function ResultTable({ columns, rows }: Props) {
+export function ResultTable({ columns, rows, rowsLabel }: Props) {
   return (
     <div className="result">
-      <p className="result-count">
-        {rows.length} {rows.length === 1 ? 'row' : 'rows'}
-      </p>
+      <p className="result-count">{rowsLabel(rows.length)}</p>
       <div className="result-scroll">
         <table className="result-table">
           <thead>

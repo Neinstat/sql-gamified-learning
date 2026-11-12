@@ -8,6 +8,8 @@
   --accent-ink: #ffffff;
   --error-bg: #fbe4dc;
   --error-ink: #8a2f12;
+  --ok-bg: #e1f0dc;
+  --ok-ink: #2f5d23;
   --code: ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
   font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
   color: var(--ink);
@@ -31,6 +33,10 @@ body {
 }
 
 .header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
   margin-bottom: 24px;
 }
 
@@ -40,16 +46,11 @@ body {
   color: var(--accent);
 }
 
-.tagline {
-  margin: 4px 0 0;
-  color: var(--muted);
-}
-
 .loading {
   color: var(--muted);
 }
 
-.playground {
+.console {
   display: grid;
   grid-template-columns: 220px minmax(0, 1fr);
   gap: 20px;
@@ -57,7 +58,7 @@ body {
 }
 
 @media (max-width: 720px) {
-  .playground {
+  .console {
     grid-template-columns: minmax(0, 1fr);
   }
 }
@@ -104,23 +105,31 @@ body {
   font-size: 0.75rem;
 }
 
-/* Editor */
+/* Editor (CodeMirror) */
 .editor {
-  width: 100%;
-  min-height: 140px;
-  padding: 12px;
-  font-family: var(--code);
-  font-size: 0.95rem;
-  color: var(--ink);
   background: var(--surface);
   border: 1px solid var(--line);
   border-radius: 10px;
-  resize: vertical;
+  overflow: hidden;
 }
 
-.editor:focus {
+.editor .cm-editor {
+  min-height: 120px;
+  font-size: 0.95rem;
+}
+
+.editor .cm-editor.cm-focused {
   outline: 2px solid var(--accent);
-  outline-offset: 1px;
+  outline-offset: -2px;
+}
+
+.editor .cm-scroller {
+  font-family: var(--code);
+}
+
+.editor .cm-gutters {
+  background: var(--surface);
+  border-right: 1px solid var(--line);
 }
 
 .toolbar {
@@ -151,13 +160,22 @@ body {
   color: var(--muted);
 }
 
-.error {
+.feedback {
+  margin: 0 0 16px;
   padding: 10px 12px;
+  border-radius: 8px;
+  font-size: 0.95rem;
+}
+
+.feedback-wrong {
   color: var(--error-ink);
   background: var(--error-bg);
-  border-radius: 8px;
-  font-family: var(--code);
-  font-size: 0.9rem;
+}
+
+.feedback-correct {
+  color: var(--ok-ink);
+  background: var(--ok-bg);
+  font-weight: 600;
 }
 
 /* Result table */
@@ -201,4 +219,154 @@ body {
 .cell-null {
   color: var(--muted);
   font-style: italic;
+}
+
+/* Language switch */
+.lang-switch {
+  display: flex;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.lang-button {
+  padding: 6px 12px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--muted);
+  background: var(--surface);
+  border: none;
+  cursor: pointer;
+}
+
+.lang-button.active {
+  color: var(--accent-ink);
+  background: var(--accent);
+}
+
+/* Level */
+.level-meta {
+  margin: 0;
+  font-size: 0.85rem;
+  color: var(--muted);
+}
+
+.level-title {
+  margin: 4px 0 16px;
+  font-size: 1.6rem;
+}
+
+.dialogue {
+  position: relative;
+  max-width: 680px;
+  margin: 0 0 16px;
+  padding: 14px 16px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+}
+
+.dialogue p {
+  margin: 4px 0;
+  line-height: 1.5;
+}
+
+.speaker {
+  display: inline-block;
+  margin-bottom: 4px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--accent);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.lesson {
+  max-width: 680px;
+  margin: 0 0 16px;
+  padding: 14px 16px;
+  background: #f1e6d4;
+  border-radius: 12px;
+}
+
+.lesson-title {
+  margin: 0 0 6px;
+  font-size: 1rem;
+}
+
+.lesson p {
+  margin: 4px 0;
+  line-height: 1.5;
+}
+
+.lesson-example {
+  margin: 10px 0 0;
+  padding: 8px 12px;
+  font-family: var(--code);
+  background: var(--surface);
+  border-radius: 8px;
+  overflow-x: auto;
+}
+
+.primary-button {
+  padding: 10px 22px;
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--accent-ink);
+  background: var(--accent);
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.link-button {
+  padding: 0;
+  font-size: 0.85rem;
+  color: var(--accent);
+  background: none;
+  border: none;
+  cursor: pointer;
+  text-decoration: underline;
+}
+
+.task {
+  margin: 0 0 16px;
+  padding: 12px 16px;
+  background: var(--surface);
+  border-left: 4px solid var(--accent);
+  border-radius: 8px;
+}
+
+.task-label {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.task-text {
+  margin: 4px 0 6px;
+  font-size: 1.05rem;
+  font-weight: 600;
+}
+
+.task .lesson {
+  margin-top: 10px;
+}
+
+.solved {
+  margin: 0 0 20px;
+}
+
+.feedback code {
+  padding: 1px 4px;
+  font-family: var(--code);
+  font-size: 0.9em;
+  background: rgba(255, 255, 255, 0.6);
+  border-radius: 4px;
+}
+
+.all-done {
+  color: var(--muted);
 }

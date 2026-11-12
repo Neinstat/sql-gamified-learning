@@ -1,9 +1,9 @@
-type Table = { table: string; columns: { name: string; type: string }[] };
+export type Table = { table: string; columns: { name: string; type: string }[] };
 
-export function SchemaPanel({ tables }: { tables: Table[] }) {
+export function SchemaPanel({ tables, title }: { tables: Table[]; title: string }) {
   return (
     <aside className="schema">
-      <h2 className="schema-title">Tables</h2>
+      <h2 className="schema-title">{title}</h2>
       {tables.map((t) => (
         <div key={t.table} className="schema-table">
           <p className="schema-table-name">{t.table}</p>
