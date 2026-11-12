@@ -31,7 +31,22 @@ describe('runQuery', () => {
   it('returns a readable error for bad SQL', async () => {
     const res = await runQuery(db, 'SELEKT * FROM menu_items');
     expect(res.ok).toBe(false);
-    if (!res.ok) expect(res.error).toEqual({ kind: 'sql-error', message: expect.stringMatching(/syntax error/i) });
+    if (!res.ok) expect(res.error).toEqual({ kind: 'syntax-error', near: 'SELEKT' });
+  });
+
+  it('recognises common beginner mistakes', async () => {
+    const errorOf = async (sql: string) => {
+      const res = await runQuery(db, sql);
+      return res.ok ? null : res.error;
+    };
+    expect(await errorOf('SELECT * FROM')).toEqual({ kind: 'syntax-error', near: null });
+    expect(await errorOf("SELECT nme FROM menu_items")).toEqual({ kind: 'unknown-column', name: 'nme' });
+    expect(await errorOf('SELECT * FROM menu WHERE 1 = 1')).toEqual({ kind: 'unknown-table', name: 'menu' });
+    expect(await errorOf('SELECT name FROM menu_items WHERE category = coffee')).toEqual({
+      kind: 'unknown-column',
+      name: 'coffee',
+    });
+    expect(await errorOf('SELECT 1 / 0')).toEqual({ kind: 'sql-error', message: 'division by zero' });
   });
 
   it('asks for a query when the input is empty', async () => {

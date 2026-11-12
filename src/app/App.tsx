@@ -6,6 +6,8 @@ import type { Table } from '../console/SchemaPanel';
 import { ui, useLang } from '../i18n';
 import { getDatabase } from './database';
 import { LevelScreen } from './LevelScreen';
+import { LevelNav } from './LevelNav';
+import { emptyProgress, loadProgress, markCompleted, saveProgress, type Progress } from './progress';
 
 export function App() {
   const [lang, setLang] = useLang();
@@ -14,7 +16,8 @@ export function App() {
   const [db, setDb] = useState<CafeDatabase | null>(null);
   const [schema, setSchema] = useState<Table[]>([]);
   const [loadError, setLoadError] = useState<string | null>(null);
-  const [levelIndex, setLevelIndex] = useState(startLevelIndex);
+  const [progress, setProgress] = useState<Progress>(loadProgress);
+  const [levelIndex, setLevelIndex] = useState(() => startLevelIndex(progress));
 
   useEffect(() => {
     getDatabase()
@@ -29,20 +32,32 @@ export function App() {
     document.documentElement.lang = lang;
   }, [lang]);
 
+  useEffect(() => saveProgress(progress), [progress]);
+
   // Levels in the chosen language, with their chapter attached.
+  const chapters = useMemo(() => getChapters(lang), [lang]);
   const levels = useMemo(
-    () => getChapters(lang).flatMap((chapter) => chapter.levels.map((level) => ({ level, chapter }))),
-    [lang],
+    () => chapters.flatMap((chapter) => chapter.levels.map((level) => ({ level, chapter }))),
+    [chapters],
   );
   const current = levels[levelIndex];
-  const chapterLevels = levels.filter((l) => l.chapter.id === current.chapter.id);
+
+  function goTo(index: number) {
+    setLevelIndex(index);
+    setProgress((p) => ({ ...p, currentLevelId: allLevels[index].id }));
+    window.scrollTo(0, 0);
+  }
+
+  function startOver() {
+    if (!window.confirm(t.confirmStartOver)) return;
+    setProgress(emptyProgress);
+    goTo(0);
+  }
 
   return (
     <main className="page">
       <header className="header">
-        <div>
-          <h1 className="title">SQL Valley</h1>
-        </div>
+        <h1 className="title">SQL Valley</h1>
         <div className="lang-switch" role="group" aria-label={t.language}>
           {LANGS.map((code) => (
             <button
@@ -57,6 +72,8 @@ export function App() {
         </div>
       </header>
 
+      <LevelNav chapters={chapters} currentId={current.level.id} progress={progress} t={t} onSelect={goTo} />
+
       {loadError && (
         <p className="feedback feedback-wrong">
           {t.loadError} {loadError}
@@ -67,35 +84,34 @@ export function App() {
         <LevelScreen
           key={current.level.id}
           level={current.level}
-          chapterId={current.chapter.id}
-          chapterTitle={current.chapter.title}
-          levelNumber={chapterLevels.indexOf(current) + 1}
-          levelCount={chapterLevels.length}
+          chapter={current.chapter}
+          levelNumber={current.chapter.levels.indexOf(current.level) + 1}
           db={db}
           schema={schema}
           lang={lang}
           t={t}
-          onNext={
-            levelIndex + 1 < levels.length
-              ? () => {
-                  setLevelIndex(levelIndex + 1);
-                  window.scrollTo(0, 0);
-                }
-              : null
-          }
+          onSolved={(hintsUsed) => setProgress((p) => markCompleted(p, current.level.id, hintsUsed))}
+          onNext={levelIndex + 1 < levels.length ? () => goTo(levelIndex + 1) : null}
         />
       )}
+
+      <footer className="footer">
+        <button className="link-button" onClick={startOver}>
+          {t.startOver}
+        </button>
+      </footer>
     </main>
   );
 }
 
 /**
- * Development shortcut: open http://localhost:5173/?level=ch1-1 to jump to a level.
- * Only works with `npm run dev`, never in the published game.
+ * Where to start: the saved level, or the first one.
+ * Development shortcut: http://localhost:5173/?level=ch1-1 jumps to a level
+ * (only with `npm run dev`, never in the published game).
  */
-function startLevelIndex(): number {
-  if (!import.meta.env.DEV) return 0;
-  const id = new URLSearchParams(window.location.search).get('level');
+function startLevelIndex(progress: Progress): number {
+  const fromUrl = import.meta.env.DEV ? new URLSearchParams(window.location.search).get('level') : null;
+  const id = fromUrl ?? progress.currentLevelId;
   const index = allLevels.findIndex((l) => l.id === id);
   return index === -1 ? 0 : index;
 }

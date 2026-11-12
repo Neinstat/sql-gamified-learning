@@ -479,3 +479,104 @@ body {
   outline: 2px solid var(--accent);
   outline-offset: 1px;
 }
+
+/* Level list */
+.level-nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 24px;
+  margin: -8px 0 24px;
+}
+
+.level-nav-chapter {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.level-nav-title {
+  margin-right: 2px;
+  font-size: 0.8rem;
+  color: var(--muted);
+}
+
+.level-dot {
+  width: 30px;
+  height: 30px;
+  padding: 0;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--ink);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 50%;
+  cursor: pointer;
+}
+
+.level-dot.done {
+  color: var(--ok-ink);
+  background: var(--ok-bg);
+  border-color: #b9d8ae;
+}
+
+.level-dot.current {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+
+.level-dot:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+/* Chapter card */
+.chapter-card {
+  max-width: 680px;
+  margin: 0 0 16px;
+  padding: 14px 16px;
+  color: var(--accent-ink);
+  background: var(--accent);
+  border-radius: 12px;
+}
+
+.chapter-card-label {
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  opacity: 0.85;
+}
+
+.chapter-card-title {
+  margin: 2px 0;
+  font-size: 1.15rem;
+  font-weight: 700;
+}
+
+.chapter-card-summary {
+  margin: 0;
+}
+
+/* Hints */
+.hints {
+  margin: -6px 0 16px;
+}
+
+.hint {
+  max-width: 680px;
+  margin: 0 0 8px;
+  padding: 8px 12px;
+  background: #fdf3d8;
+  border-radius: 8px;
+  line-height: 1.5;
+}
+
+.hint-label {
+  font-weight: 700;
+}
+
+.footer {
+  margin-top: 48px;
+  padding-top: 16px;
+  border-top: 1px solid var(--line);
+}

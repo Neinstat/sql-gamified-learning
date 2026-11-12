@@ -12,6 +12,10 @@ export const LANGS: Lang[] = ['en', 'id'];
 export type Feedback =
   /** Error straight from PostgreSQL — always English. */
   | { kind: 'sql-error'; message: string }
+  /** Common beginner mistakes, recognised from the PostgreSQL error. */
+  | { kind: 'syntax-error'; near: string | null }
+  | { kind: 'unknown-column'; name: string }
+  | { kind: 'unknown-table'; name: string }
   | { kind: 'empty-query' }
   | { kind: 'read-only' }
   | { kind: 'transaction' }
@@ -34,6 +38,14 @@ const en = (fb: Feedback): string => {
   switch (fb.kind) {
     case 'sql-error':
       return fb.message;
+    case 'syntax-error':
+      return fb.near
+        ? `Something is off near \`${fb.near}\`. Check the order: SELECT columns FROM table WHERE condition ;`
+        : 'The query stops too early — something is missing at the end.';
+    case 'unknown-column':
+      return `There is no column \`${fb.name}\`. Check the spelling in the table list. (Text values need single quotes, e.g. 'coffee'.)`;
+    case 'unknown-table':
+      return `There is no table \`${fb.name}\`. Check the spelling in the table list.`;
     case 'empty-query':
       return 'Type a query first, e.g. SELECT * FROM menu_items;';
     case 'read-only':
@@ -69,6 +81,14 @@ const id = (fb: Feedback): string => {
   switch (fb.kind) {
     case 'sql-error':
       return fb.message;
+    case 'syntax-error':
+      return fb.near
+        ? `Ada yang janggal di dekat \`${fb.near}\`. Cek urutannya: SELECT kolom FROM tabel WHERE syarat ;`
+        : 'Query-nya berhenti terlalu cepat — ada yang kurang di bagian akhir.';
+    case 'unknown-column':
+      return `Tidak ada kolom \`${fb.name}\`. Cek ejaannya di daftar tabel. (Nilai teks perlu tanda kutip tunggal, mis. 'coffee'.)`;
+    case 'unknown-table':
+      return `Tidak ada tabel \`${fb.name}\`. Cek ejaannya di daftar tabel.`;
     case 'empty-query':
       return 'Ketik query dulu, mis. SELECT * FROM menu_items;';
     case 'read-only':

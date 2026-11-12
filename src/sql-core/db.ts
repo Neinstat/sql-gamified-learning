@@ -117,5 +117,16 @@ function splitStatements(sql: string): string[] {
 function friendlyError(err: unknown): Feedback {
   const message = err instanceof Error ? err.message : String(err);
   if (/read-only transaction/i.test(message)) return { kind: 'read-only' };
+
+  const near = message.match(/^syntax error at or near "(.*)"$/);
+  if (near) return { kind: 'syntax-error', near: near[1] };
+  if (/^syntax error at end of input$/.test(message)) return { kind: 'syntax-error', near: null };
+
+  const column = message.match(/^column "(.*)" does not exist$/);
+  if (column) return { kind: 'unknown-column', name: column[1] };
+
+  const table = message.match(/^relation "(.*)" does not exist$/);
+  if (table) return { kind: 'unknown-table', name: table[1] };
+
   return { kind: 'sql-error', message };
 }

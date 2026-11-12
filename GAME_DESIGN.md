@@ -117,6 +117,7 @@ Di luar MVP (nanti): subquery, CTE, window function, analisis waktu lanjutan (Mo
 - **Koin** — untuk upgrade kafe.
 - **Daily streak** 🔥 — main minimal satu level per hari.
 - **Hint bertingkat** (maks. 3 per level): arah umum → klausa yang dibutuhkan → hampir jadi. Memakai hint mengurangi bintang, bukan menghalangi progres.
+- **Urutan level terjaga**: level yang sudah selesai dan satu level berikutnya bisa dibuka dari daftar level; sisanya terkunci. Progres (level terakhir + jumlah hint yang dipakai per level) disimpan di browser.
 - **Badge** untuk pencapaian (mis. "First JOIN", "True Analyst" setelah Chapter 5).
 
 ## 9. Kafe yang tumbuh

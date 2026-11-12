@@ -177,7 +177,7 @@ describe('checkAnswer (on the café database)', () => {
     const { result, verdict } = await checkAnswer(db, 'SELECT nme FROM menu_items', cheapItems);
     expect(result.ok).toBe(false);
     expect(verdict.correct).toBe(false);
-    if (!verdict.correct) expect(formatFeedback(verdict.feedback, 'en')).toMatch(/column "nme" does not exist/);
+    if (!verdict.correct) expect(verdict.feedback).toEqual({ kind: 'unknown-column', name: 'nme' });
   });
 
   it('handles NULL questions (dirty data)', async () => {
