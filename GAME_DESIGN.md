@@ -154,6 +154,16 @@ Di luar MVP (nanti): subquery, CTE, window function, analisis waktu lanjutan (Mo
 - Setiap query pemain berjalan di dalam transaksi **READ ONLY** yang selalu di-*rollback* (data tidak bisa rusak); perintah transaksi (`BEGIN`/`COMMIT`/…) ditolak.
 - Batas waktu query (`statement_timeout`) **tidak berfungsi** di PGlite karena berjalan di satu thread. Nanti PGlite dipindah ke Web Worker agar query yang macet bisa dihentikan.
 
+### Format data level
+Setiap level adalah objek TypeScript (`src/sql-core/levels/`), satu file per chapter. Isinya:
+- `id` (mis. `ch0-1`; dipakai untuk menyimpan progres, jadi tidak boleh diganti setelah rilis), `title`, `character`
+- `lesson` (opsional): kartu materi singkat untuk konsep SQL baru di level itu
+- `dialogue` (ucapan tokoh) dan `task` (satu kalimat target yang jelas, selalu terlihat saat mengerjakan)
+- `input`: `blocks` (daftar blok, boleh ada pengecoh), `fill-blank` (template dengan `___`), atau `free`
+- `solution` (query jawaban resmi; hanya hasilnya yang dibandingkan), `check` (opsi pengecek), `hints` (tepat 3), `success` (ucapan setelah benar)
+
+Tes otomatis memeriksa semua level: jawaban resmi bisa dijalankan, blok yang disediakan cukup untuk menyusun jawaban, dan blok tidak ditampilkan dalam urutan jawaban.
+
 ## 11. Data game
 
 - Database kafe dibuat **realistis**: `menu_items` (kategori, harga & cost), `sales` per transaksi (dengan tanggal & jam), `customers`, `employees`/shift, `inventory`, `suppliers`, kanal penjualan (dine-in, takeaway, delivery app).
@@ -180,6 +190,7 @@ Dibangun bertahap — setiap fase menghasilkan sesuatu yang bisa dimainkan.
 - [ ] Kontrol: keyboard (WASD/panah) saja, atau juga klik/tap untuk berjalan (mobile)?
 - [x] Mata uang — **$ (USD)**
 - [ ] Nuansa setting kota (generik/internasional, atau ada sentuhan lokal tertentu)
-- [ ] Isi detail tiap level (dialog, data, jawaban) per chapter
+- [ ] Isi detail tiap level (dialog, data, jawaban) per chapter — Chapter 0 sudah ditulis (4 level)
+- [ ] **Stasiun untuk Chapter 0–1**: level Chapter 0–1 memakai `menu_items`, yang menurut §3 ada di Kitchen. Padahal Fase 2 hanya membangun front counter (cash register: `sales`, `customers`). Pilihan: cash register juga bisa membaca `menu_items` (realistis, kasir perlu harga menu), atau Kitchen ikut dibangun di Fase 2. Diputuskan saat perencanaan Fase 2.
 - [ ] Bentuk Skill Check (berapa soal, bagaimana menentukan chapter awal)
 - [ ] Hosting (mis. GitHub Pages / Vercel / Netlify)
