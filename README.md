@@ -20,3 +20,14 @@ You inherit your grandma's struggling café and become its data analyst. Explore
 ## Status
 
 📐 Design complete, heading into Phase 1 (SQL core). See [GAME_DESIGN.md](GAME_DESIGN.md) for the full design (written in Indonesian).
+
+## Getting started
+
+Requires Node.js 22+.
+
+```bash
+npm install
+npm run dev        # start the dev server at http://localhost:5173
+npm test           # run the tests
+npm run build      # typecheck and build for production
+```

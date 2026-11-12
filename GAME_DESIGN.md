@@ -137,6 +137,21 @@ Di luar MVP (nanti): subquery, CTE, window function, analisis waktu lanjutan (Mo
 | Engine SQL | **PostgreSQL di browser via PGlite** | Dialek paling dekat dengan dunia kerja BI (Postgres, Redshift, BigQuery, Snowflake) |
 | Kompetisi | **Rush Hour + skor terbaik pribadi** | Leaderboard antar pemain menyusul setelah ada backend |
 | Bahasa game | **English** (UI, dialog, hint, nama tabel/kolom) | Bisa dimainkan banyak orang, mudah dimengerti, tanpa salah terjemahan; nama tabel English juga sama dengan praktik di dunia kerja |
+| Build tool | **Vite** | Server pengembangan cepat, build statis yang mudah di-hosting |
+| Bahasa kode | **TypeScript** | Kesalahan nama field/kolom di data level ketahuan sebelum dijalankan |
+| UI konsol | **React** | Komponen UI yang mudah dipecah-pecah; banyak sumber belajar; mudah ditempel di atas canvas game nanti |
+| Editor SQL | **CodeMirror 6** | Syntax highlighting + autocomplete nama tabel/kolom untuk mode ketik bebas |
+| Tes | **Vitest** | Menguji inti SQL (terutama pengecek jawaban) secara otomatis |
+| Mata uang | **$ (USD)** | Generik dan mudah dipahami pasar global |
+
+### Struktur kode (Fase 1)
+- `src/sql-core/` — database (PGlite), pengecek jawaban, tipe & data level. **Tidak boleh** meng-import React atau game engine.
+- `src/console/` — UI konsol (React): editor, input blok, isi kosong, tabel hasil, hint.
+- `src/app/` — halaman sederhana: daftar level, alur level, progres (localStorage).
+
+### Pengecek jawaban
+- Query pemain dan query jawaban resmi dijalankan di database yang sama; **hasilnya** yang dibandingkan.
+- Setiap query pemain berjalan di dalam transaksi yang selalu di-*rollback* (data tidak bisa rusak) dan diberi batas waktu.
 
 ## 11. Data game
 
@@ -158,10 +173,12 @@ Dibangun bertahap — setiap fase menghasilkan sesuatu yang bisa dimainkan.
 
 ## 13. Pertanyaan terbuka
 
-- [ ] Game engine final (kandidat: Phaser) dan framework untuk UI konsol — diputuskan saat perencanaan Fase 1–2
+- [x] Framework UI konsol — **React** (diputuskan di perencanaan Fase 1)
+- [ ] Game engine final (kandidat: Phaser) — diputuskan saat perencanaan Fase 2
 - [ ] Gaya visual (mis. pixel art) dan sumber aset — sprite/tileset orisinal atau asset pack berlisensi jelas
 - [ ] Kontrol: keyboard (WASD/panah) saja, atau juga klik/tap untuk berjalan (mobile)?
-- [ ] Mata uang dan nuansa setting kota (generik/internasional, atau ada sentuhan lokal tertentu)
+- [x] Mata uang — **$ (USD)**
+- [ ] Nuansa setting kota (generik/internasional, atau ada sentuhan lokal tertentu)
 - [ ] Isi detail tiap level (dialog, data, jawaban) per chapter
 - [ ] Bentuk Skill Check (berapa soal, bagaimana menentukan chapter awal)
 - [ ] Hosting (mis. GitHub Pages / Vercel / Netlify)
