@@ -23,6 +23,11 @@ const en = {
   next: 'Next level',
   allDone: "That's all for now — more chapters are coming soon!",
   language: 'Language',
+  blocksAnswer: 'Your query',
+  blocksTray: 'Available blocks',
+  blocksEmpty: 'Tap the blocks below to build your query',
+  blocksHelp: 'Tap a placed block to remove it.',
+  blocksClear: 'Clear',
   characters: { grandma: 'Grandma', barista: 'Barista', supplier: 'Supplier', regular: 'Regular' } satisfies Record<
     CharacterId,
     string
@@ -49,6 +54,11 @@ const id: UiText = {
   next: 'Level berikutnya',
   allDone: 'Sudah semua untuk sekarang — chapter berikutnya segera hadir!',
   language: 'Bahasa',
+  blocksAnswer: 'Query-mu',
+  blocksTray: 'Blok yang tersedia',
+  blocksEmpty: 'Ketuk blok di bawah untuk menyusun query-mu',
+  blocksHelp: 'Ketuk blok yang sudah dipasang untuk melepasnya.',
+  blocksClear: 'Kosongkan',
   characters: { grandma: 'Nenek', barista: 'Barista', supplier: 'Pemasok', regular: 'Pelanggan tetap' },
 };
 

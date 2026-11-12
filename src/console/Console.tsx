@@ -7,6 +7,7 @@ import type { UiText } from '../i18n';
 import { ResultTable } from './ResultTable';
 import { SchemaPanel, type Table } from './SchemaPanel';
 import { SqlEditor } from './SqlEditor';
+import { BlockInput } from './BlockInput';
 
 type Props = {
   db: CafeDatabase;
@@ -21,9 +22,9 @@ type Props = {
 };
 
 /**
- * The SQL console: table list, editor, Run, result and feedback.
- * For now every level uses the free-typing editor; block and
- * fill-in-the-blank input arrive in the next steps.
+ * The SQL console: table list, query input, Run, result and feedback.
+ * The input depends on the level: word blocks or the free-typing editor.
+ * (Fill-in-the-blank arrives in the next step and uses the editor for now.)
  */
 export function Console({ db, schema, level, lang, t, onCorrect, solvedPanel }: Props) {
   const starter = level.input.kind === 'free' ? (level.input.starter ?? '') : '';
@@ -60,18 +61,22 @@ export function Console({ db, schema, level, lang, t, onCorrect, solvedPanel }: 
     <div className="console">
       <SchemaPanel tables={schema} title={t.tables} />
       <section className="workspace">
-        <SqlEditor
-          initialValue={starter}
-          onChange={setSql}
-          onRun={run}
-          schema={completionSchema}
-          label="SQL"
-        />
+        {level.input.kind === 'blocks' ? (
+          <BlockInput blocks={level.input.blocks} onChange={setSql} t={t} />
+        ) : (
+          <SqlEditor
+            initialValue={starter}
+            onChange={setSql}
+            onRun={run}
+            schema={completionSchema}
+            label="SQL"
+          />
+        )}
         <div className="toolbar">
           <button className="run-button" onClick={run} disabled={running}>
             {running ? t.running : t.run}
           </button>
-          <span className="shortcut">{t.shortcut}</span>
+          {level.input.kind !== 'blocks' && <span className="shortcut">{t.shortcut}</span>}
         </div>
 
         {crash && <p className="feedback feedback-wrong">{crash}</p>}
