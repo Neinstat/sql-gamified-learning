@@ -441,3 +441,41 @@ body {
   align-items: center;
   gap: 12px;
 }
+
+/* Fill in the blanks */
+.fill-blank {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.fill-template {
+  display: block;
+  padding: 14px;
+  font-family: var(--code);
+  font-size: 1rem;
+  line-height: 2.4;
+  white-space: pre-wrap;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+}
+
+.fill-input {
+  margin: 0 4px;
+  padding: 4px 8px;
+  font-family: var(--code);
+  font-size: 1rem;
+  color: var(--accent);
+  font-weight: 600;
+  background: #fff;
+  border: none;
+  border-bottom: 2px solid var(--accent);
+  border-radius: 4px 4px 0 0;
+  max-width: 100%;
+}
+
+.fill-input:focus {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}

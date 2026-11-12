@@ -192,7 +192,7 @@ Dibangun bertahap — setiap fase menghasilkan sesuatu yang bisa dimainkan.
 - [ ] Kontrol: keyboard (WASD/panah) saja, atau juga klik/tap untuk berjalan (mobile)?
 - [x] Mata uang — **$ (USD)**
 - [ ] Nuansa setting kota (generik/internasional, atau ada sentuhan lokal tertentu)
-- [ ] Isi detail tiap level (dialog, data, jawaban) per chapter — Chapter 0 sudah ditulis (4 level)
+- [ ] Isi detail tiap level (dialog, data, jawaban) per chapter — Chapter 0 (4 level) dan Chapter 1 (6 level) sudah ditulis, lengkap dengan terjemahan Indonesia
 - [ ] **Stasiun untuk Chapter 0–1**: level Chapter 0–1 memakai `menu_items`, yang menurut §3 ada di Kitchen. Padahal Fase 2 hanya membangun front counter (cash register: `sales`, `customers`). Pilihan: cash register juga bisa membaca `menu_items` (realistis, kasir perlu harga menu), atau Kitchen ikut dibangun di Fase 2. Diputuskan saat perencanaan Fase 2.
 - [ ] Bentuk Skill Check (berapa soal, bagaimana menentukan chapter awal)
 - [ ] Hosting (mis. GitHub Pages / Vercel / Netlify)

@@ -67,9 +67,17 @@ describe('level data', () => {
       }
 
       if (level.input.kind === 'fill-blank') {
-        const template = level.input.template;
-        it('has at least one blank', () => {
+        const { template, answers } = level.input;
+        it('has one answer per blank', () => {
           expect(template).toContain(BLANK);
+          expect(template.split(BLANK).length - 1).toBe(answers.length);
+        });
+
+        it('is correct when the blanks are filled with the answers', async () => {
+          let i = 0;
+          const filled = template.split(BLANK).reduce((acc, part) => acc + answers[i++] + part);
+          const { verdict } = await checkAnswer(db, filled, level.solution, level.check);
+          expect(verdict).toEqual({ correct: true });
         });
       }
     });

@@ -28,6 +28,8 @@ const en = {
   blocksEmpty: 'Tap the blocks below to build your query',
   blocksHelp: 'Tap a placed block to remove it.',
   blocksClear: 'Clear',
+  blankLabel: (n: number, total: number) => `Blank ${n} of ${total}`,
+  fillHelp: 'Fill in the blanks, then press Run (or Enter).',
   characters: { grandma: 'Grandma', barista: 'Barista', supplier: 'Supplier', regular: 'Regular' } satisfies Record<
     CharacterId,
     string
@@ -59,6 +61,8 @@ const id: UiText = {
   blocksEmpty: 'Ketuk blok di bawah untuk menyusun query-mu',
   blocksHelp: 'Ketuk blok yang sudah dipasang untuk melepasnya.',
   blocksClear: 'Kosongkan',
+  blankLabel: (n, total) => `Bagian kosong ${n} dari ${total}`,
+  fillHelp: 'Isi bagian yang kosong, lalu tekan Jalankan (atau Enter).',
   characters: { grandma: 'Nenek', barista: 'Barista', supplier: 'Pemasok', regular: 'Pelanggan tetap' },
 };
 

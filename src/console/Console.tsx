@@ -8,6 +8,7 @@ import { ResultTable } from './ResultTable';
 import { SchemaPanel, type Table } from './SchemaPanel';
 import { SqlEditor } from './SqlEditor';
 import { BlockInput } from './BlockInput';
+import { FillBlankInput } from './FillBlankInput';
 
 type Props = {
   db: CafeDatabase;
@@ -23,8 +24,7 @@ type Props = {
 
 /**
  * The SQL console: table list, query input, Run, result and feedback.
- * The input depends on the level: word blocks or the free-typing editor.
- * (Fill-in-the-blank arrives in the next step and uses the editor for now.)
+ * The input depends on the level: word blocks, fill in the blanks, or the free-typing editor.
  */
 export function Console({ db, schema, level, lang, t, onCorrect, solvedPanel }: Props) {
   const starter = level.input.kind === 'free' ? (level.input.starter ?? '') : '';
@@ -63,6 +63,8 @@ export function Console({ db, schema, level, lang, t, onCorrect, solvedPanel }: 
       <section className="workspace">
         {level.input.kind === 'blocks' ? (
           <BlockInput blocks={level.input.blocks} onChange={setSql} t={t} />
+        ) : level.input.kind === 'fill-blank' ? (
+          <FillBlankInput template={level.input.template} onChange={setSql} onRun={run} t={t} />
         ) : (
           <SqlEditor
             initialValue={starter}
@@ -76,7 +78,7 @@ export function Console({ db, schema, level, lang, t, onCorrect, solvedPanel }: 
           <button className="run-button" onClick={run} disabled={running}>
             {running ? t.running : t.run}
           </button>
-          {level.input.kind !== 'blocks' && <span className="shortcut">{t.shortcut}</span>}
+          {level.input.kind === 'free' && <span className="shortcut">{t.shortcut}</span>}
         </div>
 
         {crash && <p className="feedback feedback-wrong">{crash}</p>}

@@ -19,7 +19,16 @@ export type InputMode =
        */
       blocks: string[];
     }
-  | { kind: 'fill-blank'; template: string }
+  | {
+      kind: 'fill-blank';
+      /** The query with gaps; each `___` is one gap. */
+      template: string;
+      /**
+       * One reference answer per gap, in order. Not used for grading (the
+       * result is graded) — tests use it to check the template is solvable.
+       */
+      answers: string[];
+    }
   | { kind: 'free'; starter?: string };
 
 /** The gap marker used in fill-blank templates. */

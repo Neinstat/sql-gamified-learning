@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { getSchema, type CafeDatabase } from '../sql-core/db';
 import { LANGS } from '../sql-core/feedback';
-import { getChapters } from '../sql-core/levels';
+import { allLevels, getChapters } from '../sql-core/levels';
 import type { Table } from '../console/SchemaPanel';
 import { ui, useLang } from '../i18n';
 import { getDatabase } from './database';
@@ -14,7 +14,7 @@ export function App() {
   const [db, setDb] = useState<CafeDatabase | null>(null);
   const [schema, setSchema] = useState<Table[]>([]);
   const [loadError, setLoadError] = useState<string | null>(null);
-  const [levelIndex, setLevelIndex] = useState(0);
+  const [levelIndex, setLevelIndex] = useState(startLevelIndex);
 
   useEffect(() => {
     getDatabase()
@@ -87,4 +87,15 @@ export function App() {
       )}
     </main>
   );
+}
+
+/**
+ * Development shortcut: open http://localhost:5173/?level=ch1-1 to jump to a level.
+ * Only works with `npm run dev`, never in the published game.
+ */
+function startLevelIndex(): number {
+  if (!import.meta.env.DEV) return 0;
+  const id = new URLSearchParams(window.location.search).get('level');
+  const index = allLevels.findIndex((l) => l.id === id);
+  return index === -1 ? 0 : index;
 }
