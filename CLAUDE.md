@@ -10,3 +10,4 @@ Project: **SQL Valley** — game web 2D top-down untuk belajar SQL dengan fokus 
 - Ikuti roadmap fase di `GAME_DESIGN.md` §12 — jangan mengerjakan fitur fase berikutnya sebelum fase berjalan selesai, kecuali diminta.
 - Visual dan karakter harus orisinal; aset pihak ketiga hanya yang lisensinya jelas, dan catat sumber + lisensinya.
 - Kerja dalam iterasi kecil: satu fitur → verifikasi di browser → commit.
+- Git: **jangan tambahkan baris `Co-Authored-By` atau atribusi Claude apa pun** di pesan commit maupun deskripsi PR.
