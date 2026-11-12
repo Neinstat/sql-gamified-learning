@@ -151,7 +151,8 @@ Di luar MVP (nanti): subquery, CTE, window function, analisis waktu lanjutan (Mo
 
 ### Pengecek jawaban
 - Query pemain dan query jawaban resmi dijalankan di database yang sama; **hasilnya** yang dibandingkan.
-- Setiap query pemain berjalan di dalam transaksi yang selalu di-*rollback* (data tidak bisa rusak) dan diberi batas waktu.
+- Setiap query pemain berjalan di dalam transaksi **READ ONLY** yang selalu di-*rollback* (data tidak bisa rusak); perintah transaksi (`BEGIN`/`COMMIT`/…) ditolak.
+- Batas waktu query (`statement_timeout`) **tidak berfungsi** di PGlite karena berjalan di satu thread. Nanti PGlite dipindah ke Web Worker agar query yang macet bisa dihentikan.
 
 ## 11. Data game
 
