@@ -4,7 +4,7 @@ Project: **SQL Valley** — game web 2D top-down untuk belajar SQL dengan fokus 
 
 - Semua keputusan desain ada di `GAME_DESIGN.md`. Baca dulu sebelum merancang atau membangun fitur, dan perbarui file itu bila ada keputusan desain baru.
 - Pemilik project sedang belajar Claude Code dan git: jelaskan langkah dalam Bahasa Indonesia, dengan singkat dan jelas.
-- **Semua isi game berbahasa English**: UI, dialog, hint, pesan error, serta nama tabel/kolom database (`snake_case`, mis. `menu_items`, `sales`). README juga English. Dokumen desain dan percakapan dengan pemilik project tetap Bahasa Indonesia.
+- **Bahasa game: English sebagai bahasa utama, Bahasa Indonesia sebagai pilihan pemain.** Teks cerita & UI (dialog, kartu materi, task, hint, umpan balik, tombol) ditulis dulu dalam English, lalu diterjemahkan ke Indonesia di file terpisah (`locales/id/`); bila terjemahan belum ada, otomatis memakai English. **Selalu English (tidak diterjemahkan):** kata kunci SQL, nama tabel/kolom (`snake_case`, mis. `menu_items`, `sales`), isi data, dan pesan error PostgreSQL. README juga English. Dokumen desain dan percakapan dengan pemilik project tetap Bahasa Indonesia.
 - Dialek SQL yang diajarkan: PostgreSQL (dijalankan di browser via PGlite). Tanpa backend untuk MVP.
 - Arsitektur: **inti SQL** (database, validasi jawaban, data level) dipisah dari **dunia game** (engine 2D, peta, NPC). Inti SQL tidak boleh bergantung pada kode game engine.
 - Ikuti roadmap fase di `GAME_DESIGN.md` §12 — jangan mengerjakan fitur fase berikutnya sebelum fase berjalan selesai, kecuali diminta.

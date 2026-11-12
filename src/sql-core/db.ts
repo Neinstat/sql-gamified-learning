@@ -1,5 +1,6 @@
 import { PGlite } from '@electric-sql/pglite';
 import { CAFE_SCHEMA_SQL, CAFE_SEED_SQL } from './data/cafe';
+import type { Feedback } from './feedback';
 
 export type CafeDatabase = PGlite;
 
@@ -8,7 +9,7 @@ export type CellValue = string | number | boolean | Date | null | unknown;
 
 export type QueryResult =
   | { ok: true; columns: string[]; rows: CellValue[][] }
-  | { ok: false; error: string };
+  | { ok: false; error: Feedback };
 
 /** Create a fresh in-memory database filled with Grandma's café data. */
 export async function createCafeDatabase(): Promise<CafeDatabase> {
@@ -37,10 +38,10 @@ const TRANSACTION_CONTROL =
 export async function runQuery(db: CafeDatabase, sql: string): Promise<QueryResult> {
   const statements = splitStatements(sql);
   if (statements.length === 0) {
-    return { ok: false, error: 'Type a query first, e.g. SELECT * FROM menu_items;' };
+    return { ok: false, error: { kind: 'empty-query' } };
   }
   if (statements.some((s) => TRANSACTION_CONTROL.test(s))) {
-    return { ok: false, error: 'Transaction commands (BEGIN, COMMIT, ROLLBACK…) are not needed here.' };
+    return { ok: false, error: { kind: 'transaction' } };
   }
 
   await db.exec('BEGIN READ ONLY');
@@ -48,7 +49,7 @@ export async function runQuery(db: CafeDatabase, sql: string): Promise<QueryResu
     const results = await db.exec(sql, { rowMode: 'array' });
     const last = results.at(-1);
     if (!last) {
-      return { ok: false, error: 'Type a query first, e.g. SELECT * FROM menu_items;' };
+      return { ok: false, error: { kind: 'empty-query' } };
     }
     return {
       ok: true,
@@ -113,10 +114,8 @@ function splitStatements(sql: string): string[] {
   return out.map((s) => s.trim()).filter(Boolean);
 }
 
-function friendlyError(err: unknown): string {
+function friendlyError(err: unknown): Feedback {
   const message = err instanceof Error ? err.message : String(err);
-  if (/read-only transaction/i.test(message)) {
-    return "This console is read-only: you can look at the data, but not change it.";
-  }
-  return message;
+  if (/read-only transaction/i.test(message)) return { kind: 'read-only' };
+  return { kind: 'sql-error', message };
 }

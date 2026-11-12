@@ -53,3 +53,23 @@ export type Chapter = {
   summary: string;
   levels: Level[];
 };
+
+/**
+ * Translated text for one level. SQL (lesson examples, solution, blocks)
+ * is never translated, so it is not part of this type.
+ */
+export type LevelText = {
+  title: string;
+  lesson?: { title: string; body: string[] };
+  dialogue: string[];
+  task: string;
+  hints: [string, string, string];
+  success: string;
+};
+
+/** A chapter's translation: chapter text + text for each level, by level id. */
+export type ChapterTranslation = {
+  title: string;
+  summary: string;
+  levels: Record<string, LevelText>;
+};

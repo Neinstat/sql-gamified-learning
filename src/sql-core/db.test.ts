@@ -31,7 +31,7 @@ describe('runQuery', () => {
   it('returns a readable error for bad SQL', async () => {
     const res = await runQuery(db, 'SELEKT * FROM menu_items');
     expect(res.ok).toBe(false);
-    if (!res.ok) expect(res.error).toMatch(/syntax error/i);
+    if (!res.ok) expect(res.error).toEqual({ kind: 'sql-error', message: expect.stringMatching(/syntax error/i) });
   });
 
   it('asks for a query when the input is empty', async () => {
@@ -41,7 +41,7 @@ describe('runQuery', () => {
 
   it('cannot change data', async () => {
     const res = await runQuery(db, 'DELETE FROM menu_items');
-    expect(res).toEqual({ ok: false, error: expect.stringMatching(/read-only/) });
+    expect(res).toEqual({ ok: false, error: { kind: 'read-only' } });
     const count = await runQuery(db, 'SELECT COUNT(*) FROM menu_items');
     expect(count.ok && Number(count.rows[0][0])).toBe(28);
   });

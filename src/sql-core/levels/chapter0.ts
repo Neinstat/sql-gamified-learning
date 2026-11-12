@@ -12,14 +12,13 @@ export const chapter0: Chapter = {
   levels: [
     {
       id: 'ch0-1',
-      title: 'The Recipe Box',
+      title: 'The Menu Book',
       character: 'grandma',
       lesson: {
         title: 'Tables',
         body: [
-          'A database keeps information in tables. A table is like a sheet in a spreadsheet.',
-          'Each row is one thing (here: one item on the menu). Each column is one detail about it (its name, its price…).',
-          'To look at a table, you ask for columns with SELECT and name the table with FROM. The star * means "every column".',
+          'A database keeps information in tables, like sheets in a spreadsheet: each row is one thing (one menu item), each column is one detail about it (name, price…).',
+          'To look at a table, pick columns with SELECT and name the table with FROM. The star * means "every column".',
         ],
         example: 'SELECT * FROM table_name',
       },

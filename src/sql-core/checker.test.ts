@@ -1,6 +1,12 @@
 import { beforeAll, describe, expect, it } from 'vitest';
 import { createCafeDatabase, type CafeDatabase } from './db';
-import { checkAnswer, compareResults, usesOrderBy } from './checker';
+import { checkAnswer, compareResults, usesOrderBy, type Verdict } from './checker';
+import { formatFeedback } from './feedback';
+
+/** Verdict with the English message, for readable assertions. */
+function said(v: Verdict) {
+  return v.correct ? v : { correct: false, message: formatFeedback(v.feedback, 'en') };
+}
 
 describe('compareResults', () => {
   const expected = {
@@ -12,17 +18,17 @@ describe('compareResults', () => {
   };
 
   it('accepts an identical result', () => {
-    expect(compareResults(expected, expected)).toEqual({ correct: true });
+    expect(said(compareResults(expected, expected))).toEqual({ correct: true });
   });
 
   it('ignores row order by default', () => {
     const actual = { columns: ['name', 'price'], rows: [['Green Tea', '2.75'], ['Espresso', '2.50']] };
-    expect(compareResults(actual, expected)).toEqual({ correct: true });
+    expect(said(compareResults(actual, expected))).toEqual({ correct: true });
   });
 
   it('checks row order when asked', () => {
     const actual = { columns: ['name', 'price'], rows: [['Green Tea', '2.75'], ['Espresso', '2.50']] };
-    expect(compareResults(actual, expected, { orderMatters: true })).toEqual({
+    expect(said(compareResults(actual, expected, { orderMatters: true }))).toEqual({
       correct: false,
       message: 'You have the right rows, but in the wrong order.',
     });
@@ -30,22 +36,22 @@ describe('compareResults', () => {
 
   it('accepts columns in a different order', () => {
     const actual = { columns: ['price', 'name'], rows: [['2.50', 'Espresso'], ['2.75', 'Green Tea']] };
-    expect(compareResults(actual, expected)).toEqual({ correct: true });
+    expect(said(compareResults(actual, expected))).toEqual({ correct: true });
   });
 
   it('treats 2.5, 2.50 and "2.50" as equal', () => {
     const actual = { columns: ['name', 'price'], rows: [['Espresso', 2.5], ['Green Tea', '2.750']] };
-    expect(compareResults(actual, expected)).toEqual({ correct: true });
+    expect(said(compareResults(actual, expected))).toEqual({ correct: true });
   });
 
   it('accepts other column names (aliases) by default', () => {
     const actual = { columns: ['item', 'cost_usd'], rows: expected.rows };
-    expect(compareResults(actual, expected)).toEqual({ correct: true });
+    expect(said(compareResults(actual, expected))).toEqual({ correct: true });
   });
 
   it('rejects other column names when names are checked', () => {
     const actual = { columns: ['name', 'cost_usd'], rows: expected.rows };
-    expect(compareResults(actual, expected, { checkColumnNames: true })).toEqual({
+    expect(said(compareResults(actual, expected, { checkColumnNames: true }))).toEqual({
       correct: false,
       message: 'Column `cost_usd` should be named `price`.',
     });
@@ -53,12 +59,12 @@ describe('compareResults', () => {
 
   it('names a missing column', () => {
     const actual = { columns: ['name'], rows: [['Espresso'], ['Green Tea']] };
-    expect(compareResults(actual, expected)).toEqual({ correct: false, message: 'Column `price` is missing.' });
+    expect(said(compareResults(actual, expected))).toEqual({ correct: false, message: 'Column `price` is missing.' });
   });
 
   it('names extra columns', () => {
     const actual = { columns: ['name', 'price', 'cost'], rows: [['Espresso', '2.50', '0.60']] };
-    expect(compareResults(actual, expected)).toEqual({
+    expect(said(compareResults(actual, expected))).toEqual({
       correct: false,
       message: 'Your result has an extra column: `cost`.',
     });
@@ -66,7 +72,7 @@ describe('compareResults', () => {
 
   it('reports a wrong row count', () => {
     const actual = { columns: ['name', 'price'], rows: [['Espresso', '2.50']] };
-    expect(compareResults(actual, expected)).toEqual({
+    expect(said(compareResults(actual, expected))).toEqual({
       correct: false,
       message: 'Your result has 1 row — expected 2.',
     });
@@ -74,7 +80,7 @@ describe('compareResults', () => {
 
   it('points at a row that should not be there', () => {
     const actual = { columns: ['name', 'price'], rows: [['Espresso', '2.50'], ['Latte', '4.00']] };
-    expect(compareResults(actual, expected)).toEqual({
+    expect(said(compareResults(actual, expected))).toEqual({
       correct: false,
       message: "This row shouldn't be in the result: Latte, 4.00",
     });
@@ -87,7 +93,7 @@ describe('compareResults', () => {
 
   it('suggests checking columns when a different column was picked', () => {
     const actual = { columns: ['name', 'cost'], rows: [['Espresso', '0.60'], ['Green Tea', '0.50']] };
-    expect(compareResults(actual, expected)).toEqual({
+    expect(said(compareResults(actual, expected))).toEqual({
       correct: false,
       message: 'Check your columns: expected `name`, `price` but got `name`, `cost`.',
     });
@@ -95,7 +101,7 @@ describe('compareResults', () => {
 
   it('treats NULL as a value', () => {
     const exp = { columns: ['cost'], rows: [[null]] };
-    expect(compareResults({ columns: ['cost'], rows: [[null]] }, exp)).toEqual({ correct: true });
+    expect(said(compareResults({ columns: ['cost'], rows: [[null]] }, exp))).toEqual({ correct: true });
     expect(compareResults({ columns: ['cost'], rows: [['0']] }, exp).correct).toBe(false);
   });
 });
@@ -127,7 +133,7 @@ describe('checkAnswer (on the café database)', () => {
       'select price, name from menu_items where not (price >= 3) order by name;',
       cheapItems,
     );
-    expect(verdict).toEqual({ correct: true });
+    expect(said(verdict)).toEqual({ correct: true });
   });
 
   it('accepts IN instead of OR', async () => {
@@ -136,12 +142,12 @@ describe('checkAnswer (on the café database)', () => {
       "SELECT name FROM menu_items WHERE category IN ('tea', 'dessert')",
       "SELECT name FROM menu_items WHERE category = 'tea' OR category = 'dessert'",
     );
-    expect(verdict).toEqual({ correct: true });
+    expect(said(verdict)).toEqual({ correct: true });
   });
 
   it('explains a wrong row count', async () => {
     const { verdict } = await checkAnswer(db, 'SELECT name, price FROM menu_items', cheapItems);
-    expect(verdict).toEqual({ correct: false, message: 'Your result has 28 rows — expected 3.' });
+    expect(said(verdict)).toEqual({ correct: false, message: 'Your result has 28 rows — expected 3.' });
   });
 
   it('requires order when the solution uses ORDER BY', async () => {
@@ -150,14 +156,14 @@ describe('checkAnswer (on the café database)', () => {
       cheapItems + ' ORDER BY price DESC',
       cheapItems + ' ORDER BY price ASC',
     );
-    expect(verdict).toEqual({ correct: false, message: 'You have the right rows, but in the wrong order.' });
+    expect(said(verdict)).toEqual({ correct: false, message: 'You have the right rows, but in the wrong order.' });
   });
 
   it('passes SQL errors through and still returns the result', async () => {
     const { result, verdict } = await checkAnswer(db, 'SELECT nme FROM menu_items', cheapItems);
     expect(result.ok).toBe(false);
     expect(verdict.correct).toBe(false);
-    if (!verdict.correct) expect(verdict.message).toMatch(/column "nme" does not exist/);
+    if (!verdict.correct) expect(formatFeedback(verdict.feedback, 'en')).toMatch(/column "nme" does not exist/);
   });
 
   it('handles NULL questions (dirty data)', async () => {
@@ -166,7 +172,7 @@ describe('checkAnswer (on the café database)', () => {
       'SELECT name FROM menu_items WHERE cost IS NULL',
       "SELECT name FROM menu_items WHERE name = 'Banana Bread'",
     );
-    expect(verdict).toEqual({ correct: true });
+    expect(said(verdict)).toEqual({ correct: true });
   });
 
   it('throws when the level solution itself is broken', async () => {

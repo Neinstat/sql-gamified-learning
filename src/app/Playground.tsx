@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { getSchema, runQuery, type CafeDatabase, type QueryResult } from '../sql-core/db';
+import { formatFeedback } from '../sql-core/feedback';
 import { ResultTable } from '../console/ResultTable';
 import { SchemaPanel } from '../console/SchemaPanel';
 import { getDatabase } from './database';
@@ -57,7 +58,7 @@ export function Playground() {
           </button>
           <span className="shortcut">or press Ctrl/⌘ + Enter</span>
         </div>
-        {result && !result.ok && <p className="error">{result.error}</p>}
+        {result && !result.ok && <p className="error">{formatFeedback(result.error, 'en')}</p>}
         {result && result.ok && <ResultTable columns={result.columns} rows={result.rows} />}
       </section>
     </div>

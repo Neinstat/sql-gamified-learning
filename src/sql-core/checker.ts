@@ -1,4 +1,5 @@
 import { runQuery, type CafeDatabase, type CellValue, type QueryResult } from './db';
+import type { Feedback } from './feedback';
 
 /** A successful query result: column names + rows. */
 export type ResultSet = { columns: string[]; rows: CellValue[][] };
@@ -16,7 +17,7 @@ export type CheckOptions = {
   checkColumnNames?: boolean;
 };
 
-export type Verdict = { correct: true } | { correct: false; message: string };
+export type Verdict = { correct: true } | { correct: false; feedback: Feedback };
 
 export type CheckOutcome = {
   /** The player's own result, to show in the console. */
@@ -36,13 +37,13 @@ export async function checkAnswer(
 ): Promise<CheckOutcome> {
   const result = await runQuery(db, playerSql);
   if (!result.ok) {
-    return { result, verdict: { correct: false, message: result.error } };
+    return { result, verdict: { correct: false, feedback: result.error } };
   }
 
   const expected = await runQuery(db, solutionSql);
   if (!expected.ok) {
     // A broken solution is a bug in the level data, not the player's fault.
-    throw new Error(`Level solution failed: ${expected.error}`);
+    throw new Error(`Level solution failed: ${JSON.stringify(expected.error)}`);
   }
 
   const orderMatters = options.orderMatters ?? usesOrderBy(solutionSql);
@@ -58,20 +59,20 @@ export function compareResults(
 ): Verdict {
   // 1. Columns
   const columnCheck = alignColumns(actual.columns, expected.columns, options.checkColumnNames ?? false);
-  if (!columnCheck.ok) return { correct: false, message: columnCheck.message };
+  if (!columnCheck.ok) return { correct: false, feedback: columnCheck.feedback };
   const aligned = actual.rows.map((row) => columnCheck.order.map((i) => row[i]));
 
   // When columns were matched by position (names differ), a wrong value may
   // simply mean a wrong column — say so instead of blaming a row.
-  const columnHint = columnCheck.byName
+  const columnHint: Feedback | null = columnCheck.byName
     ? null
-    : `Check your columns: expected ${listColumns(expected.columns)} but got ${listColumns(actual.columns)}.`;
+    : { kind: 'check-columns', actual: actual.columns, expected: expected.columns };
 
   // 2. Row count
   if (aligned.length !== expected.rows.length) {
     return {
       correct: false,
-      message: `Your result has ${plural(aligned.length, 'row')} — expected ${expected.rows.length}.`,
+      feedback: { kind: 'row-count', actual: aligned.length, expected: expected.rows.length },
     };
   }
 
@@ -82,18 +83,15 @@ export function compareResults(
   for (let i = 0; i < actualKeys.length; i++) {
     const left = remaining.get(actualKeys[i]) ?? 0;
     if (left === 0) {
-      if (columnHint) return { correct: false, message: columnHint };
-      return {
-        correct: false,
-        message: `This row shouldn't be in the result: ${describeRow(actual.rows[i])}`,
-      };
+      if (columnHint) return { correct: false, feedback: columnHint };
+      return { correct: false, feedback: { kind: 'unexpected-row', row: describeRow(actual.rows[i]) } };
     }
     remaining.set(actualKeys[i], left - 1);
   }
 
   // 4. Row order
   if (options.orderMatters && actualKeys.some((key, i) => key !== expectedKeys[i])) {
-    return { correct: false, message: 'You have the right rows, but in the wrong order.' };
+    return { correct: false, feedback: { kind: 'wrong-order' } };
   }
 
   return { correct: true };
@@ -110,7 +108,7 @@ export function usesOrderBy(sql: string): boolean {
 
 type ColumnAlignment =
   | { ok: true; order: number[]; byName: boolean }
-  | { ok: false; message: string };
+  | { ok: false; feedback: Feedback };
 
 /**
  * Work out which of the player's columns matches each expected column.
@@ -126,19 +124,12 @@ function alignColumns(actual: string[], expected: string[], checkNames: boolean)
     const missing = expected.filter((c) => !actualNames.includes(norm(c)));
     const extra = actual.filter((c) => !expectedNames.includes(norm(c)));
     if (actual.length < expected.length && missing.length > 0) {
-      const label = missing.length === 1 ? 'Column' : 'Columns';
-      return { ok: false, message: `${label} ${listColumns(missing)} ${missing.length === 1 ? 'is' : 'are'} missing.` };
+      return { ok: false, feedback: { kind: 'missing-columns', columns: missing } };
     }
     if (actual.length > expected.length && extra.length > 0) {
-      return {
-        ok: false,
-        message: `Your result has ${extra.length === 1 ? 'an extra column' : 'extra columns'}: ${listColumns(extra)}.`,
-      };
+      return { ok: false, feedback: { kind: 'extra-columns', columns: extra } };
     }
-    return {
-      ok: false,
-      message: `Your result has ${plural(actual.length, 'column')} — expected ${expected.length}.`,
-    };
+    return { ok: false, feedback: { kind: 'column-count', actual: actual.length, expected: expected.length } };
   }
 
   const byName = matchByName(actualNames, expectedNames);
@@ -146,7 +137,7 @@ function alignColumns(actual: string[], expected: string[], checkNames: boolean)
 
   if (checkNames) {
     const i = expectedNames.findIndex((name, idx) => name !== actualNames[idx]);
-    return { ok: false, message: `Column \`${actual[i]}\` should be named \`${expected[i]}\`.` };
+    return { ok: false, feedback: { kind: 'column-name', actual: actual[i], expected: expected[i] } };
   }
   return { ok: true, order: actual.map((_, i) => i), byName: false };
 }
@@ -199,12 +190,4 @@ function describeRow(row: CellValue[]): string {
       return String(v);
     })
     .join(', ');
-}
-
-function listColumns(names: string[]): string {
-  return names.map((n) => `\`${n}\``).join(', ');
-}
-
-function plural(n: number, word: string): string {
-  return `${n} ${n === 1 ? word : word + 's'}`;
 }

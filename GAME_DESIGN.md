@@ -3,7 +3,7 @@
 > Game web 2D *top-down* untuk belajar SQL sambil belajar **berpikir seperti analis Business Intelligence (BI)**: pemain berjalan menjelajahi kafe warisannya, bertemu tokoh, dan menyelesaikan tugas dengan menulis SQL di konsol yang tersebar di berbagai sudut kafe.
 > Status: desain awal (MVP). Dokumen ini adalah sumber kebenaran untuk keputusan desain — perbarui saat ada keputusan baru.
 >
-> **Bahasa:** dokumen ini ditulis dalam Bahasa Indonesia, tetapi **semua isi game berbahasa English** (UI, dialog, petunjuk, nama tabel/kolom). Istilah dan contoh in-game di bawah ditulis dalam English.
+> **Bahasa:** dokumen ini ditulis dalam Bahasa Indonesia. Game memakai **English sebagai bahasa utama** dengan **pilihan Bahasa Indonesia** untuk teks cerita & UI; SQL, nama tabel/kolom, dan isi data selalu English (lihat §10). Istilah dan contoh in-game di bawah ditulis dalam English.
 
 ---
 
@@ -23,7 +23,7 @@ Kebanyakan sumber belajar SQL hanya mengajarkan **sintaks**:
 | **Pemula total** (belum pernah menulis SQL) | Mulai dari Chapter 0 (tutorial) |
 | **Sudah tahu dasar** | Ikut **Skill Check** di awal → boleh langsung lompat ke chapter yang sesuai |
 
-Target akhir: orang yang ingin berkarier sebagai **analis data / BI**, yang perlu paham SQL *dan* konteks bisnis. Pasar global — karena itu game berbahasa English.
+Target akhir: orang yang ingin berkarier sebagai **analis data / BI**, yang perlu paham SQL *dan* konteks bisnis. Pasar global — karena itu bahasa utama game English, dengan pilihan Bahasa Indonesia agar pemula di Indonesia mudah masuk.
 
 ## 3. Konsep & cerita
 
@@ -136,7 +136,7 @@ Di luar MVP (nanti): subquery, CTE, window function, analisis waktu lanjutan (Mo
 | Backend | **Tanpa backend** untuk MVP | Gratis di-hosting, cepat jadi; progres disimpan lokal di browser |
 | Engine SQL | **PostgreSQL di browser via PGlite** | Dialek paling dekat dengan dunia kerja BI (Postgres, Redshift, BigQuery, Snowflake) |
 | Kompetisi | **Rush Hour + skor terbaik pribadi** | Leaderboard antar pemain menyusul setelah ada backend |
-| Bahasa game | **English** (UI, dialog, hint, nama tabel/kolom) | Bisa dimainkan banyak orang, mudah dimengerti, tanpa salah terjemahan; nama tabel English juga sama dengan praktik di dunia kerja |
+| Bahasa game | **English (utama) + pilihan Bahasa Indonesia** untuk dialog, kartu materi, task, hint, umpan balik, dan UI. **Selalu English:** SQL, nama tabel/kolom, isi data, pesan error PostgreSQL | English untuk pasar global dan sama dengan praktik kerja; Indonesia agar pemula lokal mudah masuk. Isi data tetap English karena query pemain bergantung padanya (`WHERE category = 'coffee'`). Terjemahan di file terpisah (`locales/id/`) dengan fallback ke English. *Uji coba di Fase 1 — dihentikan bila biaya perawatannya terlalu besar.* |
 | Build tool | **Vite** | Server pengembangan cepat, build statis yang mudah di-hosting |
 | Bahasa kode | **TypeScript** | Kesalahan nama field/kolom di data level ketahuan sebelum dijalankan |
 | UI konsol | **React** | Komponen UI yang mudah dipecah-pecah; banyak sumber belajar; mudah ditempel di atas canvas game nanti |
@@ -164,6 +164,8 @@ Setiap level adalah objek TypeScript (`src/sql-core/levels/`), satu file per cha
 
 Tes otomatis memeriksa semua level: jawaban resmi bisa dijalankan, blok yang disediakan cukup untuk menyusun jawaban, dan blok tidak ditampilkan dalam urutan jawaban.
 
+**Terjemahan:** teks Indonesia per chapter ada di `src/sql-core/levels/locales/id/` (hanya teks; SQL, blok, dan jawaban tidak diterjemahkan). Umpan balik checker dikembalikan sebagai kode terstruktur lalu diubah jadi kalimat EN/ID oleh `formatFeedback`. Tes otomatis memastikan setiap level punya terjemahan dengan struktur yang sama (jumlah baris dialog, ada/tidaknya kartu materi).
+
 ## 11. Data game
 
 - Database kafe dibuat **realistis**: `menu_items` (kategori, harga & cost), `sales` per transaksi (dengan tanggal & jam), `customers`, `employees`/shift, `inventory`, `suppliers`, kanal penjualan (dine-in, takeaway, delivery app).
@@ -177,7 +179,7 @@ Dibangun bertahap — setiap fase menghasilkan sesuatu yang bisa dimainkan.
 
 | Fase | Isi | Selesai jika… |
 |---|---|---|
-| **1. Inti SQL** | PGlite + data kafe, pengecek jawaban, format data level, konsol SQL (input blok → isi kosong → bebas), Chapter 0–1 | Chapter 0–1 bisa dimainkan lengkap di halaman sederhana, dan rasa belajarnya sudah enak |
+| **1. Inti SQL** | PGlite + data kafe, pengecek jawaban, format data level, konsol SQL (input blok → isi kosong → bebas), Chapter 0–1, pilihan bahasa EN/ID | Chapter 0–1 bisa dimainkan lengkap di halaman sederhana, dan rasa belajarnya sudah enak |
 | **2. Dunia pertama** | Game engine, satu ruangan (area depan + front counter), karakter berjalan, Grandma sebagai NPC, dialog, konsol terbuka dari stasiun | Pemain bisa jalan → bicara dengan Grandma → ke cash register → menyelesaikan level Chapter 0–1 di dalam dunia game |
 | **3. Kafe tumbuh** | Kitchen, storeroom, back office; Chapter 2–5; koin, upgrade, bintang, streak, Rush Hour, Analysis Case | MVP lengkap Chapter 0–5 |
 | **Nanti** | Skill Check, materi lanjutan, leaderboard (butuh backend), audio, polesan | — |
