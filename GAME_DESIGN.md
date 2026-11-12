@@ -179,6 +179,13 @@ Tes otomatis memeriksa semua level: jawaban resmi bisa dijalankan, blok yang dis
 
 Dibangun bertahap — setiap fase menghasilkan sesuatu yang bisa dimainkan.
 
+**Status (13 Nov 2026):** Fase 1 **selesai secara teknis**: Chapter 0–1 (10 level) bisa dimainkan dalam EN/ID, dengan pengecek jawaban, hint, progres tersimpan, dan 110 tes otomatis. Kriteria "rasa belajarnya sudah enak" masih menunggu uji main oleh pemilik project / pemain pemula.
+
+Catatan dari Fase 1 untuk fase berikutnya:
+- Ukuran unduhan pertama PGlite besar (±3,5 MB wasm terkompresi + 6 MB data) — perlu layar loading yang jelas dan dicek saat memilih hosting.
+- PGlite belum di Web Worker, jadi query yang macet tidak bisa dihentikan (lihat §10).
+- Di layar HP, daftar tabel muncul di atas area input; tata letak konsol ditata ulang saat menjadi overlay di dunia game (Fase 2).
+
 | Fase | Isi | Selesai jika… |
 |---|---|---|
 | **1. Inti SQL** | PGlite + data kafe, pengecek jawaban, format data level, konsol SQL (input blok → isi kosong → bebas), Chapter 0–1, pilihan bahasa EN/ID | Chapter 0–1 bisa dimainkan lengkap di halaman sederhana, dan rasa belajarnya sudah enak |

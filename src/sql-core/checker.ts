@@ -77,6 +77,9 @@ export function compareResults(
     : { kind: 'check-columns', actual: actual.columns, expected: expected.columns };
 
   // 2. Row count
+  if (aligned.length === 0 && expected.rows.length > 0) {
+    return { correct: false, feedback: { kind: 'no-rows', expected: expected.rows.length } };
+  }
   if (aligned.length !== expected.rows.length) {
     return {
       correct: false,

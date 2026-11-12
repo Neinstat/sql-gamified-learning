@@ -78,6 +78,15 @@ describe('compareResults', () => {
     });
   });
 
+  it('explains an empty result', () => {
+    const actual = { columns: ['name', 'price'], rows: [] };
+    expect(said(compareResults(actual, expected))).toEqual({
+      correct: false,
+      message:
+        'Your query found no rows — expected 2. Check the values in your condition: text must match exactly, including capital letters.',
+    });
+  });
+
   it('points at a row that should not be there', () => {
     const actual = { columns: ['name', 'price'], rows: [['Espresso', '2.50'], ['Latte', '4.00']] };
     expect(said(compareResults(actual, expected))).toEqual({

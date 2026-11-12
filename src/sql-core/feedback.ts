@@ -24,6 +24,8 @@ export type Feedback =
   | { kind: 'column-count'; actual: number; expected: number }
   | { kind: 'column-name'; actual: string; expected: string }
   | { kind: 'row-count'; actual: number; expected: number }
+  /** The query ran but matched nothing, while rows were expected. */
+  | { kind: 'no-rows'; expected: number }
   | { kind: 'unexpected-row'; row: string }
   | { kind: 'check-columns'; actual: string[]; expected: string[] }
   | { kind: 'wrong-order' }
@@ -47,7 +49,7 @@ const en = (fb: Feedback): string => {
     case 'unknown-table':
       return `There is no table \`${fb.name}\`. Check the spelling in the table list.`;
     case 'empty-query':
-      return 'Type a query first, e.g. SELECT * FROM menu_items;';
+      return 'Your query is empty — build it first, then press Run.';
     case 'read-only':
       return 'This console is read-only: you can look at the data, but not change it.';
     case 'transaction':
@@ -66,6 +68,8 @@ const en = (fb: Feedback): string => {
       return `Column \`${fb.actual}\` should be named \`${fb.expected}\`.`;
     case 'row-count':
       return `Your result has ${rows(fb.actual)} — expected ${fb.expected}.`;
+    case 'no-rows':
+      return `Your query found no rows — expected ${fb.expected}. Check the values in your condition: text must match exactly, including capital letters.`;
     case 'unexpected-row':
       return `This row shouldn't be in the result: ${fb.row}`;
     case 'check-columns':
@@ -90,7 +94,7 @@ const id = (fb: Feedback): string => {
     case 'unknown-table':
       return `Tidak ada tabel \`${fb.name}\`. Cek ejaannya di daftar tabel.`;
     case 'empty-query':
-      return 'Ketik query dulu, mis. SELECT * FROM menu_items;';
+      return 'Query-mu masih kosong — susun dulu, lalu tekan Jalankan.';
     case 'read-only':
       return 'Konsol ini hanya untuk membaca: kamu bisa melihat data, tapi tidak bisa mengubahnya.';
     case 'transaction':
@@ -105,6 +109,8 @@ const id = (fb: Feedback): string => {
       return `Kolom \`${fb.actual}\` seharusnya bernama \`${fb.expected}\`.`;
     case 'row-count':
       return `Hasilmu punya ${fb.actual} baris — seharusnya ${fb.expected}.`;
+    case 'no-rows':
+      return `Query-mu tidak menemukan baris apa pun — seharusnya ${fb.expected}. Cek nilai di syaratmu: teks harus sama persis, termasuk huruf besar-kecilnya.`;
     case 'unexpected-row':
       return `Baris ini seharusnya tidak ada di hasil: ${fb.row}`;
     case 'check-columns':
