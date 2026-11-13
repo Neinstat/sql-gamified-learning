@@ -27,7 +27,9 @@ You inherit your grandma's struggling café and become its data analyst. Explore
 - Answers are graded on their **result**, not their text, with specific feedback ("Column `price` is missing", "Your result has 12 rows — expected 3")
 - Three-step hints, saved progress, beginner-friendly error messages
 
-🚧 **Phase 2 (the first world)** — in progress. Chapters 0–1 are now played inside the café's front room (Phaser, placeholder pixel art): walk with WASD/arrows or click/tap, take requests from Grandma, the barista and a regular, solve them at the menu board's SQL console, and report back. The Phase 1 page is still available as **classic mode** at `?classic`. See [GAME_DESIGN.md](GAME_DESIGN.md) for the full design and roadmap (written in Indonesian).
+✅ **Phase 2 (the first world)** — Chapters 0–1 are played inside the café's front room (Phaser, placeholder pixel art): walk with WASD/arrows or click/tap, take requests from Grandma, the barista and a regular, solve them at the menu board's SQL console, and report back. Zoom with − / + (or the mouse wheel); a golden arrow points the way when your next stop is off screen. The Phase 1 page is still available as **classic mode** at `?classic`.
+
+Next: **Phase 3** — more rooms, Chapters 2–5, coins, stars and the Analysis Case. See [GAME_DESIGN.md](GAME_DESIGN.md) for the full design and roadmap (written in Indonesian).
 
 ## Getting started
 
