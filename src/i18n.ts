@@ -81,6 +81,15 @@ const en = {
   soWhatRight: 'Exactly.',
   soWhatWrong: 'Not quite.',
   continue: 'Continue',
+  starsLabel: (n: number) => `${n} of 3 stars`,
+  starsPerfect: 'Perfect — no hints, no mistakes!',
+  starsTipHints: 'Solve it without hints for ★★. Replay it any time from the Journal.',
+  starsTipRuns: 'Get it right on the first run for ★★★.',
+  starsTipConclusions: 'Answer every question without a wrong conclusion for ★★★.',
+  starsBest: (n: number) => `Your best is still ${'★'.repeat(n)}.`,
+  coins: 'Coins',
+  coinsBonus: (n: number) => `+${n} 🪙 for thinking like an analyst!`,
+  chapterStars: (got: number, total: number) => `★ ${got}/${total}`,
   characters: { grandma: 'Grandma', barista: 'Barista', supplier: 'Supplier', regular: 'Regular' } satisfies Record<
     CharacterId,
     string
@@ -164,6 +173,15 @@ const id: UiText = {
   soWhatRight: 'Tepat.',
   soWhatWrong: 'Belum tepat.',
   continue: 'Lanjut',
+  starsLabel: (n) => `${n} dari 3 bintang`,
+  starsPerfect: 'Sempurna — tanpa petunjuk, tanpa salah!',
+  starsTipHints: 'Selesaikan tanpa petunjuk untuk ★★. Main ulang kapan saja dari Jurnal.',
+  starsTipRuns: 'Jawab benar pada percobaan pertama untuk ★★★.',
+  starsTipConclusions: 'Jawab semua pertanyaan tanpa kesimpulan yang salah untuk ★★★.',
+  starsBest: (n) => `Rekor terbaikmu tetap ${'★'.repeat(n)}.`,
+  coins: 'Koin',
+  coinsBonus: (n) => `+${n} 🪙 karena berpikir seperti analis!`,
+  chapterStars: (got, total) => `★ ${got}/${total}`,
   characters: { grandma: 'Nenek', barista: 'Barista', supplier: 'Pemasok', regular: 'Pelanggan tetap' },
 };
 

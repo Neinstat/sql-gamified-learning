@@ -441,12 +441,15 @@ body {
 
 .level-nav-chapter {
   display: flex;
-  align-items: center;
+  flex-wrap: wrap;
+  align-items: flex-start;
   gap: 6px;
 }
 
 .level-nav-title {
+  flex-basis: 100%;
   margin-right: 2px;
+  white-space: nowrap;
   font-size: 0.8rem;
   color: var(--muted);
 }
@@ -678,6 +681,78 @@ body {
 
 .conclusion.done .conclusion-prompt {
   color: var(--ok-ink);
+}
+
+/* Stars and coins */
+.stars {
+  display: inline-flex;
+  gap: 2px;
+  font-size: 1.6rem;
+  line-height: 1;
+}
+
+.stars-small {
+  gap: 0;
+  font-size: 0.7rem;
+}
+
+.star {
+  color: #d8cbb8;
+}
+
+.star.filled {
+  color: #e0a526;
+  text-shadow: 0 1px 0 #9c6b10;
+}
+
+.stars-small .star.filled {
+  text-shadow: none;
+}
+
+.reward {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 14px;
+  margin-bottom: 8px;
+}
+
+.reward-coins {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #9c6b10;
+}
+
+.reward-tip {
+  flex-basis: 100%;
+  margin: 0;
+  font-size: 0.9rem;
+  color: var(--muted);
+}
+
+.so-what-bonus {
+  margin: 0 0 14px;
+  font-size: 1rem;
+}
+
+.hud-coins {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #9c6b10;
+  white-space: nowrap;
+}
+
+.level-slot {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  min-height: 44px;
+}
+
+.level-nav-stars {
+  margin-left: 6px;
+  font-weight: 700;
+  color: #9c6b10;
 }
 
 /* So what? */

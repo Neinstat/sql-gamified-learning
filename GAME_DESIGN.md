@@ -194,6 +194,11 @@ Di luar MVP (nanti): subquery, CTE, window function, analisis waktu lanjutan (Mo
 - **XP & level pemain** — dari menyelesaikan level.
 - **Bintang per level**: ⭐ benar · ⭐⭐ benar tanpa hint · ⭐⭐⭐ menyelesaikan bonus challenge (mis. tanpa salah, atau syarat tambahan).
 - **Koin** — untuk upgrade kafe.
+- **Aturan rinci (Fase 3.3):**
+  - ⭐⭐⭐ = tanpa hint **dan** tanpa salah — level biasa: tanpa sekali pun "Run" yang salah (termasuk lupa `;`); Mini Case: tanpa kesimpulan yang tidak didukung data.
+  - Koin per bintang: **10** untuk level biasa, **20** untuk Mini Case. Main ulang hanya membayar selisih dengan rekor terbaik (koin tidak bisa "diternak"). Jawaban **So what?** yang benar memberi **+5** koin, sekali per level.
+  - Layar hasil di konsol menampilkan bintang, koin yang didapat, dan cara mendapat bintang berikutnya. Journal menampilkan bintang tiap level dan total per chapter; saldo koin 🪙 ada di header.
+  - Progres lama (sebelum 3.3) tidak mencatat jumlah salah, jadi level yang selesai tanpa hint dianggap ⭐⭐; koinnya dihitung dari bintang itu saat pertama dimuat.
 - **Daily streak** 🔥 — main minimal satu level per hari.
 - **Hint bertingkat** (maks. 3 per level): arah umum → klausa yang dibutuhkan → hampir jadi. Memakai hint mengurangi bintang, bukan menghalangi progres.
 - **Urutan level terjaga**: level yang sudah selesai dan satu level berikutnya bisa dibuka dari daftar level; sisanya terkunci. Progres (level terakhir + jumlah hint yang dipakai per level) disimpan di browser.
@@ -235,6 +240,7 @@ Di luar MVP (nanti): subquery, CTE, window function, analisis waktu lanjutan (Mo
 - `src/sql-core/cases.ts` — cek kesimpulan Mini Case: jawaban dulu (`answer-wrong` dihitung sebagai kesimpulan salah untuk bintang), lalu bukti 📌 (`checkEvidence`). Pesan EN/ID lewat `formatCaseFeedback`.
 - `src/console/CaseConsole.tsx` — konsol Mini Case: tombol query awal, editor bebas, 📌 sematkan hasil, catatan investigasi, dan daftar kesimpulan (jawaban + pilih sematan sebagai bukti + Periksa). Sematan disimpan selama level yang sama (konsol tetap ter-mount), tapi **belum** disimpan ke browser — hilang bila halaman dimuat ulang.
 - `src/app/SoWhatCard.tsx` — kartu "So what?" setelah ucapan sukses tokoh, sebelum lanjut ke level berikutnya.
+- `src/app/rewards.ts` — aturan bintang & koin (fungsi murni, dites). `progress.ts` menyimpan `stars`, `mistakes`, `coins`, `soWhatRight` dan mengisi data yang belum ada di simpanan lama (`parseProgress`). `Stars.tsx` menampilkan ★ di layar hasil dan Journal.
 - `resumeNewLevels` (`quest.ts`): pemain yang sudah "selesai semua" otomatis lanjut ke level yang baru ditambahkan (mis. Mini Case Ch1).
 
 ### Struktur kode (tambahan Fase 2)
@@ -340,7 +346,7 @@ Setiap iterasi bisa dimainkan sendiri: kerjakan → cek di browser → commit & 
 |---|---|---|
 | 3.1 ✅ | **Arah visual:** file palet musim gugur, pilih pack tile CC0, ruang depan + Grandma (sprite & potret) dalam gaya final, `CREDITS.md` | Pemilik project melihat ruang depan + Grandma baru di browser dan menyetujui arahnya (atau memilih cadangan beli pack) |
 | 3.2 ✅ | **Mesin Mini Case + So what?:** catatan investigasi, 📌 sematkan hasil query, pertanyaan kesimpulan dengan cek bukti, field `soWhat`; Mini Case Ch1 **The Menu Audit**; So what? di 1–2 level Ch0–1 (EN/ID) | Setelah level terakhir Ch1, pemain menyelesaikan The Menu Audit di Menu board dengan bukti 📌; So what? muncul di Ch0–1 |
-| 3.3 | **Bintang & koin:** catat hint + jawaban salah per level/kasus, layar hasil (⭐ + koin), bintang di Journal, penghitung koin di HUD; progres lama tetap terbaca | Menyelesaikan level/kasus menampilkan bintang & koin, tersimpan, dan terlihat di Journal |
+| 3.3 ✅ | **Bintang & koin:** catat hint + jawaban salah per level/kasus, layar hasil (⭐ + koin), bintang di Journal, penghitung koin di HUD; progres lama tetap terbaca | Menyelesaikan level/kasus menampilkan bintang & koin, tersimpan, dan terlihat di Journal |
 | 3.4 | **Chapter 2 First Reports** (ketik bebas: `ORDER BY`, `LIMIT`, `DISTINCT`, alias, kolom hitungan) + Mini Case **What Should We Promote?**; Barista dalam gaya final | Chapter 2 bisa dimainkan lengkap di Menu board, EN/ID |
 | 3.5 | **Data penjualan & stasiun kedua:** generator data `sales`/`customers` dengan seed tetap, Cash register terbuka, blokir tabel per stasiun (role PostgreSQL), PGlite di Web Worker + tombol hentikan query | Cash register membuka konsol berisi `sales`, `customers`, `menu_items`; query ke tabel lain ditolak dengan pesan ramah; query macet bisa dihentikan |
 | 3.6 | **Chapter 3 Numbers Talk** (`COUNT`/`SUM`/`AVG`/`MIN`/`MAX`, `GROUP BY`, `HAVING`, dasar tanggal) + Mini Case **The Quiet Day** | Chapter 3 bisa dimainkan lengkap di Cash register, EN/ID |

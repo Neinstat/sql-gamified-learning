@@ -17,8 +17,8 @@ type Props = {
   level: RequestLevel;
   lang: Lang;
   t: UiText;
-  /** Called once each time the player's answer is correct. */
-  onCorrect: () => void;
+  /** Called once each time the player's answer is correct, with the wrong runs before it (for stars). */
+  onCorrect: (mistakes: number) => void;
   /** Shown right under "Correct!" (above the result table), e.g. the next-level button. */
   solvedPanel?: ReactNode;
 };
@@ -33,6 +33,7 @@ export function Console({ db, schema, level, lang, t, onCorrect, solvedPanel }: 
   const [outcome, setOutcome] = useState<CheckOutcome | null>(null);
   const [running, setRunning] = useState(false);
   const [crash, setCrash] = useState<string | null>(null);
+  const [mistakes, setMistakes] = useState(0);
 
   const completionSchema = useMemo(
     () => Object.fromEntries(schema.map((tbl) => [tbl.table, tbl.columns.map((c) => c.name)])),
@@ -46,7 +47,8 @@ export function Console({ db, schema, level, lang, t, onCorrect, solvedPanel }: 
       const next = await checkAnswer(db, sql, level.solution, level.check);
       setOutcome(next);
       setCrash(null);
-      if (next.verdict.correct) onCorrect();
+      if (next.verdict.correct) onCorrect(mistakes);
+      else setMistakes((n) => n + 1);
     } catch (err) {
       // Only happens when the level's own solution is broken.
       setCrash(String(err));

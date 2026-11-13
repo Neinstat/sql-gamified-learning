@@ -13,7 +13,8 @@ import { WorldModal } from './WorldModal';
 import { LevelNav } from './LevelNav';
 import { Lesson } from './LevelParts';
 import { getDatabase } from './database';
-import { emptyProgress, loadProgress, saveProgress, type Progress } from './progress';
+import { emptyProgress, loadProgress, markSoWhatRight, rewardForSolve, saveProgress, type Progress } from './progress';
+import { SO_WHAT_BONUS, type Reward } from './rewards';
 import { acceptRequest, questStage, reportDone, resumeNewLevels, solveRequest, startLevel } from './quest';
 import { SoWhatCard } from './SoWhatCard';
 
@@ -33,6 +34,8 @@ export function WorldApp() {
   const [dbError, setDbError] = useState<string | null>(null);
   const [schema, setSchema] = useState<Table[]>([]);
   const [hintsUsed, setHintsUsed] = useState(0);
+  /** Stars and coins from the last correct answer at a station. */
+  const [reward, setReward] = useState<Reward | null>(null);
   /** Chapters whose title card was shown this visit. */
   const [seenChapters, setSeenChapters] = useState<number[]>([]);
 
@@ -51,7 +54,10 @@ export function WorldApp() {
   }, [lang]);
   useEffect(() => saveProgress(progress), [progress]);
   // Hints are counted per level.
-  useEffect(() => setHintsUsed(0), [level.id]);
+  useEffect(() => {
+    setHintsUsed(0);
+    setReward(null);
+  }, [level.id]);
 
   // Start loading the café database in the background as soon as the world opens.
   useEffect(() => {
@@ -151,6 +157,9 @@ export function WorldApp() {
       <header className="world-hud">
         <h1 className="world-title">SQL Valley</h1>
         <div className="world-hud-actions">
+          <span className="hud-coins" title={t.coins} aria-label={`${t.coins}: ${progress.coins}`}>
+            🪙 {progress.coins}
+          </span>
           {/* onMouseDown: clicking doesn't keep focus here, so Space still talks in the world. */}
           <button className="hud-button" onMouseDown={noFocus} onClick={() => setOverlay({ kind: 'journal' })}>
             📖 {t.journal}
@@ -222,7 +231,11 @@ export function WorldApp() {
             visible={consoleOpen}
             hintsUsed={hintsUsed}
             onRevealHint={() => setHintsUsed((n) => n + 1)}
-            onCorrect={() => setProgress((p) => solveRequest(p, level.id, hintsUsed))}
+            onCorrect={(mistakes) => {
+              setReward(rewardForSolve(progress, level.id, hintsUsed, mistakes));
+              setProgress((p) => solveRequest(p, level.id, hintsUsed, mistakes));
+            }}
+            reward={reward}
             solvedMessage={t.solvedGoReport(giver)}
             onClose={close}
           />
@@ -247,8 +260,12 @@ export function WorldApp() {
             soWhat={level.soWhat}
             speaker={giver}
             t={t}
-            onDone={() => {
-              setProgress((p) => reportDone(p, levelIds, level.id));
+            bonus={progress.soWhatRight.includes(level.id) ? 0 : SO_WHAT_BONUS}
+            onDone={(right) => {
+              setProgress((p) => {
+                const paid = right ? markSoWhatRight(p, level.id, SO_WHAT_BONUS) : p;
+                return reportDone(paid, levelIds, level.id);
+              });
               close();
             }}
           />

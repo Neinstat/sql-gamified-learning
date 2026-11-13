@@ -1,3 +1,6 @@
+import { findLevel, isCase } from '../sql-core/levels';
+import { coinsFor, rewardFor, type Reward, type Stars } from './rewards';
+
 /**
  * Player progress, saved in this browser (no backend in the MVP).
  * Level ids are the keys, so never rename a released level id.
@@ -5,11 +8,18 @@
 export type Progress = {
   /** Level the player was last on. */
   currentLevelId: string | null;
-  /** Finished levels, with the fewest hints used (kept for stars in Phase 3). */
-  completed: Record<string, { hintsUsed: number }>;
+  /** Finished levels, with the best result so far. */
+  completed: Record<string, LevelRecord>;
   /** Game world only: how far the player is with the current level's request (see quest.ts). */
   quest?: QuestState;
+  /** Coin balance (earned from stars and "So what?" answers; spent on upgrades later). */
+  coins: number;
+  /** Levels whose "So what?" was answered right (the bonus is paid once). */
+  soWhatRight: string[];
 };
+
+/** Best result for a finished level: fewest hints, fewest mistakes, most stars. */
+export type LevelRecord = { hintsUsed: number; mistakes: number; stars: Stars };
 
 export type QuestStage = 'talk' | 'solve' | 'report' | 'done';
 export type QuestState = { levelId: string; stage: QuestStage };
@@ -17,20 +27,32 @@ const STAGES: QuestStage[] = ['talk', 'solve', 'report', 'done'];
 
 const STORAGE_KEY = 'sql-valley.progress.v1';
 
-export const emptyProgress: Progress = { currentLevelId: null, completed: {} };
+export const emptyProgress: Progress = { currentLevelId: null, completed: {}, coins: 0, soWhatRight: [] };
 
 export function loadProgress(): Progress {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) return emptyProgress;
+    return raw ? parseProgress(raw) : emptyProgress;
+  } catch {
+    return emptyProgress;
+  }
+}
+
+/** Read a saved progress string, filling in anything older saves didn't have. */
+export function parseProgress(raw: string): Progress {
+  try {
     const data = JSON.parse(raw) as Partial<Progress>;
+    const completed = readCompleted(data.completed);
     return {
       currentLevelId: typeof data.currentLevelId === 'string' ? data.currentLevelId : null,
-      completed: data.completed && typeof data.completed === 'object' ? data.completed : {},
+      completed,
       quest:
         data.quest && typeof data.quest.levelId === 'string' && STAGES.includes(data.quest.stage)
           ? { levelId: data.quest.levelId, stage: data.quest.stage }
           : undefined,
+      // Saves from before coins existed get the coins their stars are worth.
+      coins: typeof data.coins === 'number' ? data.coins : coinsForAll(completed),
+      soWhatRight: Array.isArray(data.soWhatRight) ? data.soWhatRight.filter((id) => typeof id === 'string') : [],
     };
   } catch {
     return emptyProgress;
@@ -45,8 +67,52 @@ export function saveProgress(progress: Progress): void {
   }
 }
 
-export function markCompleted(progress: Progress, levelId: string, hintsUsed: number): Progress {
+/** Fill in what older saves didn't record: no mistake count (assume some), so at most ⭐⭐. */
+function readCompleted(raw: unknown): Record<string, LevelRecord> {
+  if (!raw || typeof raw !== 'object') return {};
+  const out: Record<string, LevelRecord> = {};
+  for (const [id, value] of Object.entries(raw as Record<string, Partial<LevelRecord>>)) {
+    if (!value || typeof value !== 'object') continue;
+    const hintsUsed = typeof value.hintsUsed === 'number' ? value.hintsUsed : 0;
+    const mistakes = typeof value.mistakes === 'number' ? value.mistakes : 1;
+    const stars = value.stars === 1 || value.stars === 2 || value.stars === 3 ? value.stars : hintsUsed > 0 ? 1 : 2;
+    out[id] = { hintsUsed, mistakes, stars };
+  }
+  return out;
+}
+
+export const levelKind = (levelId: string): 'request' | 'case' => {
+  const level = findLevel(levelId);
+  return level && isCase(level) ? 'case' : 'request';
+};
+
+function coinsForAll(completed: Record<string, LevelRecord>): number {
+  return Object.entries(completed).reduce((sum, [id, r]) => sum + coinsFor(levelKind(id), r.stars), 0);
+}
+
+/** What solving `levelId` now would earn (stars this time, coins above the previous best). */
+export function rewardForSolve(progress: Progress, levelId: string, hintsUsed: number, mistakes: number): Reward {
+  return rewardFor(levelKind(levelId), progress.completed[levelId]?.stars ?? 0, hintsUsed, mistakes);
+}
+
+/** Record a solve: keep the best result and add the coins it earned. */
+export function markCompleted(progress: Progress, levelId: string, hintsUsed: number, mistakes = 0): Progress {
   const previous = progress.completed[levelId];
-  const best = previous ? Math.min(previous.hintsUsed, hintsUsed) : hintsUsed;
-  return { ...progress, completed: { ...progress.completed, [levelId]: { hintsUsed: best } } };
+  const reward = rewardForSolve(progress, levelId, hintsUsed, mistakes);
+  const record: LevelRecord = {
+    hintsUsed: previous ? Math.min(previous.hintsUsed, hintsUsed) : hintsUsed,
+    mistakes: previous ? Math.min(previous.mistakes, mistakes) : mistakes,
+    stars: reward.best,
+  };
+  return {
+    ...progress,
+    completed: { ...progress.completed, [levelId]: record },
+    coins: progress.coins + reward.coins,
+  };
+}
+
+/** A right "So what?" answer: a small bonus, paid once per level. */
+export function markSoWhatRight(progress: Progress, levelId: string, bonus: number): Progress {
+  if (progress.soWhatRight.includes(levelId)) return progress;
+  return { ...progress, coins: progress.coins + bonus, soWhatRight: [...progress.soWhatRight, levelId] };
 }

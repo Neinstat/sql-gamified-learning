@@ -7,6 +7,8 @@ import { Console } from '../console/Console';
 import { CaseConsole } from '../console/CaseConsole';
 import type { Table } from '../console/SchemaPanel';
 import { Hints, Lesson } from './LevelParts';
+import { RewardLine } from './Stars';
+import type { Reward } from './rewards';
 
 type Props = {
   stationName: string;
@@ -22,16 +24,33 @@ type Props = {
   visible: boolean;
   hintsUsed: number;
   onRevealHint: () => void;
-  onCorrect: () => void;
+  /** Correct: `mistakes` = wrong runs (request) or wrong conclusions (Mini Case). */
+  onCorrect: (mistakes: number) => void;
   /** Shown after a correct answer, e.g. "Nice work! Go tell Grandma." */
   solvedMessage: string;
+  /** Stars and coins from the last correct answer. */
+  reward: Reward | null;
   onClose: () => void;
 };
 
 /** The SQL console opened at a station, over the game world. */
 export function ConsoleOverlay(props: Props) {
-  const { stationName, level, db, dbError, schema, lang, t, visible, hintsUsed, onRevealHint, onCorrect, solvedMessage, onClose } =
-    props;
+  const {
+    stationName,
+    level,
+    db,
+    dbError,
+    schema,
+    lang,
+    t,
+    visible,
+    hintsUsed,
+    onRevealHint,
+    onCorrect,
+    solvedMessage,
+    reward,
+    onClose,
+  } = props;
   const [solved, setSolved] = useState(false);
   const [lessonOpen, setLessonOpen] = useState(false);
 
@@ -47,6 +66,7 @@ export function ConsoleOverlay(props: Props) {
 
   const solvedPanelContent = (
     <div className="solved">
+      {reward && <RewardLine reward={reward} isCase={isCase(level)} t={t} />}
       <p className="solved-message">{solvedMessage}</p>
       <button className="primary-button" onClick={onClose}>
         {t.backToCafe}
@@ -84,9 +104,9 @@ export function ConsoleOverlay(props: Props) {
             level={level}
             lang={lang}
             t={t}
-            onSolved={() => {
+            onSolved={(wrongConclusions) => {
               setSolved(true);
-              onCorrect();
+              onCorrect(wrongConclusions);
             }}
             solvedPanel={solved && solvedPanelContent}
           />
@@ -97,9 +117,9 @@ export function ConsoleOverlay(props: Props) {
             level={level}
             lang={lang}
             t={t}
-            onCorrect={() => {
+            onCorrect={(mistakes) => {
               setSolved(true);
-              onCorrect();
+              onCorrect(mistakes);
             }}
             solvedPanel={solved && solvedPanelContent}
           />

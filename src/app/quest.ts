@@ -21,8 +21,8 @@ export function acceptRequest(progress: Progress, levelId: string): Progress {
 }
 
 /** Correct answer at the station: saved as completed, then go back and report. */
-export function solveRequest(progress: Progress, levelId: string, hintsUsed: number): Progress {
-  return { ...markCompleted(progress, levelId, hintsUsed), quest: { levelId, stage: 'report' } };
+export function solveRequest(progress: Progress, levelId: string, hintsUsed: number, mistakes = 0): Progress {
+  return { ...markCompleted(progress, levelId, hintsUsed, mistakes), quest: { levelId, stage: 'report' } };
 }
 
 /** Reported to the character: move on to the next level, or finish if it was the last. */

@@ -15,7 +15,7 @@ describe('quest loop', () => {
 
     p = solveRequest(p, 'ch0-1', 2);
     expect(questStage(p, 'ch0-1')).toBe('report');
-    expect(p.completed['ch0-1']).toEqual({ hintsUsed: 2 });
+    expect(p.completed['ch0-1']).toEqual({ hintsUsed: 2, mistakes: 0, stars: 1 });
 
     p = reportDone(p, ids, 'ch0-1');
     expect(p.currentLevelId).toBe('ch0-2');
@@ -33,7 +33,7 @@ describe('quest loop', () => {
     p = startLevel(reportDone(p, ids, 'ch0-1'), 'ch0-1');
     expect(questStage(p, 'ch0-1')).toBe('talk');
     p = solveRequest(acceptRequest(p, 'ch0-1'), 'ch0-1', 3);
-    expect(p.completed['ch0-1']).toEqual({ hintsUsed: 0 });
+    expect(p.completed['ch0-1']).toEqual({ hintsUsed: 0, mistakes: 0, stars: 3 });
   });
 });
 
@@ -42,16 +42,18 @@ describe('resumeNewLevels', () => {
   it('moves a finished player on to a level added after their last one', () => {
     const done: Progress = {
       currentLevelId: 'b',
-      completed: { a: { hintsUsed: 0 }, b: { hintsUsed: 0 } },
+      completed: {},
+      coins: 0,
+      soWhatRight: [],
       quest: { levelId: 'b', stage: 'done' },
     };
     expect(resumeNewLevels(done, ids).quest).toEqual({ levelId: 'c', stage: 'talk' });
   });
 
   it('leaves everyone else alone', () => {
-    const finished: Progress = { currentLevelId: 'c', completed: {}, quest: { levelId: 'c', stage: 'done' } };
+    const finished: Progress = { ...emptyProgress, currentLevelId: 'c', quest: { levelId: 'c', stage: 'done' } };
     expect(resumeNewLevels(finished, ids)).toBe(finished);
-    const solving: Progress = { currentLevelId: 'b', completed: {}, quest: { levelId: 'b', stage: 'solve' } };
+    const solving: Progress = { ...emptyProgress, currentLevelId: 'b', quest: { levelId: 'b', stage: 'solve' } };
     expect(resumeNewLevels(solving, ids)).toBe(solving);
   });
 });

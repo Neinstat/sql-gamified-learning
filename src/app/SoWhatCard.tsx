@@ -7,28 +7,31 @@ type Props = {
   /** Who asks, e.g. "Grandma". */
   speaker: string;
   t: UiText;
-  onDone: () => void;
+  /** Coins for a right answer (0 once it has been paid). */
+  bonus: number;
+  onDone: (right: boolean) => void;
 };
 
 /**
  * "So what?" (GAME_DESIGN.md §5): after reporting, the character asks what the result means.
  * Any choice shows the explanation; it never blocks progress.
  */
-export function SoWhatCard({ soWhat, speaker, t, onDone }: Props) {
+export function SoWhatCard({ soWhat, speaker, t, bonus, onDone }: Props) {
   const [picked, setPicked] = useState<number | null>(null);
   const answered = picked !== null;
+  const right = picked === soWhat.answer;
 
   useEffect(() => {
     if (!answered) return;
     const onKey = (event: KeyboardEvent) => {
       if (event.key === 'Enter' || event.key === 'Escape') {
         event.preventDefault();
-        onDone();
+        onDone(right);
       }
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [answered, onDone]);
+  }, [answered, right, onDone]);
 
   return (
     <div className="world-modal-backdrop">
@@ -50,9 +53,10 @@ export function SoWhatCard({ soWhat, speaker, t, onDone }: Props) {
         {answered && (
           <>
             <p className="so-what-explanation" role="status">
-              <strong>{picked === soWhat.answer ? t.soWhatRight : t.soWhatWrong}</strong> {soWhat.explanation}
+              <strong>{right ? t.soWhatRight : t.soWhatWrong}</strong> {soWhat.explanation}
             </p>
-            <button className="primary-button" onClick={onDone} autoFocus>
+            {right && bonus > 0 && <p className="reward-coins so-what-bonus">{t.coinsBonus(bonus)}</p>}
+            <button className="primary-button" onClick={() => onDone(right)} autoFocus>
               {t.continue}
             </button>
           </>
