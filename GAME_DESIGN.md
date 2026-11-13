@@ -50,13 +50,29 @@ Game ditampilkan sebagai **dunia 2D dengan kamera dari atas** (genre seperti gam
 
 | Lokasi (in-game) | Stasiun / konsol | Tabel yang bisa diakses |
 |---|---|---|
+| 🪧 Front area | Menu board (papan menu) | `menu_items` |
 | 🧾 Front counter | Cash register | `sales`, `customers` |
-| 🍳 Kitchen | Recipe book | `menu_items`, `recipes` |
+| 🍳 Kitchen | Recipe book | `recipes` (+ `menu_items` untuk JOIN) |
 | 📦 Storeroom | Stock ledger | `inventory`, `suppliers` |
 | 🗂 Back office | Grandma's computer | Semua tabel (Analysis Case) |
 
 - **Ruangan terbuka bertahap** mengikuti chapter — membuka ruangan baru adalah bagian dari sistem progres.
 - Konsol tampil sebagai **panel overlay** di atas dunia game (dunia tetap terlihat di belakang).
+- **Kontrol:** keyboard (WASD/panah untuk berjalan, E/Spasi untuk bicara/membuka stasiun) **dan** klik/tap tujuan untuk berjalan (pathfinding di grid), sehingga bisa dimainkan di desktop maupun HP. Klik/tap pada NPC atau stasiun = berjalan ke sana lalu berinteraksi.
+
+### Gaya visual & aset
+- **Pixel art cozy** ala game simulasi/bertani top-down — hanya *konvensi ukurannya* yang diikuti; gambar, karakter, dan warna tetap **orisinal**.
+
+| Jenis aset | Ukuran (px) | Keterangan |
+|---|---|---|
+| Tile peta (lantai, dinding, rumput, jalan) | 16×16 | Satu kotak grid |
+| Item & ikon kecil | 16×16 | Ikon menu, cangkir, dll. |
+| Karakter (pemain & NPC) | 16×32 | Tinggi dua tile |
+| Potret dialog | 64×64 | Wajah tokoh di kotak dialog |
+| Objek tinggi & furnitur | 16×32 atau 32×32 | Counter, mesin kopi, rak, papan menu |
+
+- Ditampilkan dengan **zoom bulat** (mis. 3×) dan `pixelArt: true` agar piksel tetap tajam.
+- **Sumber aset Fase 2: placeholder.** Tile dari pack **CC0** (kandidat: Kenney, 16×16) dan sprite karakter/potret placeholder sederhana buatan sendiri. Fokus Fase 2 adalah mekanik; aset final diganti di Fase 3 atau nanti. Setiap aset pihak ketiga dicatat sumber + lisensinya di `CREDITS.md`.
 
 ## 4. Core loop (per level)
 
@@ -132,7 +148,7 @@ Di luar MVP (nanti): subquery, CTE, window function, analisis waktu lanjutan (Mo
 | Topik | Keputusan | Alasan |
 |---|---|---|
 | Platform | **Web app** di browser | Mudah diakses, mudah dibagikan |
-| Dunia game | **Game engine 2D untuk web** (kandidat utama: Phaser) + tilemap | Dunia top-down, karakter berjalan, NPC, animasi |
+| Dunia game | **Phaser 3** + tilemap (diputuskan di perencanaan Fase 2) | Dunia top-down, karakter berjalan, NPC, animasi |
 | Konsol SQL | **UI HTML di atas canvas game** (editor kode di DOM) | Editor, autocomplete, dan tabel hasil jauh lebih mudah dibuat dengan HTML daripada di dalam canvas |
 | Arsitektur | **Inti SQL terpisah dari dunia game** | Inti SQL (database, validasi, data level) bisa dibangun dan dites lebih dulu, lalu dipanggil oleh dunia game |
 | Backend | **Tanpa backend** untuk MVP | Gratis di-hosting, cepat jadi; progres disimpan lokal di browser |
@@ -150,6 +166,12 @@ Di luar MVP (nanti): subquery, CTE, window function, analisis waktu lanjutan (Mo
 - `src/sql-core/` — database (PGlite), pengecek jawaban, tipe & data level. **Tidak boleh** meng-import React atau game engine.
 - `src/console/` — UI konsol (React): editor, input blok, isi kosong, tabel hasil, hint.
 - `src/app/` — halaman sederhana: daftar level, alur level, progres (localStorage).
+
+### Struktur kode (tambahan Fase 2)
+- `src/sql-core/stations.ts` — daftar stasiun dan tabel yang boleh diakses tiap stasiun (data murni, tanpa engine). Level mendapat field `station`.
+- `src/game/` — Phaser: scene ruangan, pemain, NPC, stasiun, pathfinding. **Tidak boleh** meng-import React.
+- `src/game/bridge.ts` — penghubung kecil (event) antara Phaser dan React: "bicara dengan NPC", "buka stasiun", "overlay ditutup". Saat overlay terbuka, input keyboard Phaser dimatikan agar mengetik SQL tidak menggerakkan karakter.
+- `src/app/` — React membungkus kanvas game dan menampilkan overlay (dialog, konsol, daftar level).
 
 ### Pengecek jawaban
 - Query pemain dan query jawaban resmi dijalankan di database yang sama; **hasilnya** yang dibandingkan.
@@ -179,7 +201,7 @@ Tes otomatis memeriksa semua level: jawaban resmi bisa dijalankan, blok yang dis
 
 Dibangun bertahap — setiap fase menghasilkan sesuatu yang bisa dimainkan.
 
-**Status (13 Nov 2026):** ✅ **Fase 1 selesai.** Chapter 0–1 (10 level) bisa dimainkan dalam EN/ID, dengan pengecek jawaban, hint, progres tersimpan, dan 110 tes otomatis. Pemilik project sudah uji main dan menyetujui rasa belajarnya. Berikutnya: **Fase 2**.
+**Status (13 Nov 2026):** ✅ **Fase 1 selesai.** Chapter 0–1 (10 level) bisa dimainkan dalam EN/ID, dengan pengecek jawaban, hint, progres tersimpan, dan 110 tes otomatis. Pemilik project sudah uji main dan menyetujui rasa belajarnya. 🚧 **Fase 2 sedang berjalan** — rencana dan keputusan ada di "Rencana Fase 2" di bawah.
 
 Catatan dari Fase 1 untuk fase berikutnya:
 - Ukuran unduhan pertama PGlite besar (±3,5 MB wasm terkompresi + 6 MB data) — perlu layar loading yang jelas dan dicek saat memilih hosting.
@@ -189,19 +211,41 @@ Catatan dari Fase 1 untuk fase berikutnya:
 | Fase | Isi | Selesai jika… |
 |---|---|---|
 | **1. Inti SQL** | PGlite + data kafe, pengecek jawaban, format data level, konsol SQL (input blok → isi kosong → bebas), Chapter 0–1, pilihan bahasa EN/ID | Chapter 0–1 bisa dimainkan lengkap di halaman sederhana, dan rasa belajarnya sudah enak |
-| **2. Dunia pertama** | Game engine, satu ruangan (area depan + front counter), karakter berjalan, Grandma sebagai NPC, dialog, konsol terbuka dari stasiun | Pemain bisa jalan → bicara dengan Grandma → ke cash register → menyelesaikan level Chapter 0–1 di dalam dunia game |
+| **2. Dunia pertama** | Game engine, satu ruangan (area depan + front counter), karakter berjalan, Grandma sebagai NPC, dialog, konsol terbuka dari stasiun | Pemain bisa jalan → bicara dengan Grandma → ke menu board → menyelesaikan level Chapter 0–1 di dalam dunia game |
 | **3. Kafe tumbuh** | Kitchen, storeroom, back office; Chapter 2–5; koin, upgrade, bintang, streak, Rush Hour, Analysis Case | MVP lengkap Chapter 0–5 |
 | **Nanti** | Skill Check, materi lanjutan, leaderboard (butuh backend), audio, polesan | — |
+
+### Rencana Fase 2 — Dunia pertama
+
+Keputusan: Phaser 3 · pixel art 16 px (karakter 16×32, potret 64×64) · aset placeholder CC0 · keyboard + klik/tap · stasiun baru **Menu board** di area depan untuk `menu_items` (semua level Chapter 0–1).
+
+Satu ruangan: area depan kafe (pintu, meja pelanggan, menu board) + front counter (cash register). Cash register sudah bisa dibuka untuk melihat `sales`/`customers`, tapi belum ada level di sana sampai Chapter 3.
+
+Iterasi kecil, masing-masing: kerjakan → cek di browser → commit & push.
+
+| # | Iterasi | Selesai jika… |
+|---|---|---|
+| 2.1 | Pasang Phaser; kanvas game di halaman React; ruangan placeholder dari tilemap 16 px (zoom 3×) | Ruangan kafe tampil tajam di browser; halaman Fase 1 masih bisa dibuka di `?classic` selama transisi |
+| 2.2 | Pemain 16×32 berjalan dengan WASD/panah; tabrakan dengan dinding & furnitur; kamera mengikuti | Bisa berkeliling ruangan tanpa menembus objek |
+| 2.3 | Klik/tap untuk berjalan (pathfinding A* di grid) | Klik/tap lantai → pemain berjalan memutari halangan |
+| 2.4 | Grandma sebagai NPC + sistem interaksi (penanda "E" saat dekat) + kotak dialog React dengan potret 64×64 | Bicara dengan Grandma menampilkan dialog level aktif (EN/ID) |
+| 2.5 | `stations.ts` + field `station` di level; konsol sebagai overlay yang dibuka dari stasiun; daftar tabel difilter per stasiun; keyboard Phaser dimatikan saat overlay terbuka | Menu board membuka konsol berisi `menu_items`; tes memastikan setiap jawaban level hanya memakai tabel dari stasiunnya |
+| 2.6 | Alur level di dunia: penanda "!" di atas Grandma → dialog + kartu materi → penanda di stasiun → konsol → benar → kembali ke Grandma untuk ucapan sukses → level berikutnya. Hint, progres, dan daftar level (sebagai menu "Journal") tetap jalan | Chapter 0–1 bisa diselesaikan seluruhnya di dalam dunia game |
+| 2.7 | Layar loading (PGlite besar), tata letak overlay di HP, tombol bahasa & menu di HUD | Bisa dimainkan nyaman di desktop dan HP |
+| 2.8 | Uji main pemilik project, perbaikan, README, status | Pemilik project menyetujui → Fase 2 selesai |
+
+Di luar Fase 2: kitchen/storeroom/back office, koin & upgrade, NPC pelanggan berjalan, aset final, audio, PGlite di Web Worker.
 
 ## 13. Pertanyaan terbuka
 
 - [x] Framework UI konsol — **React** (diputuskan di perencanaan Fase 1)
-- [ ] Game engine final (kandidat: Phaser) — diputuskan saat perencanaan Fase 2
-- [ ] Gaya visual (mis. pixel art) dan sumber aset — sprite/tileset orisinal atau asset pack berlisensi jelas
-- [ ] Kontrol: keyboard (WASD/panah) saja, atau juga klik/tap untuk berjalan (mobile)?
+- [x] Game engine final — **Phaser 3** (perencanaan Fase 2)
+- [x] Gaya visual — **pixel art 16 px** (karakter 16×32, potret 64×64); sumber aset Fase 2 — **placeholder CC0 + buatan sendiri** (lihat §3)
+- [x] Kontrol — **keyboard + klik/tap** untuk berjalan (lihat §3)
+- [ ] Aset final: buat sendiri atau beli asset pack berlisensi komersial — diputuskan di Fase 3
 - [x] Mata uang — **$ (USD)**
 - [ ] Nuansa setting kota (generik/internasional, atau ada sentuhan lokal tertentu)
 - [ ] Isi detail tiap level (dialog, data, jawaban) per chapter — Chapter 0 (4 level) dan Chapter 1 (6 level) sudah ditulis, lengkap dengan terjemahan Indonesia
-- [ ] **Stasiun untuk Chapter 0–1**: level Chapter 0–1 memakai `menu_items`, yang menurut §3 ada di Kitchen. Padahal Fase 2 hanya membangun front counter (cash register: `sales`, `customers`). Pilihan: cash register juga bisa membaca `menu_items` (realistis, kasir perlu harga menu), atau Kitchen ikut dibangun di Fase 2. Diputuskan saat perencanaan Fase 2.
+- [x] **Stasiun untuk Chapter 0–1** — stasiun baru **Menu board** di area depan membaca `menu_items` (cocok dengan cerita "Cleaning Up the Menu"); Kitchen tetap untuk `recipes` di Fase 3
 - [ ] Bentuk Skill Check (berapa soal, bagaimana menentukan chapter awal)
 - [ ] Hosting (mis. GitHub Pages / Vercel / Netlify)
