@@ -1,4 +1,5 @@
 import type { CheckOptions } from '../checker';
+import type { StationId } from '../stations';
 
 /** People in the café who give the player requests. */
 export type CharacterId = 'grandma' | 'barista' | 'supplier' | 'regular';
@@ -39,6 +40,8 @@ export type Level = {
   id: string;
   title: string;
   character: CharacterId;
+  /** Where in the café the player solves it: the station's console must see the tables used. */
+  station: StationId;
   /** Short teaching card shown before the request (new SQL idea for this level). */
   lesson?: { title: string; body: string[]; example?: string };
   /** What the character says, line by line. */

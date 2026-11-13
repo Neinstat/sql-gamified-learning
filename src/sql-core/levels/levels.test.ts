@@ -6,6 +6,7 @@ import { beforeAll, describe, expect, it } from 'vitest';
 import { createCafeDatabase, type CafeDatabase } from '../db';
 import { checkAnswer } from '../checker';
 import { allLevels, chapters, BLANK } from './index';
+import { STATIONS, tablesInQuery } from '../stations';
 
 /** Split SQL into the pieces a block puzzle would use: words, commas, brackets. */
 function tokens(sql: string): string[] {
@@ -35,6 +36,12 @@ describe('level data', () => {
         expect(level.task.trim()).not.toBe('');
         expect(level.hints).toHaveLength(3);
         for (const hint of level.hints) expect(hint.trim()).not.toBe('');
+      });
+
+      it("only uses tables its station's console can see", () => {
+        const used = tablesInQuery(level.solution);
+        expect(used.length).toBeGreaterThan(0);
+        for (const table of used) expect(STATIONS[level.station].tables).toContain(table);
       });
 
       it('ends its solution (and template) with a semicolon', () => {

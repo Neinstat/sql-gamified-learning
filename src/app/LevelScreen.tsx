@@ -4,6 +4,7 @@ import type { Lang } from '../sql-core/feedback';
 import type { Chapter, Level } from '../sql-core/levels';
 import type { UiText } from '../i18n';
 import { Console } from '../console/Console';
+import { Dialogue, Hints, Lesson } from './LevelParts';
 import type { Table } from '../console/SchemaPanel';
 
 type Props = {
@@ -94,46 +95,5 @@ export function LevelScreen({ level, chapter, levelNumber, db, schema, lang, t, 
         </>
       )}
     </article>
-  );
-}
-
-/** Hints are revealed one at a time: general direction → clause → almost the answer. */
-function Hints({ hints, used, onReveal, t }: { hints: string[]; used: number; onReveal: () => void; t: UiText }) {
-  return (
-    <div className="hints">
-      {hints.slice(0, used).map((hint, i) => (
-        <p key={i} className="hint">
-          <span className="hint-label">💡 {t.hintTitle(i + 1)}</span> {hint}
-        </p>
-      ))}
-      {used < hints.length && (
-        <button className="link-button" onClick={onReveal}>
-          {t.hintButton(used, hints.length)}
-        </button>
-      )}
-    </div>
-  );
-}
-
-function Dialogue({ speaker, lines }: { speaker: string; lines: string[] }) {
-  return (
-    <div className="dialogue">
-      <span className="speaker">{speaker}</span>
-      {lines.map((line, i) => (
-        <p key={i}>{line}</p>
-      ))}
-    </div>
-  );
-}
-
-function Lesson({ lesson }: { lesson: NonNullable<Level['lesson']> }) {
-  return (
-    <section className="lesson">
-      <h3 className="lesson-title">📘 {lesson.title}</h3>
-      {lesson.body.map((p, i) => (
-        <p key={i}>{p}</p>
-      ))}
-      {lesson.example && <pre className="lesson-example">{lesson.example}</pre>}
-    </section>
   );
 }

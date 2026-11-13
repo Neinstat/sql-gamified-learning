@@ -3,7 +3,8 @@ import { placeholderPortrait } from '../game/placeholderPortraits';
 import type { UiText } from '../i18n';
 
 type Props = {
-  character: string;
+  /** Whose portrait to show; none for things like stations. */
+  character?: string;
   speaker: string;
   lines: string[];
   t: UiText;
@@ -13,7 +14,7 @@ type Props = {
 /** A character speaking, one line at a time, over the game world. */
 export function DialogueBox({ character, speaker, lines, t, onClose }: Props) {
   const [index, setIndex] = useState(0);
-  const portrait = useMemo(() => placeholderPortrait(character), [character]);
+  const portrait = useMemo(() => (character ? placeholderPortrait(character) : null), [character]);
   const isLast = index >= lines.length - 1;
 
   const advance = () => (isLast ? onClose() : setIndex((i) => i + 1));
@@ -34,7 +35,7 @@ export function DialogueBox({ character, speaker, lines, t, onClose }: Props) {
 
   return (
     <div className="dialogue-box" role="dialog" aria-label={speaker} onClick={advance}>
-      <img className="dialogue-portrait" src={portrait} alt="" width={64} height={64} />
+      {portrait && <img className="dialogue-portrait" src={portrait} alt="" width={64} height={64} />}
       <div className="dialogue-body">
         <span className="speaker">{speaker}</span>
         <p className="dialogue-line" aria-live="polite">

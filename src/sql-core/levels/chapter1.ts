@@ -14,6 +14,7 @@ export const chapter1: Chapter = {
       id: 'ch1-1',
       title: 'Cheap Treats',
       character: 'grandma',
+      station: 'menu-board',
       lesson: {
         title: 'Filtering rows with WHERE',
         body: [
@@ -44,6 +45,7 @@ export const chapter1: Chapter = {
       id: 'ch1-2',
       title: 'Just Coffee',
       character: 'barista',
+      station: 'menu-board',
       lesson: {
         title: 'Text needs quotes',
         body: [
@@ -74,6 +76,7 @@ export const chapter1: Chapter = {
       id: 'ch1-3',
       title: 'On the Board Today',
       character: 'barista',
+      station: 'menu-board',
       lesson: {
         title: 'Two conditions with AND',
         body: [
@@ -104,6 +107,7 @@ export const chapter1: Chapter = {
       id: 'ch1-4',
       title: 'Tea Time',
       character: 'grandma',
+      station: 'menu-board',
       lesson: {
         title: 'One of several values: IN',
         body: [
@@ -134,6 +138,7 @@ export const chapter1: Chapter = {
       id: 'ch1-5',
       title: 'Chocolate Lover',
       character: 'regular',
+      station: 'menu-board',
       lesson: {
         title: 'Searching text with LIKE',
         body: [
@@ -164,6 +169,7 @@ export const chapter1: Chapter = {
       id: 'ch1-6',
       title: 'Missing Pieces',
       character: 'grandma',
+      station: 'menu-board',
       lesson: {
         title: 'Empty values: IS NULL',
         body: [

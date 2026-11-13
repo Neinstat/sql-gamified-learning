@@ -707,3 +707,66 @@ body {
     justify-content: flex-end;
   }
 }
+
+/* SQL console over the world */
+.console-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 20;
+  display: flex;
+  justify-content: center;
+  padding: 16px;
+  overflow-y: auto;
+  background: rgba(43, 33, 28, 0.55);
+}
+
+.console-overlay[hidden] {
+  display: none;
+}
+
+.console-panel {
+  width: min(1100px, 100%);
+  height: max-content;
+  padding: 16px 20px 24px;
+  color: var(--ink);
+  background: var(--bg);
+  border: 3px solid #5b4033;
+  border-radius: 10px;
+}
+
+.console-panel-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.console-panel-title {
+  margin: 0;
+  font-size: 1.25rem;
+  color: var(--accent);
+}
+
+.close-button {
+  width: 36px;
+  height: 36px;
+  font-size: 1.1rem;
+  color: var(--ink);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+@media (max-width: 520px) {
+  .console-overlay {
+    padding: 0;
+  }
+
+  .console-panel {
+    min-height: 100%;
+    padding: 12px 16px 24px;
+    border: none;
+    border-radius: 0;
+  }
+}

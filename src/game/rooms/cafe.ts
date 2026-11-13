@@ -82,6 +82,12 @@ export const BLOCKING_TILES: readonly number[] = [
 /** People standing in the room (tile coordinates). They block the tile they stand on. */
 export const NPCS = [{ id: 'grandma', tile: { x: 11, y: 4 } }] as const;
 
+/** Stations (SQL consoles), placed on furniture tiles: the menu board and the cash register. */
+export const STATION_SPOTS = [
+  { id: 'menu-board', mapChar: 'M' },
+  { id: 'cash-register', mapChar: 'R' },
+] as const;
+
 /** Where the player appears: just inside the door (tile coordinates, can be fractional). */
 export const PLAYER_START = { x: 10, y: 10 };
 

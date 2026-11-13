@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { BLOCKING_TILES, CAFE_MAP, NPCS, PLAYER_START, TILE_COUNT, findTiles, furnitureLayer, groundLayer, walkableGrid } from './cafe';
+import { BLOCKING_TILES, CAFE_MAP, NPCS, PLAYER_START, STATION_SPOTS, TILE_COUNT, findTiles, furnitureLayer, groundLayer, walkableGrid } from './cafe';
 
 describe('café map', () => {
   it('has rows of equal width', () => {
@@ -49,6 +49,18 @@ describe('NPCs', () => {
       expect(walkable[tile.y][tile.x]).toBe(false);
       const neighbours = [[1, 0], [-1, 0], [0, 1], [0, -1]].filter(([dx, dy]) => walkable[tile.y + dy][tile.x + dx]);
       expect(neighbours.length).toBeGreaterThan(0);
+    }
+  });
+});
+
+describe('stations', () => {
+  it('each sit on exactly one tile that the player can stand next to', () => {
+    const walkable = walkableGrid();
+    for (const { mapChar } of STATION_SPOTS) {
+      const tiles = findTiles(mapChar);
+      expect(tiles).toHaveLength(1);
+      const [{ x, y }] = tiles;
+      expect([[1, 0], [-1, 0], [0, 1], [0, -1]].some(([dx, dy]) => walkable[y + dy][x + dx])).toBe(true);
     }
   });
 });

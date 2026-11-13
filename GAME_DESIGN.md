@@ -170,7 +170,9 @@ Di luar MVP (nanti): subquery, CTE, window function, analisis waktu lanjutan (Mo
 - `src/app/` — halaman sederhana: daftar level, alur level, progres (localStorage).
 
 ### Struktur kode (tambahan Fase 2)
-- `src/sql-core/stations.ts` — daftar stasiun dan tabel yang boleh diakses tiap stasiun (data murni, tanpa engine). Level mendapat field `station`.
+- `src/sql-core/stations.ts` — daftar stasiun dan tabel yang boleh diakses tiap stasiun (data murni, tanpa engine). Level mendapat field `station`; tes memastikan jawaban resmi tiap level hanya memakai tabel stasiunnya.
+- Konsol di stasiun hanya **menampilkan** tabel milik stasiun itu. Query ke tabel lain belum diblokir — diputuskan saat stasiun kedua punya level (Fase 3).
+- Konsol terbuka hanya di stasiun tempat tugas aktif dikerjakan; stasiun lain menampilkan pesan singkat. Konsol tetap tersimpan selama level yang sama, jadi query yang sedang disusun tidak hilang saat konsol ditutup (Esc atau ✕).
 - `src/game/` — Phaser: scene ruangan, pemain, NPC, stasiun, pathfinding. **Tidak boleh** meng-import React.
 - `src/game/bridge.ts` — penghubung kecil (event) antara Phaser dan React: "bicara dengan NPC", "buka stasiun", "overlay ditutup". Saat overlay terbuka, input keyboard Phaser dimatikan agar mengetik SQL tidak menggerakkan karakter.
 - `src/app/` — React membungkus kanvas game dan menampilkan overlay (dialog, konsol, daftar level).
@@ -203,7 +205,7 @@ Tes otomatis memeriksa semua level: jawaban resmi bisa dijalankan, blok yang dis
 
 Dibangun bertahap — setiap fase menghasilkan sesuatu yang bisa dimainkan.
 
-**Status (13 Nov 2026):** ✅ **Fase 1 selesai.** Chapter 0–1 (10 level) bisa dimainkan dalam EN/ID, dengan pengecek jawaban, hint, progres tersimpan, dan 110 tes otomatis. Pemilik project sudah uji main dan menyetujui rasa belajarnya. 🚧 **Fase 2 sedang berjalan** — rencana dan keputusan ada di "Rencana Fase 2" di bawah. Selesai: 2.1–2.4.
+**Status (13 Nov 2026):** ✅ **Fase 1 selesai.** Chapter 0–1 (10 level) bisa dimainkan dalam EN/ID, dengan pengecek jawaban, hint, progres tersimpan, dan 110 tes otomatis. Pemilik project sudah uji main dan menyetujui rasa belajarnya. 🚧 **Fase 2 sedang berjalan** — rencana dan keputusan ada di "Rencana Fase 2" di bawah. Selesai: 2.1–2.5.
 
 Catatan dari Fase 1 untuk fase berikutnya:
 - Ukuran unduhan pertama PGlite besar (±3,5 MB wasm terkompresi + 6 MB data) — perlu layar loading yang jelas dan dicek saat memilih hosting.
@@ -221,7 +223,7 @@ Catatan dari Fase 1 untuk fase berikutnya:
 
 Keputusan: Phaser 3 · pixel art 16 px (karakter 16×32, potret 64×64) · aset placeholder CC0 · keyboard + klik/tap · stasiun baru **Menu board** di area depan untuk `menu_items` (semua level Chapter 0–1).
 
-Satu ruangan: area depan kafe (pintu, meja pelanggan, menu board) + front counter (cash register). Cash register sudah bisa dibuka untuk melihat `sales`/`customers`, tapi belum ada level di sana sampai Chapter 3.
+Satu ruangan: area depan kafe (pintu, meja pelanggan, menu board) + front counter (cash register). Cash register sudah ada di dunia, tapi **belum dibuka**: tabel `sales`/`customers` baru dibuat di Fase 3, jadi untuk sementara stasiun ini hanya menampilkan pesan singkat. Stasiun otomatis terbuka begitu tabelnya ada di database.
 
 Iterasi kecil, masing-masing: kerjakan → cek di browser → commit & push.
 
@@ -231,7 +233,7 @@ Iterasi kecil, masing-masing: kerjakan → cek di browser → commit & push.
 | 2.2 ✅ | Pemain 16×32 berjalan dengan WASD/panah; tabrakan dengan dinding & furnitur; kamera mengikuti | Bisa berkeliling ruangan tanpa menembus objek |
 | 2.3 ✅ | Klik/tap untuk berjalan (pathfinding di grid) | Klik/tap lantai → pemain berjalan memutari halangan |
 | 2.4 ✅ | Grandma sebagai NPC + sistem interaksi (gelembung "…" saat dekat; E/Spasi/klik untuk bicara) + kotak dialog React dengan potret 64×64 | Bicara dengan Grandma menampilkan dialog level aktif (EN/ID) |
-| 2.5 | `stations.ts` + field `station` di level; konsol sebagai overlay yang dibuka dari stasiun; daftar tabel difilter per stasiun; keyboard Phaser dimatikan saat overlay terbuka | Menu board membuka konsol berisi `menu_items`; tes memastikan setiap jawaban level hanya memakai tabel dari stasiunnya |
+| 2.5 ✅ | `stations.ts` + field `station` di level; konsol sebagai overlay yang dibuka dari stasiun; daftar tabel difilter per stasiun; keyboard Phaser dimatikan saat overlay terbuka | Menu board membuka konsol berisi `menu_items`; tes memastikan setiap jawaban level hanya memakai tabel dari stasiunnya |
 | 2.6 | Alur level di dunia: penanda "!" di atas Grandma → dialog + kartu materi → penanda di stasiun → konsol → benar → kembali ke Grandma untuk ucapan sukses → level berikutnya. Hint, progres, dan daftar level (sebagai menu "Journal") tetap jalan | Chapter 0–1 bisa diselesaikan seluruhnya di dalam dunia game |
 | 2.7 | Layar loading (PGlite besar), tata letak overlay di HP, tombol bahasa & menu di HUD | Bisa dimainkan nyaman di desktop dan HP |
 | 2.8 | Uji main pemilik project, perbaikan, README, status | Pemilik project menyetujui → Fase 2 selesai |

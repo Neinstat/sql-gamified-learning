@@ -4,7 +4,9 @@ import {
   CAFE_MAP,
   NPCS,
   PLAYER_START,
+  STATION_SPOTS,
   TILE_SIZE,
+  findTiles,
   furnitureLayer,
   groundLayer,
   walkableGrid,
@@ -15,7 +17,7 @@ import { LOOKS } from './placeholderSprites';
 import { Player } from './Player';
 import { Npc } from './Npc';
 import { nearestInteractable } from './interaction';
-import type { GameBridge } from './bridge';
+import type { GameBridge, InteractTarget } from './bridge';
 
 const TILESET_KEY = 'cafe-tiles';
 const PROMPT_KEY = 'talk-prompt';
@@ -29,19 +31,32 @@ const REOPEN_DELAY_MS = 250;
 const tileToFeet = (t: Tile) => ({ x: t.x * TILE_SIZE + TILE_SIZE / 2, y: t.y * TILE_SIZE + 12 });
 const toTile = (p: { x: number; y: number }) => ({ x: Math.floor(p.x / TILE_SIZE), y: Math.floor(p.y / TILE_SIZE) });
 
+/** Something the player can use: an NPC to talk to, or a station with a SQL console. */
+type Target = InteractTarget & {
+  /** Centre of its tile: talk range is measured from here. */
+  x: number;
+  y: number;
+  /** Where the "…" bubble sits (its bottom edge). */
+  promptX: number;
+  promptY: number;
+  npc?: Npc;
+  /** Click/tap area. */
+  hit: () => Phaser.Geom.Rectangle;
+};
+
 /** The café's front room. */
 export class CafeScene extends Phaser.Scene {
   private bridge!: GameBridge;
   private player!: Player;
   private npcs: Npc[] = [];
+  private targets: Target[] = [];
   private walkable = walkableGrid();
   private marker?: Phaser.GameObjects.Rectangle;
   private prompt!: Phaser.GameObjects.Image;
-  private talkKeys: Phaser.Input.Keyboard.Key[] = [];
   private locked = false;
   private talkBlockedUntil = 0;
-  /** NPC the player clicked on: talk to them on arrival. */
-  private pendingTalk: Npc | null = null;
+  /** Target the player clicked on: use it on arrival. */
+  private pendingUse: Target | null = null;
   private talkingTo: Npc | null = null;
 
   constructor() {
@@ -76,11 +91,38 @@ export class CafeScene extends Phaser.Scene {
     this.player = new Player(this, PLAYER_START.x * TILE_SIZE, (PLAYER_START.y + 1) * TILE_SIZE - 2);
     this.npcs = NPCS.map((npc) => new Npc(this, npc.id, npc.tile, LOOKS[npc.id]));
     for (const obstacle of [...layers, ...this.npcs]) this.physics.add.collider(this.player, obstacle);
+    this.targets = [
+      ...this.npcs.map(
+        (npc): Target => ({
+          kind: 'npc',
+          id: npc.id,
+          ...npc.spot,
+          promptX: npc.x,
+          promptY: npc.y - 34,
+          npc,
+          hit: () => npc.getBounds(),
+        }),
+      ),
+      ...STATION_SPOTS.map(({ id, mapChar }): Target => {
+        const [tile] = findTiles(mapChar);
+        const box = new Phaser.Geom.Rectangle(tile.x * TILE_SIZE, tile.y * TILE_SIZE, TILE_SIZE, TILE_SIZE);
+        return {
+          kind: 'station',
+          id,
+          x: box.centerX,
+          y: box.centerY,
+          promptX: box.centerX,
+          promptY: box.y - 1,
+          hit: () => box,
+        };
+      }),
+    ];
 
     this.prompt = this.add.image(0, 0, PROMPT_KEY).setOrigin(0.5, 1).setVisible(false).setDepth(10_000);
     this.tweens.add({ targets: this.prompt, y: '-=2', duration: 500, yoyo: true, repeat: -1, ease: 'Sine.inOut' });
 
-    this.talkKeys = ['E', 'SPACE', 'ENTER'].map((key) => this.input.keyboard!.addKey(key, false));
+    // Key events (not polling), so even a very quick tap between two frames is noticed.
+    for (const key of ['E', 'SPACE', 'ENTER']) this.input.keyboard!.on(`keydown-${key}`, () => this.onTalkKey());
     this.input.on('pointerdown', (pointer: Phaser.Input.Pointer) => this.onPointer(pointer.worldX, pointer.worldY));
     this.player.on('path-end', (arrived: boolean) => this.onPathEnd(arrived));
 
@@ -98,34 +140,41 @@ export class CafeScene extends Phaser.Scene {
 
   update(): void {
     if (this.locked) return;
-    const near = nearestInteractable(
-      this.player.feet,
-      this.npcs.map((npc) => ({ id: npc.id, x: npc.spot.x, y: npc.spot.y, npc })),
-    )?.npc;
+    const near = nearestInteractable(this.player.feet, this.targets);
 
     if (near) {
       this.prompt.setVisible(true);
-      this.prompt.x = near.x;
-      // Keep the bob tween's offset: only reset y when the prompt moves to a new NPC.
+      this.prompt.x = near.promptX;
+      // Keep the bob tween's offset: only reset y when the prompt moves to a new target.
       if (this.prompt.getData('for') !== near.id) {
-        this.prompt.y = near.y - 34;
+        this.prompt.y = near.promptY;
         this.prompt.setData('for', near.id);
       }
     } else {
       this.prompt.setVisible(false).setData('for', null);
     }
-
-    const talkPressed = this.talkKeys.some((key) => Phaser.Input.Keyboard.JustDown(key));
-    // Same clock as talkBlockedUntil (the scene clock), never the loop time.
-    if (near && talkPressed && this.time.now >= this.talkBlockedUntil) this.talkTo(near);
   }
 
-  private talkTo(npc: Npc): void {
-    this.pendingTalk = null;
-    this.talkingTo = npc;
-    this.player.lookAt(npc.spot);
-    npc.lookAt(this.player.feet);
-    this.bridge.emit('interact', { kind: 'npc', id: npc.id });
+  private onTalkKey(): void {
+    // Same clock as talkBlockedUntil (the scene clock), never the loop time.
+    if (this.locked || this.time.now < this.talkBlockedUntil) return;
+    const near = nearestInteractable(this.player.feet, this.targets);
+    if (near) this.use(near);
+  }
+
+  /** Talk to an NPC or open a station: the React side shows the matching overlay. */
+  private use(target: Target): void {
+    this.pendingUse = null;
+    this.player.lookAt(target);
+    if (target.npc) {
+      this.talkingTo = target.npc;
+      target.npc.lookAt(this.player.feet);
+    }
+    this.bridge.emit('interact', { kind: target.kind, id: target.id });
+  }
+
+  private inRange(target: Target): boolean {
+    return nearestInteractable(this.player.feet, [target]) !== null;
   }
 
   private setLocked(locked: boolean): void {
@@ -142,33 +191,29 @@ export class CafeScene extends Phaser.Scene {
     }
   }
 
-  /** Click/tap: on an NPC = walk up and talk; elsewhere = walk there (or as close as possible). */
+  /** Click/tap: on an NPC or station = walk up and use it; elsewhere = walk there (or as close as possible). */
   private onPointer(worldX: number, worldY: number): void {
     if (this.locked) return;
-    const target = toTile({ x: worldX, y: worldY });
-    const npc = this.npcAt(worldX, worldY);
-    this.pendingTalk = npc;
+    const clicked = this.targets.find((t) => t.hit().contains(worldX, worldY)) ?? null;
 
-    if (npc && nearestInteractable(this.player.feet, [{ id: npc.id, ...npc.spot }])) {
-      this.talkTo(npc); // already next to them
+    if (clicked && this.inRange(clicked)) {
+      this.use(clicked); // already next to it
       return;
     }
-    const path = findPath(this.walkable, toTile(this.player.feet), npc ? toTile(npc.spot) : target);
+    const goal = clicked ? toTile(clicked) : toTile({ x: worldX, y: worldY });
+    const path = findPath(this.walkable, toTile(this.player.feet), goal);
     if (path.length === 0) return;
+    // Start walking first: replacing an old path ends it, which clears pendingUse.
     this.player.walkPath(path.map(tileToFeet));
+    this.pendingUse = clicked;
     this.showMarker(path[path.length - 1]);
-  }
-
-  /** The NPC whose body (16×32 sprite) was clicked, if any. */
-  private npcAt(worldX: number, worldY: number): Npc | null {
-    return this.npcs.find((npc) => npc.getBounds().contains(worldX, worldY)) ?? null;
   }
 
   private onPathEnd(arrived: boolean): void {
     this.clearMarker();
-    const npc = this.pendingTalk;
-    this.pendingTalk = null;
-    if (arrived && npc && nearestInteractable(this.player.feet, [{ id: npc.id, ...npc.spot }])) this.talkTo(npc);
+    const target = this.pendingUse;
+    this.pendingUse = null;
+    if (arrived && target && this.inRange(target)) this.use(target);
   }
 
   /** A soft pulsing square on the tile the player is walking to. */

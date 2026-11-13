@@ -14,6 +14,7 @@ export const chapter0: Chapter = {
       id: 'ch0-1',
       title: 'The Menu Book',
       character: 'grandma',
+      station: 'menu-board',
       lesson: {
         title: 'Tables',
         body: [
@@ -41,6 +42,7 @@ export const chapter0: Chapter = {
       id: 'ch0-2',
       title: 'Just the Names',
       character: 'grandma',
+      station: 'menu-board',
       lesson: {
         title: 'Picking a column',
         body: [
@@ -67,6 +69,7 @@ export const chapter0: Chapter = {
       id: 'ch0-3',
       title: 'Names and Prices',
       character: 'grandma',
+      station: 'menu-board',
       lesson: {
         title: 'Several columns',
         body: [
@@ -93,6 +96,7 @@ export const chapter0: Chapter = {
       id: 'ch0-4',
       title: 'Does It Pay?',
       character: 'grandma',
+      station: 'menu-board',
       lesson: {
         title: 'Price vs. cost',
         body: [
