@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { placeholderPortrait } from '../game/placeholderPortraits';
+import { characterPortrait } from '../game/placeholderPortraits';
 import type { UiText } from '../i18n';
 
 type Props = {
@@ -14,7 +14,7 @@ type Props = {
 /** A character speaking, one line at a time, over the game world. */
 export function DialogueBox({ character, speaker, lines, t, onClose }: Props) {
   const [index, setIndex] = useState(0);
-  const portrait = useMemo(() => (character ? placeholderPortrait(character) : null), [character]);
+  const portrait = useMemo(() => (character ? characterPortrait(character) : null), [character]);
   const isLast = index >= lines.length - 1;
 
   const advance = () => (isLast ? onClose() : setIndex((i) => i + 1));

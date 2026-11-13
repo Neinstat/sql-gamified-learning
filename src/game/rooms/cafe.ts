@@ -5,11 +5,11 @@
  *   #  wall          f  wall face      w  window       S  shelf
  *   K  coffee machine                  .  floor        d  door mat
  *   C  counter       R  cash register  T  table        h  chair
- *   p  plant         M  menu board
+ *   p  plant         M  menu board       P  painting
  */
 export const CAFE_MAP = [
   '####################',
-  '#ffSKSffffwwffffwwf#',
+  '#ffSKSffPfwwffPfwwf#',
   '#..................#',
   '#..................#',
   '#CCCCCRCC.....p....#',
@@ -39,6 +39,9 @@ export const TILE = {
   shelf: 10,
   coffeeMachine: 11,
   doorMat: 12,
+  /** A chair on the right of a table, facing it (the chair art mirrored). */
+  chairFlipped: 13,
+  painting: 14,
 } as const;
 
 export const TILE_COUNT = Object.keys(TILE).length;
@@ -51,6 +54,7 @@ const GROUND: Record<string, number> = {
   S: TILE.wallFace,
   K: TILE.wallFace,
   d: TILE.doorMat,
+  P: TILE.painting,
 };
 
 /** Furniture layer: objects drawn on top of the ground. */
@@ -70,6 +74,7 @@ export const BLOCKING_TILES: readonly number[] = [
   TILE.wall,
   TILE.wallFace,
   TILE.window,
+  TILE.painting,
   TILE.counter,
   TILE.register,
   TILE.table,
@@ -103,7 +108,13 @@ export function groundLayer(map: readonly string[] = CAFE_MAP): number[][] {
 }
 
 export function furnitureLayer(map: readonly string[] = CAFE_MAP): number[][] {
-  return map.map((row) => [...row].map((ch) => FURNITURE[ch] ?? -1));
+  return map.map((row) =>
+    [...row].map((ch, x) => {
+      // Chairs face the table: one with the table on its left is mirrored.
+      if (ch === 'h' && row[x - 1] === 'T') return TILE.chairFlipped;
+      return FURNITURE[ch] ?? -1;
+    }),
+  );
 }
 
 /** Where a character appears in the map, as tile coordinates. */

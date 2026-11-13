@@ -12,8 +12,7 @@ import {
   walkableGrid,
 } from './rooms/cafe';
 import { findPath, type Tile } from './pathfinding';
-import { drawPlaceholderTileset } from './placeholderTiles';
-import { LOOKS } from './placeholderSprites';
+import { drawTileset } from './art/tiles';
 import { Player } from './Player';
 import { Npc } from './Npc';
 import { nearestInteractable } from './interaction';
@@ -99,7 +98,7 @@ export class CafeScene extends Phaser.Scene {
     this.physics.world.setBounds(0, 0, map.widthInPixels, map.heightInPixels);
     // Feet just inside the door, centred between the two door tiles.
     this.player = new Player(this, PLAYER_START.x * TILE_SIZE, (PLAYER_START.y + 1) * TILE_SIZE - 2);
-    this.npcs = NPCS.map((npc) => new Npc(this, npc.id, npc.tile, LOOKS[npc.id], npc.facing));
+    this.npcs = NPCS.map((npc) => new Npc(this, npc.id, npc.tile, npc.facing));
     for (const obstacle of [...layers, ...this.npcs]) this.physics.add.collider(this.player, obstacle);
     this.targets = [
       ...this.npcs.map(
@@ -288,7 +287,7 @@ export class CafeScene extends Phaser.Scene {
   private makeTextures(): void {
     if (!this.textures.exists(TILESET_KEY)) {
       const canvas = document.createElement('canvas');
-      drawPlaceholderTileset(canvas);
+      drawTileset(canvas);
       this.textures.addCanvas(TILESET_KEY, canvas);
     }
     if (!this.textures.exists(PROMPT_KEY)) {

@@ -1,5 +1,5 @@
 import Phaser from 'phaser';
-import { CHAR_H, LOOKS, frameIndex } from './placeholderSprites';
+import { CHAR_H, frameIndex } from './placeholderSprites';
 import { ensureCharacterTexture, facingToward, sheetFacing, standFacing } from './characters';
 import { WALK_SPEED, facingFor, moveVector, steerTowards, type Facing } from './movement';
 
@@ -20,7 +20,7 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
   private keys: Record<'up' | 'down' | 'left' | 'right' | 'w' | 'a' | 's' | 'd', Phaser.Input.Keyboard.Key>;
 
   constructor(scene: Phaser.Scene, x: number, y: number) {
-    ensureCharacterTexture(scene, TEXTURE, LOOKS.player);
+    ensureCharacterTexture(scene, TEXTURE, 'player');
     super(scene, x, y, TEXTURE, frameIndex('up', 0));
     scene.add.existing(this);
     scene.physics.add.existing(this);

@@ -86,12 +86,14 @@ Game ditampilkan sebagai **dunia 2D dengan kamera dari atas** (genre seperti gam
 - **Zoom manual** (masukan uji main Fase 2): tombol − / + di pojok kanan bawah dunia game dan scroll mouse, 1×–4×, diingat di browser. Di HP, 1× memperlihatkan seluruh ruangan.
 - **Panah penunjuk:** bila target "!" berada di luar layar, panah emas di tepi layar menunjuk ke arahnya. *Minimap tidak dibuat* — diganti tab Café map di Journal (keputusan Fase 3, lihat di atas).
 - Hanya **kaki** karakter yang bertabrakan (kepala boleh menutupi benda di belakangnya); benda yang lebih bawah di layar digambar di depan.
-- **Sumber aset Fase 2: placeholder.** Tile dari pack **CC0** (kandidat: Kenney, 16×16) dan sprite karakter/potret placeholder sederhana buatan sendiri. Fokus Fase 2 adalah mekanik; aset final diganti di Fase 3 atau nanti. Setiap aset pihak ketiga dicatat sumber + lisensinya di `CREDITS.md`. *(2.1–2.4: tile, sprite pemain & Grandma, dan potret Grandma placeholder digambar lewat kode di `src/game/placeholderTiles.ts`, `placeholderSprites.ts`, dan `placeholderPortraits.ts` — belum ada aset pihak ketiga.)*
+- **Sumber aset Fase 2: placeholder.** Tile dari pack **CC0** (kandidat: Kenney, 16×16) dan sprite karakter/potret placeholder sederhana buatan sendiri. Fokus Fase 2 adalah mekanik; aset final diganti di Fase 3 atau nanti. Setiap aset pihak ketiga dicatat sumber + lisensinya di `CREDITS.md`. *(2.1–2.4: tile, sprite pemain & Grandma, dan potret Grandma placeholder digambar lewat kode di `src/game/placeholderTiles.ts`, `placeholderSprites.ts`, dan `placeholderPortraits.ts` — belum ada aset pihak ketiga.)* *(3.1: `placeholderTiles.ts` diganti `src/game/art/tiles.ts`; sprite & potret Grandma diganti aset final.)*
 
 #### Arah visual final (diputuskan di awal Fase 3)
 - **Suasana: hangat musim gugur** — kayu, krem, oranye bata, hijau zaitun, cahaya lampu hangat. Cocok dengan cerita lembah di musim gugur dan kasus "October sales dropped".
-- **Satu palet tetap** (±24–32 warna) untuk semua aset — tile, karakter, potret, dan aksen UI. Palet dipilih/disusun di iterasi 3.1 dan disimpan sebagai file di repo; aset baru wajib memakai palet ini. Palet publik boleh dipakai bila lisensinya bebas (dicatat di `CREDITS.md`).
+- **Satu palet tetap: 32 warna** untuk semua aset — tile, karakter, potret, dan aksen UI. Palet disusun sendiri di iterasi 3.1 (`src/game/art/palette.ts`, tanpa lisensi pihak ketiga); aset baru wajib memakai palet ini (dicek tes otomatis).
 - **Sumber aset: tile & furnitur dari pack CC0 16 px** (aman di repo GitHub yang publik), diwarnai ulang ke palet bila perlu; **karakter dan potret dibuat sendiri** agar tokoh SQL Valley khas.
+  - Pack yang dipakai: **Kenney "Roguelike Indoors"** (CC0) — meja, kursi, tanaman pot, counter, lukisan. Pack ini hanya berisi furnitur, jadi lantai, dinding, jendela, rak, mesin kopi, cash register, menu board, dan keset dibuat sendiri. Sumber dicatat di `CREDITS.md`.
+  - **Format aset: grid teks di kode TypeScript** (satu karakter = satu piksel, huruf = warna palet), bukan file PNG. Alasannya: bisa dibaca dan di-diff di git, warnanya terkunci ke palet (dicek tes), dan cara memuatnya sama dengan placeholder Fase 2. Tile Kenney diubah ke grid ini dengan warna dipetakan ke palet; potret 64×64 digambar dari bentuk dasar (elips, persegi) dengan outline otomatis.
 - **Diuji dulu lewat contoh:** satu ruangan (area depan) + satu karakter (Grandma, sprite + potret) dalam gaya final (iterasi 3.1). Bila pemilik project menilai hasilnya kurang, cadangannya **beli asset pack berlisensi komersial** — dengan catatan file aslinya tidak boleh di-commit ke repo publik.
 - **Diganti bertahap**, tidak menunggu semua fitur selesai: ruang depan + Grandma di 3.1; Barista dan Regular saat level mereka disentuh; ruangan baru (kitchen, storeroom, back office) langsung dibuat dalam gaya final; sisa placeholder dibersihkan di iterasi terakhir Fase 3.
 
@@ -228,6 +230,9 @@ Di luar MVP (nanti): subquery, CTE, window function, analisis waktu lanjutan (Mo
 - `src/console/` — UI konsol (React): editor, input blok, isi kosong, tabel hasil, hint.
 - `src/app/` — halaman sederhana: daftar level, alur level, progres (localStorage). *(Halaman ini dihapus setelah Fase 2 — lihat §12.)*
 
+### Struktur kode (tambahan Fase 3)
+- `src/game/art/` — aset final: `palette.ts` (32 warna + `paintGrid`), `tiles.ts` (tileset kafe), `grandma.ts` (sprite 16×32 + potret 64×64). Karakter yang belum punya aset final tetap memakai `placeholderSprites.ts` / `placeholderPortraits.ts` (dipilih otomatis di `characters.ts` dan `characterPortrait`).
+
 ### Struktur kode (tambahan Fase 2)
 - `src/sql-core/stations.ts` — daftar stasiun dan tabel yang boleh diakses tiap stasiun (data murni, tanpa engine). Level mendapat field `station`; tes memastikan jawaban resmi tiap level hanya memakai tabel stasiunnya.
 - Konsol di stasiun hanya **menampilkan** tabel milik stasiun itu. *(Fase 3: query ke tabel lain juga diblokir — lihat di bawah.)*
@@ -327,7 +332,7 @@ Setiap iterasi bisa dimainkan sendiri: kerjakan → cek di browser → commit & 
 
 | # | Iterasi | Selesai jika… |
 |---|---|---|
-| 3.1 | **Arah visual:** file palet musim gugur, pilih pack tile CC0, ruang depan + Grandma (sprite & potret) dalam gaya final, `CREDITS.md` | Pemilik project melihat ruang depan + Grandma baru di browser dan menyetujui arahnya (atau memilih cadangan beli pack) |
+| 3.1 🚧 | **Arah visual:** file palet musim gugur, pilih pack tile CC0, ruang depan + Grandma (sprite & potret) dalam gaya final, `CREDITS.md` | Pemilik project melihat ruang depan + Grandma baru di browser dan menyetujui arahnya (atau memilih cadangan beli pack) |
 | 3.2 | **Mesin Mini Case + So what?:** catatan investigasi, 📌 sematkan hasil query, pertanyaan kesimpulan dengan cek bukti, field `soWhat`; Mini Case Ch1 **The Menu Audit**; So what? di 1–2 level Ch0–1 (EN/ID) | Setelah level terakhir Ch1, pemain menyelesaikan The Menu Audit di Menu board dengan bukti 📌; So what? muncul di Ch0–1 |
 | 3.3 | **Bintang & koin:** catat hint + jawaban salah per level/kasus, layar hasil (⭐ + koin), bintang di Journal, penghitung koin di HUD; progres lama tetap terbaca | Menyelesaikan level/kasus menampilkan bintang & koin, tersimpan, dan terlihat di Journal |
 | 3.4 | **Chapter 2 First Reports** (ketik bebas: `ORDER BY`, `LIMIT`, `DISTINCT`, alias, kolom hitungan) + Mini Case **What Should We Promote?**; Barista dalam gaya final | Chapter 2 bisa dimainkan lengkap di Menu board, EN/ID |

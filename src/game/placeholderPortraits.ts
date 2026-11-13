@@ -1,4 +1,5 @@
 import { LOOKS, type Look } from './placeholderSprites';
+import { grandmaPortrait } from './art/grandma';
 
 /**
  * Placeholder 64×64 dialogue portraits, drawn in code — no third-party art.
@@ -67,8 +68,10 @@ function drawFace(ctx: Ctx, L: Look) {
   }
 }
 
-/** A data URL for the character's portrait (Grandma's look is the fallback for characters without one). */
-export function placeholderPortrait(character: string): string {
+/** A data URL for the character's portrait: final art when there is some, else a placeholder (Grandma's look is the fallback). */
+export function characterPortrait(character: string): string {
+  // Grandma already has her final portrait (GAME_DESIGN.md §3).
+  if (character === 'grandma') return grandmaPortrait();
   const canvas = document.createElement('canvas');
   canvas.width = PORTRAIT_SIZE;
   canvas.height = PORTRAIT_SIZE;

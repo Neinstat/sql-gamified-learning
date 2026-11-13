@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { BLOCKING_TILES, CAFE_MAP, NPCS, PLAYER_START, STATION_SPOTS, TILE_COUNT, findTiles, furnitureLayer, groundLayer, walkableGrid } from './cafe';
+import { BLOCKING_TILES, CAFE_MAP, NPCS, PLAYER_START, STATION_SPOTS, TILE, TILE_COUNT, findTiles, furnitureLayer, groundLayer, walkableGrid } from './cafe';
 
 describe('café map', () => {
   it('has rows of equal width', () => {
@@ -8,7 +8,7 @@ describe('café map', () => {
   });
 
   it('only uses known characters', () => {
-    const known = new Set('#fwSKdCRThpM.');
+    const known = new Set('#fwSKPdCRThpM.');
     for (const row of CAFE_MAP) for (const ch of row) expect(known.has(ch), `unknown "${ch}"`).toBe(true);
   });
 
@@ -23,6 +23,16 @@ describe('café map', () => {
   it('has one menu board and one cash register', () => {
     expect(findTiles('M')).toHaveLength(1);
     expect(findTiles('R')).toHaveLength(1);
+  });
+
+  it('turns each chair towards its table', () => {
+    const furniture = furnitureLayer();
+    CAFE_MAP.forEach((row, y) =>
+      [...row].forEach((ch, x) => {
+        if (ch !== 'h') return;
+        expect(furniture[y][x]).toBe(row[x - 1] === 'T' ? TILE.chairFlipped : TILE.chair);
+      }),
+    );
   });
 
   it('builds layers that only use tiles from the tileset', () => {

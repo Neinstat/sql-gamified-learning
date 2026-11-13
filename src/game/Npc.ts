@@ -1,6 +1,6 @@
 import Phaser from 'phaser';
-import { CHAR_H, frameIndex, type Look } from './placeholderSprites';
-import { ensureCharacterTexture, facingToward, standFacing } from './characters';
+import { CHAR_H, frameIndex } from './placeholderSprites';
+import { ensureCharacterTexture, facingToward, standFacing, type CharacterLook } from './characters';
 import { TILE_SIZE } from './rooms/cafe';
 import type { Facing } from './movement';
 
@@ -11,12 +11,11 @@ export class Npc extends Phaser.Physics.Arcade.Sprite {
 
   constructor(
     scene: Phaser.Scene,
-    readonly id: string,
+    readonly id: CharacterLook,
     tile: { x: number; y: number },
-    look: Look,
     private readonly restFacing: Facing = 'down',
   ) {
-    ensureCharacterTexture(scene, `npc-${id}`, look);
+    ensureCharacterTexture(scene, `npc-${id}`, id);
     const x = (tile.x + 0.5) * TILE_SIZE;
     const y = tile.y * TILE_SIZE + 12;
     super(scene, x, y, `npc-${id}`, frameIndex('down', 0));

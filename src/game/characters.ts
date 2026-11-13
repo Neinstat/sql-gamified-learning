@@ -1,15 +1,25 @@
 import Phaser from 'phaser';
-import { CHAR_H, CHAR_W, FACINGS, FRAMES_PER_FACING, drawPlaceholderCharacter, frameIndex, type Look } from './placeholderSprites';
+import { CHAR_H, CHAR_W, FACINGS, FRAMES_PER_FACING, LOOKS, drawPlaceholderCharacter, frameIndex } from './placeholderSprites';
+import { drawGrandmaSheet } from './art/grandma';
 import type { Facing } from './movement';
+
+export type CharacterLook = keyof typeof LOOKS;
+
+/** Characters already drawn in the final style; the rest still use placeholders (GAME_DESIGN.md §3). */
+const FINAL_SHEETS: Partial<Record<CharacterLook, (canvas: HTMLCanvasElement) => void>> = {
+  grandma: drawGrandmaSheet,
+};
 
 /**
  * Loads a character's frames and walk animations into the game (once per texture key).
  * Animations are named `<key>-walk-<down|up|side>`.
  */
-export function ensureCharacterTexture(scene: Phaser.Scene, key: string, look: Look): void {
+export function ensureCharacterTexture(scene: Phaser.Scene, key: string, who: CharacterLook): void {
   if (scene.textures.exists(key)) return;
   const canvas = document.createElement('canvas');
-  drawPlaceholderCharacter(canvas, look);
+  const drawFinal = FINAL_SHEETS[who];
+  if (drawFinal) drawFinal(canvas);
+  else drawPlaceholderCharacter(canvas, LOOKS[who]);
   const texture = scene.textures.addCanvas(key, canvas)!;
   for (let i = 0; i < FACINGS.length * FRAMES_PER_FACING; i++) {
     texture.add(i, 0, i * CHAR_W, 0, CHAR_W, CHAR_H);
