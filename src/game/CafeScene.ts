@@ -17,14 +17,17 @@ import { LOOKS } from './placeholderSprites';
 import { Player } from './Player';
 import { Npc } from './Npc';
 import { nearestInteractable } from './interaction';
+import { autoZoom, clampZoom, edgePointer } from './camera';
 import type { GameBridge, InteractTarget } from './bridge';
 
 const TILESET_KEY = 'cafe-tiles';
 const PROMPT_KEY = 'talk-prompt';
 const QUEST_KEY = 'quest-marker';
-/** Never zoom out below this, so phones see big, readable pixels (the camera scrolls instead). */
-const MIN_ZOOM = 2;
-const MAX_ZOOM = 4;
+const ARROW_KEY = 'quest-arrow';
+/** Zoom the player picked with − / + or the mouse wheel; remembered in this browser. */
+const ZOOM_STORAGE_KEY = 'sql-valley.zoom';
+/** One wheel "notch" at most this often, so a trackpad swipe doesn't jump 1× → 4×. */
+const WHEEL_STEP_MS = 200;
 /** After an overlay closes, ignore the talk key briefly so the key that closed it doesn't reopen it. */
 const REOPEN_DELAY_MS = 250;
 
@@ -56,6 +59,10 @@ export class CafeScene extends Phaser.Scene {
   private prompt!: Phaser.GameObjects.Image;
   private questMarker!: Phaser.GameObjects.Image;
   private quest: Target | null = null;
+  private questArrow!: Phaser.GameObjects.Image;
+  private manualZoom: number | null = loadZoom();
+  private lastWheel = 0;
+  private refit: () => void = () => {};
   private locked = false;
   private talkBlockedUntil = 0;
   /** Target the player clicked on: use it on arrival. */
@@ -124,6 +131,7 @@ export class CafeScene extends Phaser.Scene {
     this.prompt = this.add.image(0, 0, PROMPT_KEY).setOrigin(0.5, 1).setVisible(false).setDepth(10_000);
     this.tweens.add({ targets: this.prompt, y: '-=2', duration: 500, yoyo: true, repeat: -1, ease: 'Sine.inOut' });
     this.questMarker = this.add.image(0, 0, QUEST_KEY).setOrigin(0.5, 1).setVisible(false).setDepth(10_000);
+    this.questArrow = this.add.image(0, 0, ARROW_KEY).setVisible(false).setDepth(10_001);
 
     // Key events (not polling), so even a very quick tap between two frames is noticed.
     for (const key of ['E', 'SPACE', 'ENTER']) this.input.keyboard!.on(`keydown-${key}`, () => this.onTalkKey());
@@ -132,9 +140,16 @@ export class CafeScene extends Phaser.Scene {
 
     const offOverlay = this.bridge.on('overlay', (open) => this.setLocked(open));
     const offQuest = this.bridge.on('quest', (target) => this.setQuest(target));
+    const offZoom = this.bridge.on('zoom', (step) => this.zoomBy(step));
+    this.input.on('wheel', (_p: unknown, _o: unknown, _dx: number, dy: number) => {
+      if (this.locked || dy === 0 || this.time.now - this.lastWheel < WHEEL_STEP_MS) return;
+      this.lastWheel = this.time.now;
+      this.zoomBy(dy < 0 ? 1 : -1);
+    });
     this.bridge.emit('ready', true);
 
     const fit = () => this.fitCamera(map.widthInPixels, map.heightInPixels);
+    this.refit = fit;
     fit();
     this.cameras.main.startFollow(this.player, true);
     this.scale.on('resize', fit);
@@ -142,6 +157,7 @@ export class CafeScene extends Phaser.Scene {
       this.scale.off('resize', fit);
       offOverlay();
       offQuest();
+      offZoom();
     });
   }
 
@@ -152,6 +168,7 @@ export class CafeScene extends Phaser.Scene {
       this.questMarker.setVisible(near?.id !== this.quest.id);
       this.questMarker.setPosition(this.quest.promptX, this.quest.promptY - 1 + Math.round(Math.sin(time / 250)));
     }
+    this.updateQuestArrow();
     if (this.locked) return;
 
     if (near) {
@@ -170,6 +187,24 @@ export class CafeScene extends Phaser.Scene {
   private setQuest(target: InteractTarget | null): void {
     this.quest = target ? (this.targets.find((t) => t.kind === target.kind && t.id === target.id) ?? null) : null;
     this.questMarker.setVisible(this.quest !== null);
+  }
+
+  /** A golden arrow on the screen edge, pointing at the quest target when it is off screen. */
+  private updateQuestArrow(): void {
+    const cam = this.cameras.main;
+    const zoom = cam.zoom;
+    const pointer = this.quest ? edgePointer(cam.worldView, this.quest, 14 / zoom + 6) : null;
+    this.questArrow.setVisible(pointer !== null);
+    if (!pointer) return;
+    // Keep the arrow a readable size on screen at every zoom.
+    this.questArrow.setScale(Math.max(1, 2 / zoom)).setPosition(pointer.x, pointer.y).setRotation(pointer.angle);
+  }
+
+  /** − / + buttons and the mouse wheel: one whole zoom step at a time. */
+  private zoomBy(step: number): void {
+    this.manualZoom = clampZoom(this.cameras.main.zoom + step);
+    saveZoom(this.manualZoom);
+    this.refit();
   }
 
   private onTalkKey(): void {
@@ -265,6 +300,14 @@ export class CafeScene extends Phaser.Scene {
       g.generateTexture(PROMPT_KEY, 13, 11);
       g.destroy();
     }
+    if (!this.textures.exists(ARROW_KEY)) {
+      // A golden arrow pointing right (rotated towards the target).
+      const g = this.make.graphics({}, false);
+      g.fillStyle(0x3b2f2a).fillTriangle(0, 0, 11, 6, 0, 12);
+      g.fillStyle(0xf0c75e).fillTriangle(1, 2, 8, 6, 1, 10);
+      g.generateTexture(ARROW_KEY, 12, 13);
+      g.destroy();
+    }
     if (!this.textures.exists(QUEST_KEY)) {
       // A golden "!" bubble: "go here next".
       const g = this.make.graphics({}, false);
@@ -277,8 +320,8 @@ export class CafeScene extends Phaser.Scene {
   }
 
   /**
-   * Whole-number zoom so pixels stay square and sharp, between MIN_ZOOM and MAX_ZOOM.
-   * If the room is smaller than the screen it is centred; if larger, the camera follows
+   * Whole-number zoom so pixels stay square and sharp: the player's choice, or automatic
+   * (see camera.ts). If the room is smaller than the screen it is centred; if larger, the camera follows
    * the player without showing past the walls.
    */
   private fitCamera(roomWidth: number, roomHeight: number): void {
@@ -286,16 +329,29 @@ export class CafeScene extends Phaser.Scene {
     // Use the new canvas size: on 'resize' the camera may not have been resized yet.
     const { width, height } = this.scale.gameSize;
     cam.setSize(width, height);
-    const fitZoom = Math.floor(Math.min(width / roomWidth, height / roomHeight));
-    // Whole room fits big enough (desktop): show all of it. Otherwise (phones) fill the
-    // screen instead of leaving empty bands, and let the camera follow the player.
-    const fillZoom = Math.floor(Math.max(width / roomWidth, height / roomHeight));
-    const zoom = Phaser.Math.Clamp(fitZoom >= MIN_ZOOM ? fitZoom : fillZoom, MIN_ZOOM, MAX_ZOOM);
+    const zoom = this.manualZoom ?? autoZoom(width, height, roomWidth, roomHeight);
     cam.setZoom(zoom);
     const viewW = width / zoom;
     const viewH = height / zoom;
     const boundsW = Math.max(roomWidth, viewW);
     const boundsH = Math.max(roomHeight, viewH);
     cam.setBounds((roomWidth - boundsW) / 2, (roomHeight - boundsH) / 2, boundsW, boundsH);
+  }
+}
+
+function loadZoom(): number | null {
+  try {
+    const saved = Number(localStorage.getItem(ZOOM_STORAGE_KEY));
+    return saved ? clampZoom(saved) : null;
+  } catch {
+    return null;
+  }
+}
+
+function saveZoom(zoom: number): void {
+  try {
+    localStorage.setItem(ZOOM_STORAGE_KEY, String(zoom));
+  } catch {
+    // Storage blocked: the zoom just isn't remembered.
   }
 }

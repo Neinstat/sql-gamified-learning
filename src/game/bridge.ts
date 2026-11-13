@@ -7,6 +7,7 @@
  *   app → game   'overlay'   an overlay opened (true) or closed (false); the world
  *                            ignores input while one is open
  *   app → game   'quest'     where the player should go next (a "!" is shown there), or null
+ *   app → game   'zoom'      zoom in (+1) or out (−1) one step
  */
 export type InteractTarget = { kind: 'npc' | 'station'; id: string };
 
@@ -15,6 +16,7 @@ type Events = {
   interact: InteractTarget;
   overlay: boolean;
   quest: InteractTarget | null;
+  zoom: 1 | -1;
 };
 
 type Listener<T> = (payload: T) => void;

@@ -72,7 +72,9 @@ Game ditampilkan sebagai **dunia 2D dengan kamera dari atas** (genre seperti gam
 | Potret dialog | 64×64 | Wajah tokoh di kotak dialog |
 | Objek tinggi & furnitur | 16×32 atau 32×32 | Counter, mesin kopi, rak, papan menu |
 
-- Ditampilkan dengan **zoom bulat** (mis. 3×) dan `pixelArt: true` agar piksel tetap tajam. Zoom 2×–4×: bila seluruh ruangan muat pada ≥2× (desktop), ruangan tampil utuh; bila tidak (HP), zoom dipilih agar layar terisi (biasanya 3×) dan kamera mengikuti pemain.
+- Ditampilkan dengan **zoom bulat** (mis. 3×) dan `pixelArt: true` agar piksel tetap tajam. Zoom otomatis 2×–4×: bila seluruh ruangan muat pada ≥2× (desktop), ruangan tampil utuh; bila tidak (HP), zoom dipilih agar layar terisi (biasanya 3×) dan kamera mengikuti pemain.
+- **Zoom manual** (masukan uji main Fase 2): tombol − / + di pojok kanan bawah dunia game dan scroll mouse, 1×–4×, diingat di browser. Di HP, 1× memperlihatkan seluruh ruangan.
+- **Panah penunjuk:** bila target "!" berada di luar layar, panah emas di tepi layar menunjuk ke arahnya. *Minimap sengaja belum dibuat* — Fase 2 hanya satu ruangan kecil; dipertimbangkan lagi saat ada beberapa ruangan (Fase 3).
 - Hanya **kaki** karakter yang bertabrakan (kepala boleh menutupi benda di belakangnya); benda yang lebih bawah di layar digambar di depan.
 - **Sumber aset Fase 2: placeholder.** Tile dari pack **CC0** (kandidat: Kenney, 16×16) dan sprite karakter/potret placeholder sederhana buatan sendiri. Fokus Fase 2 adalah mekanik; aset final diganti di Fase 3 atau nanti. Setiap aset pihak ketiga dicatat sumber + lisensinya di `CREDITS.md`. *(2.1–2.4: tile, sprite pemain & Grandma, dan potret Grandma placeholder digambar lewat kode di `src/game/placeholderTiles.ts`, `placeholderSprites.ts`, dan `placeholderPortraits.ts` — belum ada aset pihak ketiga.)*
 
@@ -217,7 +219,7 @@ Tes otomatis memeriksa semua level: jawaban resmi bisa dijalankan, blok yang dis
 
 Dibangun bertahap — setiap fase menghasilkan sesuatu yang bisa dimainkan.
 
-**Status (13 Nov 2026):** ✅ **Fase 1 selesai.** Chapter 0–1 (10 level) bisa dimainkan dalam EN/ID, dengan pengecek jawaban, hint, progres tersimpan, dan 110 tes otomatis. Pemilik project sudah uji main dan menyetujui rasa belajarnya. 🚧 **Fase 2 sedang berjalan** — rencana dan keputusan ada di "Rencana Fase 2" di bawah. Selesai: 2.1–2.7.
+**Status (13 Nov 2026):** ✅ **Fase 1 selesai.** Chapter 0–1 (10 level) bisa dimainkan dalam EN/ID, dengan pengecek jawaban, hint, progres tersimpan, dan 110 tes otomatis. Pemilik project sudah uji main dan menyetujui rasa belajarnya. 🚧 **Fase 2 sedang berjalan** — rencana dan keputusan ada di "Rencana Fase 2" di bawah. Selesai: 2.1–2.7; 2.8 (uji main) sedang berjalan.
 
 Catatan dari Fase 1 untuk fase berikutnya:
 - Ukuran unduhan pertama PGlite besar (±3,5 MB wasm terkompresi + 6 MB data) — perlu layar loading yang jelas dan dicek saat memilih hosting.

@@ -183,6 +183,14 @@ export function WorldApp() {
 
       <div className="world-stage">
         <GameView t={t} bridge={bridge} />
+        <div className="zoom-controls">
+          <button className="zoom-button" onMouseDown={noFocus} onClick={() => bridge.emit('zoom', 1)} aria-label={t.zoomIn} title={t.zoomIn}>
+            +
+          </button>
+          <button className="zoom-button" onMouseDown={noFocus} onClick={() => bridge.emit('zoom', -1)} aria-label={t.zoomOut} title={t.zoomOut}>
+            −
+          </button>
+        </div>
 
         {dialogue && (
           <DialogueBox
