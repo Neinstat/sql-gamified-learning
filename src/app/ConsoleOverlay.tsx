@@ -11,6 +11,8 @@ type Props = {
   stationName: string;
   level: Level;
   db: CafeDatabase | null;
+  /** Set when the database could not be opened. */
+  dbError: string | null;
   /** Only the tables this station can see. */
   schema: Table[];
   lang: Lang;
@@ -27,7 +29,7 @@ type Props = {
 
 /** The SQL console opened at a station, over the game world. */
 export function ConsoleOverlay(props: Props) {
-  const { stationName, level, db, schema, lang, t, visible, hintsUsed, onRevealHint, onCorrect, solvedMessage, onClose } =
+  const { stationName, level, db, dbError, schema, lang, t, visible, hintsUsed, onRevealHint, onCorrect, solvedMessage, onClose } =
     props;
   const [solved, setSolved] = useState(false);
   const [lessonOpen, setLessonOpen] = useState(false);
@@ -87,8 +89,20 @@ export function ConsoleOverlay(props: Props) {
               )
             }
           />
+        ) : dbError ? (
+          <div className="feedback feedback-wrong" role="alert">
+            <p>
+              {t.loadError} {dbError}
+            </p>
+            <button className="primary-button" onClick={() => window.location.reload()}>
+              {t.retry}
+            </button>
+          </div>
         ) : (
-          <p className="loading">{t.loading}</p>
+          <div className="db-loading" role="status">
+            <div className="loading-bar" aria-hidden="true" />
+            <p className="loading">{t.loading}</p>
+          </div>
         )}
       </section>
     </div>

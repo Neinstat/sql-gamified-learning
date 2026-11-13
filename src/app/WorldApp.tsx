@@ -29,6 +29,7 @@ export function WorldApp() {
   const [overlay, setOverlay] = useState<Overlay | null>(null);
   const [progress, setProgress] = useState<Progress>(loadProgress);
   const [db, setDb] = useState<CafeDatabase | null>(null);
+  const [dbError, setDbError] = useState<string | null>(null);
   const [schema, setSchema] = useState<Table[]>([]);
   const [hintsUsed, setHintsUsed] = useState(0);
   /** Chapters whose title card was shown this visit. */
@@ -58,7 +59,7 @@ export function WorldApp() {
         setSchema(await getSchema(database));
         setDb(database);
       })
-      .catch((err) => console.error(err));
+      .catch((err) => setDbError(String(err)));
   }, []);
 
   // A new chapter starts with its title card.
@@ -89,7 +90,12 @@ export function WorldApp() {
     [bridge, questTarget, overlay],
   );
 
-  const close = useCallback(() => setOverlay(null), []);
+  const close = useCallback(() => {
+    // Don't leave focus inside a closed overlay (e.g. the hidden SQL editor), or the
+    // player's next WASD/Space would type there instead of moving.
+    if (document.activeElement instanceof HTMLElement) document.activeElement.blur();
+    setOverlay(null);
+  }, []);
 
   // --- What each overlay shows ---------------------------------------------------------
 
@@ -140,16 +146,15 @@ export function WorldApp() {
       <header className="world-hud">
         <h1 className="world-title">SQL Valley</h1>
         <div className="world-hud-actions">
-          <button className="link-button" onClick={() => setOverlay({ kind: 'journal' })}>
-            {t.journal}
+          {/* onMouseDown: clicking doesn't keep focus here, so Space still talks in the world. */}
+          <button className="hud-button" onMouseDown={noFocus} onClick={() => setOverlay({ kind: 'journal' })}>
+            📖 {t.journal}
           </button>
-          <a className="link-button" href="?classic">
-            {t.classicMode}
-          </a>
           <div className="lang-switch" role="group" aria-label={t.language}>
             {LANGS.map((code) => (
               <button
                 key={code}
+                onMouseDown={noFocus}
                 className={code === lang ? 'lang-button active' : 'lang-button'}
                 aria-pressed={code === lang}
                 onClick={() => setLang(code)}
@@ -163,6 +168,7 @@ export function WorldApp() {
 
       <QuestBar
         label={`${t.chapter(chapter.id)} · ${chapter.title}`}
+        status={dbError ? `⚠️ ${t.loadError}` : db ? null : t.loadingRecords}
         active={stage !== 'done'}
         text={
           stage === 'talk'
@@ -196,6 +202,7 @@ export function WorldApp() {
             stationName={stationName}
             level={level}
             db={db}
+            dbError={dbError}
             schema={stationTables(level.station, schema)}
             lang={lang}
             t={t}
@@ -265,6 +272,9 @@ export function WorldApp() {
             >
               {t.startOver}
             </button>
+            <a className="link-button world-modal-classic" href="?classic">
+              {t.classicMode}
+            </a>
           </WorldModal>
         )}
       </div>
@@ -273,11 +283,15 @@ export function WorldApp() {
 }
 
 /** Always-visible line under the header: what to do next. */
-function QuestBar({ label, text, active }: { label: string; text: string; active: boolean }) {
+const noFocus = (event: React.MouseEvent) => event.preventDefault();
+
+function QuestBar(props: { label: string; text: string; active: boolean; status: string | null }) {
+  const { label, text, active, status } = props;
   return (
     <div className="quest-bar" role="status">
       <span className="quest-bar-label">{label}</span>
       <span className={active ? 'quest-bar-text active' : 'quest-bar-text'}>{text}</span>
+      {status && <span className="quest-bar-status">{status}</span>}
     </div>
   );
 }

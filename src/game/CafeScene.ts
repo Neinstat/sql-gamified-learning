@@ -277,9 +277,9 @@ export class CafeScene extends Phaser.Scene {
   }
 
   /**
-   * Whole-number zoom so pixels stay square and sharp: as big as fits the room, but at
-   * least MIN_ZOOM. If the room is smaller than the screen it is centred; if larger, the
-   * camera follows the player without showing past the walls.
+   * Whole-number zoom so pixels stay square and sharp, between MIN_ZOOM and MAX_ZOOM.
+   * If the room is smaller than the screen it is centred; if larger, the camera follows
+   * the player without showing past the walls.
    */
   private fitCamera(roomWidth: number, roomHeight: number): void {
     const cam = this.cameras.main;
@@ -287,7 +287,10 @@ export class CafeScene extends Phaser.Scene {
     const { width, height } = this.scale.gameSize;
     cam.setSize(width, height);
     const fitZoom = Math.floor(Math.min(width / roomWidth, height / roomHeight));
-    const zoom = Phaser.Math.Clamp(fitZoom, MIN_ZOOM, MAX_ZOOM);
+    // Whole room fits big enough (desktop): show all of it. Otherwise (phones) fill the
+    // screen instead of leaving empty bands, and let the camera follow the player.
+    const fillZoom = Math.floor(Math.max(width / roomWidth, height / roomHeight));
+    const zoom = Phaser.Math.Clamp(fitZoom >= MIN_ZOOM ? fitZoom : fillZoom, MIN_ZOOM, MAX_ZOOM);
     cam.setZoom(zoom);
     const viewW = width / zoom;
     const viewH = height / zoom;

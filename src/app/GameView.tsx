@@ -25,7 +25,13 @@ export function GameView({ t, bridge }: { t: UiText; bridge: GameBridge }) {
 
   return (
     <div className="game-view" ref={parentRef}>
-      {!ready && <p className="game-loading">{t.loadingWorld}</p>}
+      {!ready && (
+        <div className="world-loading" role="status">
+          <p className="world-loading-title">SQL Valley</p>
+          <div className="loading-bar" aria-hidden="true" />
+          <p className="world-loading-text">{t.loadingWorld}</p>
+        </div>
+      )}
     </div>
   );
 }

@@ -72,7 +72,7 @@ Game ditampilkan sebagai **dunia 2D dengan kamera dari atas** (genre seperti gam
 | Potret dialog | 64×64 | Wajah tokoh di kotak dialog |
 | Objek tinggi & furnitur | 16×32 atau 32×32 | Counter, mesin kopi, rak, papan menu |
 
-- Ditampilkan dengan **zoom bulat** (mis. 3×) dan `pixelArt: true` agar piksel tetap tajam. Zoom minimal 2× (maks. 4×): di layar kecil kamera mengikuti pemain, bukan memperkecil ruangan.
+- Ditampilkan dengan **zoom bulat** (mis. 3×) dan `pixelArt: true` agar piksel tetap tajam. Zoom 2×–4×: bila seluruh ruangan muat pada ≥2× (desktop), ruangan tampil utuh; bila tidak (HP), zoom dipilih agar layar terisi (biasanya 3×) dan kamera mengikuti pemain.
 - Hanya **kaki** karakter yang bertabrakan (kepala boleh menutupi benda di belakangnya); benda yang lebih bawah di layar digambar di depan.
 - **Sumber aset Fase 2: placeholder.** Tile dari pack **CC0** (kandidat: Kenney, 16×16) dan sprite karakter/potret placeholder sederhana buatan sendiri. Fokus Fase 2 adalah mekanik; aset final diganti di Fase 3 atau nanti. Setiap aset pihak ketiga dicatat sumber + lisensinya di `CREDITS.md`. *(2.1–2.4: tile, sprite pemain & Grandma, dan potret Grandma placeholder digambar lewat kode di `src/game/placeholderTiles.ts`, `placeholderSprites.ts`, dan `placeholderPortraits.ts` — belum ada aset pihak ketiga.)*
 
@@ -99,7 +99,8 @@ Setiap level adalah satu permintaan dengan tahap yang disimpan di progres (`ques
 3. **report** — setelah jawaban benar (progres tersimpan), "!" kembali ke pemberi tugas, yang mengucapkan kalimat sukses.
 4. Lanjut ke level berikutnya (tahap **talk**); setelah level terakhir tahapnya **done**.
 
-- Bar di bawah header selalu menunjukkan langkah berikutnya (mis. "Talk to Grandma", atau tugas + stasiunnya).
+- Bar di bawah header selalu menunjukkan langkah berikutnya (mis. "Talk to Grandma", atau tugas + stasiunnya), dan status "Loading records…" selama database PGlite dimuat di belakang layar. Dunia sudah bisa dijelajahi sebelum database siap; konsol menampilkan bilah loading, atau pesan galat + tombol "Try again" bila gagal.
+- Header berisi 📖 Journal dan pilihan bahasa. Tautan mode klasik dipindah ke dalam Journal agar header muat di HP. Tombol header tidak menahan fokus, jadi Spasi/E tetap dipakai untuk bicara di dunia.
 - Chapter baru dibuka dengan kartu chapter. **Journal** (menu di header) menampilkan daftar level; level yang sudah selesai bisa dimainkan ulang dari tahap *talk*. "Start over" ada di Journal.
 
 ## 5. Jenis level
@@ -216,7 +217,7 @@ Tes otomatis memeriksa semua level: jawaban resmi bisa dijalankan, blok yang dis
 
 Dibangun bertahap — setiap fase menghasilkan sesuatu yang bisa dimainkan.
 
-**Status (13 Nov 2026):** ✅ **Fase 1 selesai.** Chapter 0–1 (10 level) bisa dimainkan dalam EN/ID, dengan pengecek jawaban, hint, progres tersimpan, dan 110 tes otomatis. Pemilik project sudah uji main dan menyetujui rasa belajarnya. 🚧 **Fase 2 sedang berjalan** — rencana dan keputusan ada di "Rencana Fase 2" di bawah. Selesai: 2.1–2.6.
+**Status (13 Nov 2026):** ✅ **Fase 1 selesai.** Chapter 0–1 (10 level) bisa dimainkan dalam EN/ID, dengan pengecek jawaban, hint, progres tersimpan, dan 110 tes otomatis. Pemilik project sudah uji main dan menyetujui rasa belajarnya. 🚧 **Fase 2 sedang berjalan** — rencana dan keputusan ada di "Rencana Fase 2" di bawah. Selesai: 2.1–2.7.
 
 Catatan dari Fase 1 untuk fase berikutnya:
 - Ukuran unduhan pertama PGlite besar (±3,5 MB wasm terkompresi + 6 MB data) — perlu layar loading yang jelas dan dicek saat memilih hosting.
@@ -246,7 +247,7 @@ Iterasi kecil, masing-masing: kerjakan → cek di browser → commit & push.
 | 2.4 ✅ | Grandma sebagai NPC + sistem interaksi (gelembung "…" saat dekat; E/Spasi/klik untuk bicara) + kotak dialog React dengan potret 64×64 | Bicara dengan Grandma menampilkan dialog level aktif (EN/ID) |
 | 2.5 ✅ | `stations.ts` + field `station` di level; konsol sebagai overlay yang dibuka dari stasiun; daftar tabel difilter per stasiun; keyboard Phaser dimatikan saat overlay terbuka | Menu board membuka konsol berisi `menu_items`; tes memastikan setiap jawaban level hanya memakai tabel dari stasiunnya |
 | 2.6 ✅ | Alur level di dunia: penanda "!" di atas pemberi tugas (Grandma, Barista, atau Regular) → dialog + kartu materi → penanda di stasiun → konsol → benar → kembali ke Grandma untuk ucapan sukses → level berikutnya. Hint, progres, dan daftar level (sebagai menu "Journal") tetap jalan | Chapter 0–1 bisa diselesaikan seluruhnya di dalam dunia game |
-| 2.7 | Layar loading (PGlite besar), tata letak overlay di HP, tombol bahasa & menu di HUD | Bisa dimainkan nyaman di desktop dan HP |
+| 2.7 ✅ | Layar loading (PGlite besar), tata letak overlay di HP, tombol bahasa & menu di HUD | Bisa dimainkan nyaman di desktop dan HP |
 | 2.8 | Uji main pemilik project, perbaikan, README, status | Pemilik project menyetujui → Fase 2 selesai |
 
 Di luar Fase 2: kitchen/storeroom/back office, koin & upgrade, NPC pelanggan berjalan, aset final, audio, PGlite di Web Worker.

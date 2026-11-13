@@ -623,14 +623,14 @@ body {
   display: block;
 }
 
-.game-loading {
-  position: absolute;
-  inset: 0;
-  display: grid;
-  place-items: center;
-  margin: 0;
-  color: var(--bg);
+/* The world is driven by taps, not page gestures: no scrolling, zooming or text selection. */
+.game-view {
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
 }
+
 
 .world-stage {
   position: relative;
@@ -846,12 +846,118 @@ body {
   margin-bottom: 20px;
 }
 
-.world-modal-start-over {
-  display: block;
-  margin: 0 0 20px;
+.world-modal-start-over,
+.world-modal-classic {
+  display: inline-block;
+  margin: 0 20px 20px 0;
 }
 
 .solved-message {
   margin: 0 0 10px;
   font-weight: 600;
+}
+
+/* Loading */
+.world-loading {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 14px;
+  color: var(--bg);
+}
+
+.world-loading-title {
+  margin: 0;
+  font-size: 2rem;
+  font-weight: 700;
+  color: #f0c75e;
+}
+
+.world-loading-text {
+  margin: 0;
+}
+
+.loading-bar {
+  position: relative;
+  width: min(240px, 60%);
+  height: 8px;
+  overflow: hidden;
+  background: rgba(255, 250, 243, 0.25);
+  border-radius: 4px;
+}
+
+.loading-bar::after {
+  content: '';
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 40%;
+  background: #f0c75e;
+  border-radius: 4px;
+  animation: loading-slide 1.2s ease-in-out infinite;
+}
+
+.db-loading .loading-bar {
+  background: var(--line);
+}
+
+.db-loading .loading-bar::after {
+  background: var(--accent);
+}
+
+@keyframes loading-slide {
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: translateX(250%);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .loading-bar::after {
+    width: 100%;
+    animation: none;
+    opacity: 0.6;
+  }
+}
+
+.quest-bar-status {
+  margin-left: auto;
+  font-size: 0.8rem;
+  color: var(--muted);
+}
+
+.hud-button {
+  padding: 6px 10px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--ink);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+/* Phones */
+@media (max-width: 520px) {
+  .world-hud {
+    padding: 6px 12px;
+  }
+
+  .world-hud-actions {
+    gap: 8px;
+  }
+
+  .quest-bar {
+    padding: 6px 12px;
+    font-size: 0.9rem;
+  }
+
+  /* iOS zooms into inputs smaller than 16px; keep the editor at 16px. */
+  .editor .cm-editor {
+    font-size: 16px;
+  }
 }
