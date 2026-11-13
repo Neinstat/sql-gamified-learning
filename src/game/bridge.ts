@@ -2,15 +2,19 @@
  * The only connection between the game world (Phaser) and the HTML overlays (React).
  * Plain TypeScript: neither side's library is imported here.
  *
+ *   game → app   'ready'     the world has started: send it the current quest
  *   game → app   'interact'  the player talked to an NPC or used a station (its id)
  *   app → game   'overlay'   an overlay opened (true) or closed (false); the world
  *                            ignores input while one is open
+ *   app → game   'quest'     where the player should go next (a "!" is shown there), or null
  */
 export type InteractTarget = { kind: 'npc' | 'station'; id: string };
 
 type Events = {
+  ready: true;
   interact: InteractTarget;
   overlay: boolean;
+  quest: InteractTarget | null;
 };
 
 type Listener<T> = (payload: T) => void;

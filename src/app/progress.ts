@@ -7,7 +7,13 @@ export type Progress = {
   currentLevelId: string | null;
   /** Finished levels, with the fewest hints used (kept for stars in Phase 3). */
   completed: Record<string, { hintsUsed: number }>;
+  /** Game world only: how far the player is with the current level's request (see quest.ts). */
+  quest?: QuestState;
 };
+
+export type QuestStage = 'talk' | 'solve' | 'report' | 'done';
+export type QuestState = { levelId: string; stage: QuestStage };
+const STAGES: QuestStage[] = ['talk', 'solve', 'report', 'done'];
 
 const STORAGE_KEY = 'sql-valley.progress.v1';
 
@@ -21,6 +27,10 @@ export function loadProgress(): Progress {
     return {
       currentLevelId: typeof data.currentLevelId === 'string' ? data.currentLevelId : null,
       completed: data.completed && typeof data.completed === 'object' ? data.completed : {},
+      quest:
+        data.quest && typeof data.quest.levelId === 'string' && STAGES.includes(data.quest.stage)
+          ? { levelId: data.quest.levelId, stage: data.quest.stage }
+          : undefined,
     };
   } catch {
     return emptyProgress;

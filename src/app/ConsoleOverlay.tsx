@@ -5,7 +5,7 @@ import type { Level } from '../sql-core/levels';
 import type { UiText } from '../i18n';
 import { Console } from '../console/Console';
 import type { Table } from '../console/SchemaPanel';
-import { Dialogue, Hints, Lesson } from './LevelParts';
+import { Hints, Lesson } from './LevelParts';
 
 type Props = {
   stationName: string;
@@ -20,12 +20,15 @@ type Props = {
   hintsUsed: number;
   onRevealHint: () => void;
   onCorrect: () => void;
+  /** Shown after a correct answer, e.g. "Nice work! Go tell Grandma." */
+  solvedMessage: string;
   onClose: () => void;
 };
 
 /** The SQL console opened at a station, over the game world. */
 export function ConsoleOverlay(props: Props) {
-  const { stationName, level, db, schema, lang, t, visible, hintsUsed, onRevealHint, onCorrect, onClose } = props;
+  const { stationName, level, db, schema, lang, t, visible, hintsUsed, onRevealHint, onCorrect, solvedMessage, onClose } =
+    props;
   const [solved, setSolved] = useState(false);
   const [lessonOpen, setLessonOpen] = useState(false);
 
@@ -73,7 +76,16 @@ export function ConsoleOverlay(props: Props) {
               setSolved(true);
               onCorrect();
             }}
-            solvedPanel={solved && <Dialogue speaker={t.characters[level.character]} lines={[level.success]} />}
+            solvedPanel={
+              solved && (
+                <div className="solved">
+                  <p className="solved-message">{solvedMessage}</p>
+                  <button className="primary-button" onClick={onClose}>
+                    {t.backToCafe}
+                  </button>
+                </div>
+              )
+            }
           />
         ) : (
           <p className="loading">{t.loading}</p>

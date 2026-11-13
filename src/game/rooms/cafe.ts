@@ -80,7 +80,13 @@ export const BLOCKING_TILES: readonly number[] = [
 ];
 
 /** People standing in the room (tile coordinates). They block the tile they stand on. */
-export const NPCS = [{ id: 'grandma', tile: { x: 11, y: 4 } }] as const;
+export const NPCS = [
+  { id: 'grandma', tile: { x: 11, y: 4 }, facing: 'down' },
+  // Behind the counter, next to the coffee machine.
+  { id: 'barista', tile: { x: 4, y: 2 }, facing: 'down' },
+  // A regular by the window table.
+  { id: 'regular', tile: { x: 16, y: 6 }, facing: 'left' },
+] as const;
 
 /** Stations (SQL consoles), placed on furniture tiles: the menu board and the cash register. */
 export const STATION_SPOTS = [

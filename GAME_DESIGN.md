@@ -91,6 +91,17 @@ Game ditampilkan sebagai **dunia 2D dengan kamera dari atas** (genre seperti gam
 - Nama kolom/alias dinilai longgar kecuali level secara eksplisit mengajarkan alias.
 - **Query wajib diakhiri titik koma `;`** — kebiasaan penting sejak hari pertama. Dicek setelah hasilnya benar, dengan pesan ramah ("hasilnya sudah benar, tinggal akhiri dengan `;`"). Mode blok selalu menyediakan blok `;`; template isi-kosong sudah diakhiri `;`.
 
+### Alur quest di dunia game (Fase 2)
+Setiap level adalah satu permintaan dengan tahap yang disimpan di progres (`quest` di `progress.ts`):
+
+1. **talk** — penanda "!" di atas pemberi tugas. Bicara → dialog → kartu materi (bila ada) → tahap berikutnya.
+2. **solve** — "!" pindah ke stasiun. Konsol hanya terbuka di stasiun itu; pemberi tugas hanya mengingatkan.
+3. **report** — setelah jawaban benar (progres tersimpan), "!" kembali ke pemberi tugas, yang mengucapkan kalimat sukses.
+4. Lanjut ke level berikutnya (tahap **talk**); setelah level terakhir tahapnya **done**.
+
+- Bar di bawah header selalu menunjukkan langkah berikutnya (mis. "Talk to Grandma", atau tugas + stasiunnya).
+- Chapter baru dibuka dengan kartu chapter. **Journal** (menu di header) menampilkan daftar level; level yang sudah selesai bisa dimainkan ulang dari tahap *talk*. "Start over" ada di Journal.
+
 ## 5. Jenis level
 
 | Jenis (in-game) | Deskripsi | Mulai dari |
@@ -205,7 +216,7 @@ Tes otomatis memeriksa semua level: jawaban resmi bisa dijalankan, blok yang dis
 
 Dibangun bertahap — setiap fase menghasilkan sesuatu yang bisa dimainkan.
 
-**Status (13 Nov 2026):** ✅ **Fase 1 selesai.** Chapter 0–1 (10 level) bisa dimainkan dalam EN/ID, dengan pengecek jawaban, hint, progres tersimpan, dan 110 tes otomatis. Pemilik project sudah uji main dan menyetujui rasa belajarnya. 🚧 **Fase 2 sedang berjalan** — rencana dan keputusan ada di "Rencana Fase 2" di bawah. Selesai: 2.1–2.5.
+**Status (13 Nov 2026):** ✅ **Fase 1 selesai.** Chapter 0–1 (10 level) bisa dimainkan dalam EN/ID, dengan pengecek jawaban, hint, progres tersimpan, dan 110 tes otomatis. Pemilik project sudah uji main dan menyetujui rasa belajarnya. 🚧 **Fase 2 sedang berjalan** — rencana dan keputusan ada di "Rencana Fase 2" di bawah. Selesai: 2.1–2.6.
 
 Catatan dari Fase 1 untuk fase berikutnya:
 - Ukuran unduhan pertama PGlite besar (±3,5 MB wasm terkompresi + 6 MB data) — perlu layar loading yang jelas dan dicek saat memilih hosting.
@@ -221,7 +232,7 @@ Catatan dari Fase 1 untuk fase berikutnya:
 
 ### Rencana Fase 2 — Dunia pertama
 
-Keputusan: Phaser 3 · pixel art 16 px (karakter 16×32, potret 64×64) · aset placeholder CC0 · keyboard + klik/tap · stasiun baru **Menu board** di area depan untuk `menu_items` (semua level Chapter 0–1).
+Keputusan: Phaser 3 · pixel art 16 px (karakter 16×32, potret 64×64) · aset placeholder CC0 · keyboard + klik/tap · stasiun baru **Menu board** di area depan untuk `menu_items` (semua level Chapter 0–1) · NPC **Barista** (di belakang counter) dan **Regular** (dekat meja jendela) ikut ditambahkan di 2.6 karena tiga level Chapter 1 adalah permintaan mereka.
 
 Satu ruangan: area depan kafe (pintu, meja pelanggan, menu board) + front counter (cash register). Cash register sudah ada di dunia, tapi **belum dibuka**: tabel `sales`/`customers` baru dibuat di Fase 3, jadi untuk sementara stasiun ini hanya menampilkan pesan singkat. Stasiun otomatis terbuka begitu tabelnya ada di database.
 
@@ -234,7 +245,7 @@ Iterasi kecil, masing-masing: kerjakan → cek di browser → commit & push.
 | 2.3 ✅ | Klik/tap untuk berjalan (pathfinding di grid) | Klik/tap lantai → pemain berjalan memutari halangan |
 | 2.4 ✅ | Grandma sebagai NPC + sistem interaksi (gelembung "…" saat dekat; E/Spasi/klik untuk bicara) + kotak dialog React dengan potret 64×64 | Bicara dengan Grandma menampilkan dialog level aktif (EN/ID) |
 | 2.5 ✅ | `stations.ts` + field `station` di level; konsol sebagai overlay yang dibuka dari stasiun; daftar tabel difilter per stasiun; keyboard Phaser dimatikan saat overlay terbuka | Menu board membuka konsol berisi `menu_items`; tes memastikan setiap jawaban level hanya memakai tabel dari stasiunnya |
-| 2.6 | Alur level di dunia: penanda "!" di atas Grandma → dialog + kartu materi → penanda di stasiun → konsol → benar → kembali ke Grandma untuk ucapan sukses → level berikutnya. Hint, progres, dan daftar level (sebagai menu "Journal") tetap jalan | Chapter 0–1 bisa diselesaikan seluruhnya di dalam dunia game |
+| 2.6 ✅ | Alur level di dunia: penanda "!" di atas pemberi tugas (Grandma, Barista, atau Regular) → dialog + kartu materi → penanda di stasiun → konsol → benar → kembali ke Grandma untuk ucapan sukses → level berikutnya. Hint, progres, dan daftar level (sebagai menu "Journal") tetap jalan | Chapter 0–1 bisa diselesaikan seluruhnya di dalam dunia game |
 | 2.7 | Layar loading (PGlite besar), tata letak overlay di HP, tombol bahasa & menu di HUD | Bisa dimainkan nyaman di desktop dan HP |
 | 2.8 | Uji main pemilik project, perbaikan, README, status | Pemilik project menyetujui → Fase 2 selesai |
 

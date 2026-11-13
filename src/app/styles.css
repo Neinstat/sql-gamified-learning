@@ -770,3 +770,88 @@ body {
     border-radius: 0;
   }
 }
+
+/* What to do next, under the header */
+.quest-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 12px;
+  padding: 8px 16px;
+  font-size: 0.95rem;
+  color: var(--ink);
+  background: #f3e6cc;
+  border-bottom: 1px solid var(--line);
+}
+
+.quest-bar-label {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.quest-bar-text.active::before {
+  content: '❗ ';
+}
+
+/* Cards in the middle of the world: lesson, new chapter, journal */
+.world-modal-backdrop {
+  position: absolute;
+  inset: 0;
+  z-index: 30;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 16px;
+  overflow-y: auto;
+  background: rgba(43, 33, 28, 0.55);
+}
+
+.world-modal {
+  position: relative;
+  width: min(720px, 100%);
+  max-height: 100%;
+  padding: 20px;
+  overflow-y: auto;
+  color: var(--ink);
+  background: var(--bg);
+  border: 3px solid #5b4033;
+  border-radius: 10px;
+}
+
+.world-modal .lesson,
+.world-modal .chapter-card {
+  margin-bottom: 16px;
+}
+
+.world-modal-close {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+}
+
+.world-modal-title {
+  margin: 0 0 4px;
+  color: var(--accent);
+}
+
+.world-modal-hint {
+  margin: 0 0 16px;
+  color: var(--muted);
+}
+
+.world-modal .level-nav {
+  margin-bottom: 20px;
+}
+
+.world-modal-start-over {
+  display: block;
+  margin: 0 0 20px;
+}
+
+.solved-message {
+  margin: 0 0 10px;
+  font-weight: 600;
+}

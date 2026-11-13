@@ -21,6 +21,8 @@ export type Look = {
   bun?: boolean;
   glasses?: boolean;
   skirt?: boolean;
+  /** A cap with a brim, in this colour. */
+  cap?: string;
 };
 
 export const LOOKS = {
@@ -44,6 +46,25 @@ export const LOOKS = {
     bun: true,
     glasses: true,
     skirt: true,
+  },
+  barista: {
+    hair: '#2e2420',
+    hairLight: '#4a3a33',
+    skin: '#c98e68',
+    top: '#f3e6cc',
+    front: '#4f6f52',
+    legs: '#2f3b35',
+    shoe: '#2b211c',
+  },
+  regular: {
+    hair: '#8a5a3b',
+    hairLight: '#a87650',
+    skin: '#f0c8a8',
+    top: '#b5643c',
+    front: '#d98a5f',
+    legs: '#3f4f6e',
+    shoe: '#5b4033',
+    cap: '#3f6f8a',
   },
 } satisfies Record<string, Look>;
 
@@ -108,6 +129,10 @@ function drawDown(ctx: Ctx, L: Look, step: number) {
     r(ctx, L.hair, 6, 3, 4, 3);
     r(ctx, L.hairLight, 7, 3, 2, 1);
   }
+  if (L.cap) {
+    r(ctx, L.cap, 4, 4, 8, 4);
+    r(ctx, L.cap, 3, 8, 10, 1);
+  }
 }
 
 function drawUp(ctx: Ctx, L: Look, step: number) {
@@ -121,6 +146,7 @@ function drawUp(ctx: Ctx, L: Look, step: number) {
     r(ctx, L.hair, 5, 3, 6, 4);
     r(ctx, L.hairLight, 6, 4, 3, 1);
   }
+  if (L.cap) r(ctx, L.cap, 3, 4, 10, 5);
 }
 
 function drawSide(ctx: Ctx, L: Look, step: number) {
@@ -154,6 +180,10 @@ function drawSide(ctx: Ctx, L: Look, step: number) {
   if (L.bun) {
     r(ctx, L.hair, 10, 4, 4, 4);
     r(ctx, L.hairLight, 11, 4, 2, 1);
+  }
+  if (L.cap) {
+    r(ctx, L.cap, 4, 4, 8, 4);
+    r(ctx, L.cap, 1, 7, 5, 1);
   }
 }
 

@@ -42,6 +42,10 @@ function drawFace(ctx: Ctx, L: Look) {
     r(ctx, L.hair, 25, 3, 14, 10);
     r(ctx, L.hairLight, 28, 4, 6, 2);
   }
+  if (L.cap) {
+    r(ctx, L.cap, 16, 6, 32, 10);
+    r(ctx, L.cap, 12, 15, 40, 3);
+  }
 
   // Eyes, cheeks, smile.
   r(ctx, EYE, 24, 27, 3, 4);
@@ -63,7 +67,7 @@ function drawFace(ctx: Ctx, L: Look) {
   }
 }
 
-/** A data URL for the character's portrait (Grandma's look is the fallback for now). */
+/** A data URL for the character's portrait (Grandma's look is the fallback for characters without one). */
 export function placeholderPortrait(character: string): string {
   const canvas = document.createElement('canvas');
   canvas.width = PORTRAIT_SIZE;

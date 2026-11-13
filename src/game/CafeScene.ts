@@ -21,6 +21,7 @@ import type { GameBridge, InteractTarget } from './bridge';
 
 const TILESET_KEY = 'cafe-tiles';
 const PROMPT_KEY = 'talk-prompt';
+const QUEST_KEY = 'quest-marker';
 /** Never zoom out below this, so phones see big, readable pixels (the camera scrolls instead). */
 const MIN_ZOOM = 2;
 const MAX_ZOOM = 4;
@@ -53,6 +54,8 @@ export class CafeScene extends Phaser.Scene {
   private walkable = walkableGrid();
   private marker?: Phaser.GameObjects.Rectangle;
   private prompt!: Phaser.GameObjects.Image;
+  private questMarker!: Phaser.GameObjects.Image;
+  private quest: Target | null = null;
   private locked = false;
   private talkBlockedUntil = 0;
   /** Target the player clicked on: use it on arrival. */
@@ -89,7 +92,7 @@ export class CafeScene extends Phaser.Scene {
     this.physics.world.setBounds(0, 0, map.widthInPixels, map.heightInPixels);
     // Feet just inside the door, centred between the two door tiles.
     this.player = new Player(this, PLAYER_START.x * TILE_SIZE, (PLAYER_START.y + 1) * TILE_SIZE - 2);
-    this.npcs = NPCS.map((npc) => new Npc(this, npc.id, npc.tile, LOOKS[npc.id]));
+    this.npcs = NPCS.map((npc) => new Npc(this, npc.id, npc.tile, LOOKS[npc.id], npc.facing));
     for (const obstacle of [...layers, ...this.npcs]) this.physics.add.collider(this.player, obstacle);
     this.targets = [
       ...this.npcs.map(
@@ -120,6 +123,7 @@ export class CafeScene extends Phaser.Scene {
 
     this.prompt = this.add.image(0, 0, PROMPT_KEY).setOrigin(0.5, 1).setVisible(false).setDepth(10_000);
     this.tweens.add({ targets: this.prompt, y: '-=2', duration: 500, yoyo: true, repeat: -1, ease: 'Sine.inOut' });
+    this.questMarker = this.add.image(0, 0, QUEST_KEY).setOrigin(0.5, 1).setVisible(false).setDepth(10_000);
 
     // Key events (not polling), so even a very quick tap between two frames is noticed.
     for (const key of ['E', 'SPACE', 'ENTER']) this.input.keyboard!.on(`keydown-${key}`, () => this.onTalkKey());
@@ -127,6 +131,8 @@ export class CafeScene extends Phaser.Scene {
     this.player.on('path-end', (arrived: boolean) => this.onPathEnd(arrived));
 
     const offOverlay = this.bridge.on('overlay', (open) => this.setLocked(open));
+    const offQuest = this.bridge.on('quest', (target) => this.setQuest(target));
+    this.bridge.emit('ready', true);
 
     const fit = () => this.fitCamera(map.widthInPixels, map.heightInPixels);
     fit();
@@ -135,12 +141,18 @@ export class CafeScene extends Phaser.Scene {
     this.events.once('shutdown', () => {
       this.scale.off('resize', fit);
       offOverlay();
+      offQuest();
     });
   }
 
-  update(): void {
+  update(time: number): void {
+    // The "!" floats over where the player should go next, unless the "…" is already there.
+    const near = this.locked ? null : nearestInteractable(this.player.feet, this.targets);
+    if (this.quest) {
+      this.questMarker.setVisible(near?.id !== this.quest.id);
+      this.questMarker.setPosition(this.quest.promptX, this.quest.promptY - 1 + Math.round(Math.sin(time / 250)));
+    }
     if (this.locked) return;
-    const near = nearestInteractable(this.player.feet, this.targets);
 
     if (near) {
       this.prompt.setVisible(true);
@@ -153,6 +165,11 @@ export class CafeScene extends Phaser.Scene {
     } else {
       this.prompt.setVisible(false).setData('for', null);
     }
+  }
+
+  private setQuest(target: InteractTarget | null): void {
+    this.quest = target ? (this.targets.find((t) => t.kind === target.kind && t.id === target.id) ?? null) : null;
+    this.questMarker.setVisible(this.quest !== null);
   }
 
   private onTalkKey(): void {
@@ -246,6 +263,15 @@ export class CafeScene extends Phaser.Scene {
       g.fillStyle(0xfffaf3).fillRect(2, 1, 9, 7).fillRect(1, 2, 11, 5).fillRect(6, 8, 1, 1);
       g.fillStyle(0xb5643c).fillRect(3, 4, 2, 2).fillRect(6, 4, 2, 2).fillRect(9, 4, 2, 2);
       g.generateTexture(PROMPT_KEY, 13, 11);
+      g.destroy();
+    }
+    if (!this.textures.exists(QUEST_KEY)) {
+      // A golden "!" bubble: "go here next".
+      const g = this.make.graphics({}, false);
+      g.fillStyle(0x3b2f2a).fillRect(1, 0, 7, 11).fillRect(0, 1, 9, 9).fillRect(3, 11, 3, 2);
+      g.fillStyle(0xf0c75e).fillRect(2, 1, 5, 9).fillRect(1, 2, 7, 7).fillRect(4, 11, 1, 1);
+      g.fillStyle(0x3b2f2a).fillRect(4, 2, 1, 4).fillRect(4, 7, 1, 1);
+      g.generateTexture(QUEST_KEY, 9, 13);
       g.destroy();
     }
   }
