@@ -26,3 +26,19 @@ export function facingFor(vector: { x: number; y: number }, current: Facing): Fa
   if (options.length === 0 || options.includes(current)) return current;
   return options[0];
 }
+
+/**
+ * Heading towards a waypoint. `arrived` is true once the next step would reach or pass
+ * it, so the walker never overshoots and wobbles, even when frames are slow.
+ */
+export function steerTowards(
+  from: { x: number; y: number },
+  to: { x: number; y: number },
+  stepLength: number,
+): { vector: { x: number; y: number }; arrived: boolean } {
+  const dx = to.x - from.x;
+  const dy = to.y - from.y;
+  const distance = Math.hypot(dx, dy);
+  if (distance <= Math.max(stepLength, 0.5)) return { vector: { x: 0, y: 0 }, arrived: true };
+  return { vector: { x: dx / distance, y: dy / distance }, arrived: false };
+}

@@ -95,3 +95,12 @@ export function furnitureLayer(map: readonly string[] = CAFE_MAP): number[][] {
 export function findTiles(ch: string, map: readonly string[] = CAFE_MAP): { x: number; y: number }[] {
   return map.flatMap((row, y) => [...row].flatMap((c, x) => (c === ch ? [{ x, y }] : [])));
 }
+
+/** true where the player can stand: neither the ground nor the furniture blocks it. */
+export function walkableGrid(map: readonly string[] = CAFE_MAP): boolean[][] {
+  const ground = groundLayer(map);
+  const furniture = furnitureLayer(map);
+  return ground.map((row, y) =>
+    row.map((g, x) => !BLOCKING_TILES.includes(g) && !BLOCKING_TILES.includes(furniture[y][x])),
+  );
+}
