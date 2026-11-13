@@ -27,7 +27,7 @@ export function WorldApp() {
   const t = ui[lang];
   const bridge = useMemo(() => new GameBridge(), []);
   const [overlay, setOverlay] = useState<Overlay | null>(null);
-  const [progress, setProgress] = useState<Progress>(loadProgress);
+  const [progress, setProgress] = useState<Progress>(() => withDevStart(loadProgress()));
   const [db, setDb] = useState<CafeDatabase | null>(null);
   const [dbError, setDbError] = useState<string | null>(null);
   const [schema, setSchema] = useState<Table[]>([]);
@@ -280,9 +280,6 @@ export function WorldApp() {
             >
               {t.startOver}
             </button>
-            <a className="link-button world-modal-classic" href="?classic">
-              {t.classicMode}
-            </a>
           </WorldModal>
         )}
       </div>
@@ -291,6 +288,16 @@ export function WorldApp() {
 }
 
 /** Always-visible line under the header: what to do next. */
+/**
+ * Development shortcut: http://localhost:5173/?level=ch1-3 starts that level's request
+ * (only with `npm run dev`, never in the published game).
+ */
+function withDevStart(progress: Progress): Progress {
+  if (!import.meta.env.DEV) return progress;
+  const id = new URLSearchParams(window.location.search).get('level');
+  return id && levelIds.includes(id) ? startLevel(progress, id) : progress;
+}
+
 const noFocus = (event: React.MouseEvent) => event.preventDefault();
 
 function QuestBar(props: { label: string; text: string; active: boolean; status: string | null }) {

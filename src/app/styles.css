@@ -26,26 +26,6 @@ body {
   background: var(--bg);
 }
 
-.page {
-  max-width: 1100px;
-  margin: 0 auto;
-  padding: 32px 16px 64px;
-}
-
-.header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 16px;
-  margin-bottom: 24px;
-}
-
-.title {
-  margin: 0;
-  font-size: 2.25rem;
-  color: var(--accent);
-}
-
 .loading {
   color: var(--muted);
 }
@@ -245,31 +225,6 @@ body {
 }
 
 /* Level */
-.level-meta {
-  margin: 0;
-  font-size: 0.85rem;
-  color: var(--muted);
-}
-
-.level-title {
-  margin: 4px 0 16px;
-  font-size: 1.6rem;
-}
-
-.dialogue {
-  position: relative;
-  max-width: 680px;
-  margin: 0 0 16px;
-  padding: 14px 16px;
-  background: var(--surface);
-  border: 1px solid var(--line);
-  border-radius: 12px;
-}
-
-.dialogue p {
-  margin: 4px 0;
-  line-height: 1.5;
-}
 
 .speaker {
   display: inline-block;
@@ -365,10 +320,6 @@ body {
   font-size: 0.9em;
   background: rgba(255, 255, 255, 0.6);
   border-radius: 4px;
-}
-
-.all-done {
-  color: var(--muted);
 }
 
 /* Block input */
@@ -575,12 +526,6 @@ body {
   font-weight: 700;
 }
 
-.footer {
-  margin-top: 48px;
-  padding-top: 16px;
-  border-top: 1px solid var(--line);
-}
-
 /* Game world (Phase 2) */
 .world {
   display: flex;
@@ -630,7 +575,6 @@ body {
   -webkit-user-select: none;
   -webkit-touch-callout: none;
 }
-
 
 .world-stage {
   position: relative;
@@ -846,8 +790,7 @@ body {
   margin-bottom: 20px;
 }
 
-.world-modal-start-over,
-.world-modal-classic {
+.world-modal-start-over {
   display: inline-block;
   margin: 0 20px 20px 0;
 }

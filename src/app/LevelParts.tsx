@@ -1,7 +1,7 @@
 import type { Level } from '../sql-core/levels';
 import type { UiText } from '../i18n';
 
-/* Pieces of a level shared by the classic page and the game world. */
+/* Pieces of a level shown in the game world's overlays. */
 
 /** Hints are revealed one at a time: general direction → clause → almost the answer. */
 export function Hints({ hints, used, onReveal, t }: { hints: string[]; used: number; onReveal: () => void; t: UiText }) {
@@ -17,17 +17,6 @@ export function Hints({ hints, used, onReveal, t }: { hints: string[]; used: num
           {t.hintButton(used, hints.length)}
         </button>
       )}
-    </div>
-  );
-}
-
-export function Dialogue({ speaker, lines }: { speaker: string; lines: string[] }) {
-  return (
-    <div className="dialogue">
-      <span className="speaker">{speaker}</span>
-      {lines.map((line, i) => (
-        <p key={i}>{line}</p>
-      ))}
     </div>
   );
 }

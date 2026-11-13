@@ -27,7 +27,7 @@ You inherit your grandma's struggling café and become its data analyst. Explore
 - Answers are graded on their **result**, not their text, with specific feedback ("Column `price` is missing", "Your result has 12 rows — expected 3")
 - Three-step hints, saved progress, beginner-friendly error messages
 
-✅ **Phase 2 (the first world)** — Chapters 0–1 are played inside the café's front room (Phaser, placeholder pixel art): walk with WASD/arrows or click/tap, take requests from Grandma, the barista and a regular, solve them at the menu board's SQL console, and report back. Zoom with − / + (or the mouse wheel); a golden arrow points the way when your next stop is off screen. The Phase 1 page is still available as **classic mode** at `?classic`.
+✅ **Phase 2 (the first world)** — Chapters 0–1 are played inside the café's front room (Phaser, placeholder pixel art): walk with WASD/arrows or click/tap, take requests from Grandma, the barista and a regular, solve them at the menu board's SQL console, and report back. Zoom with − / + (or the mouse wheel); a golden arrow points the way when your next stop is off screen.
 
 Next: **Phase 3** — more rooms, Chapters 2–5, coins, stars and the Analysis Case. See [GAME_DESIGN.md](GAME_DESIGN.md) for the full design and roadmap (written in Indonesian).
 
@@ -43,7 +43,7 @@ npm run build      # typecheck and build for production
 npm run preview    # serve the production build at http://localhost:4173
 ```
 
-While developing, open `http://localhost:5173/?classic&level=ch1-3` to jump straight to a level in classic mode.
+While developing, open `http://localhost:5173/?level=ch1-3` to jump straight to a level's request in the game world.
 
 ## Project structure
 
@@ -61,6 +61,6 @@ src/
 │   ├── rooms/       # room maps as text (one character = one 16×16 tile)
 │   ├── bridge.ts    # the only link between the game world and the React overlays
 │   └── placeholder*.ts  # temporary tiles, sprites and portraits drawn in code
-├── app/           # pages (world + classic), level flow, level list, saved progress
+├── app/           # the page around the world: overlays, quest flow, journal, saved progress
 └── i18n.ts        # UI text in both languages
 ```

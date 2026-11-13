@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import type { UiText } from '../i18n';
 import type { GameBridge } from '../game/bridge';
 
-/** Holds the Phaser canvas. Phaser is loaded on demand so classic mode never downloads it. */
+/** Holds the Phaser canvas. Phaser is loaded after the first paint, so the loading screen shows at once. */
 export function GameView({ t, bridge }: { t: UiText; bridge: GameBridge }) {
   const parentRef = useRef<HTMLDivElement>(null);
   const [ready, setReady] = useState(false);

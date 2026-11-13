@@ -102,7 +102,7 @@ Setiap level adalah satu permintaan dengan tahap yang disimpan di progres (`ques
 4. Lanjut ke level berikutnya (tahap **talk**); setelah level terakhir tahapnya **done**.
 
 - Bar di bawah header selalu menunjukkan langkah berikutnya (mis. "Talk to Grandma", atau tugas + stasiunnya), dan status "Loading records…" selama database PGlite dimuat di belakang layar. Dunia sudah bisa dijelajahi sebelum database siap; konsol menampilkan bilah loading, atau pesan galat + tombol "Try again" bila gagal.
-- Header berisi 📖 Journal dan pilihan bahasa. Tautan mode klasik dipindah ke dalam Journal agar header muat di HP. Tombol header tidak menahan fokus, jadi Spasi/E tetap dipakai untuk bicara di dunia.
+- Header berisi 📖 Journal dan pilihan bahasa (ringkas agar muat di HP). Tombol header tidak menahan fokus, jadi Spasi/E tetap dipakai untuk bicara di dunia.
 - Chapter baru dibuka dengan kartu chapter. **Journal** (menu di header) menampilkan daftar level; level yang sudah selesai bisa dimainkan ulang dari tahap *talk*. "Start over" ada di Journal.
 
 ## 5. Jenis level
@@ -181,7 +181,7 @@ Di luar MVP (nanti): subquery, CTE, window function, analisis waktu lanjutan (Mo
 ### Struktur kode (Fase 1)
 - `src/sql-core/` — database (PGlite), pengecek jawaban, tipe & data level. **Tidak boleh** meng-import React atau game engine.
 - `src/console/` — UI konsol (React): editor, input blok, isi kosong, tabel hasil, hint.
-- `src/app/` — halaman sederhana: daftar level, alur level, progres (localStorage).
+- `src/app/` — halaman sederhana: daftar level, alur level, progres (localStorage). *(Halaman ini dihapus setelah Fase 2 — lihat §12.)*
 
 ### Struktur kode (tambahan Fase 2)
 - `src/sql-core/stations.ts` — daftar stasiun dan tabel yang boleh diakses tiap stasiun (data murni, tanpa engine). Level mendapat field `station`; tes memastikan jawaban resmi tiap level hanya memakai tabel stasiunnya.
@@ -230,7 +230,7 @@ Catatan dari Fase 2 untuk fase berikutnya:
 - Semua aset masih placeholder yang digambar lewat kode (`src/game/placeholder*.ts`); keputusan aset final ada di §13.
 - Cash register sudah ada di dunia tapi belum dibuka; terbuka otomatis saat tabel `sales`/`customers` dibuat. Query ke tabel di luar stasiun belum diblokir — putuskan saat stasiun kedua punya level.
 - Minimap belum dibuat (cukup zoom 1× + panah penunjuk untuk satu ruangan); pertimbangkan lagi saat ada beberapa ruangan.
-- Mode klasik (`?classic`) masih ada; putuskan apakah tetap dipertahankan.
+- **Mode klasik (`?classic`) dihapus** (keputusan pemilik project setelah Fase 2): mempertahankannya berarti setiap fitur Fase 3 (bintang, koin, Analysis Case, Rush Hour, tabel per stasiun) harus dibuat dua kali. Jalan pintas pengembangan `?level=ch1-3` kini membuka permintaan level itu langsung di dunia game.
 - Belum teruji otomatis: mengubah ukuran jendela/memutar HP saat game berjalan dan tampilan galat database (sudah dicoba manual oleh pemilik project untuk HP).
 - Teks bar tugas English memakai nama tokoh apa adanya ("Talk to Regular") — bisa dirapikan saat menulis teks Chapter 2+.
 
