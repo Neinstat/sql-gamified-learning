@@ -580,3 +580,54 @@ body {
   padding-top: 16px;
   border-top: 1px solid var(--line);
 }
+
+/* Game world (Phase 2) */
+.world {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  height: 100dvh;
+  background: #2b211c;
+}
+
+.world-hud {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 16px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--line);
+}
+
+.world-title {
+  margin: 0;
+  font-size: 1.25rem;
+  color: var(--accent);
+}
+
+.world-hud-actions {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.game-view {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.game-view canvas {
+  display: block;
+}
+
+.game-loading {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  margin: 0;
+  color: var(--bg);
+}

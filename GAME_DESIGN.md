@@ -72,7 +72,7 @@ Game ditampilkan sebagai **dunia 2D dengan kamera dari atas** (genre seperti gam
 | Objek tinggi & furnitur | 16×32 atau 32×32 | Counter, mesin kopi, rak, papan menu |
 
 - Ditampilkan dengan **zoom bulat** (mis. 3×) dan `pixelArt: true` agar piksel tetap tajam.
-- **Sumber aset Fase 2: placeholder.** Tile dari pack **CC0** (kandidat: Kenney, 16×16) dan sprite karakter/potret placeholder sederhana buatan sendiri. Fokus Fase 2 adalah mekanik; aset final diganti di Fase 3 atau nanti. Setiap aset pihak ketiga dicatat sumber + lisensinya di `CREDITS.md`.
+- **Sumber aset Fase 2: placeholder.** Tile dari pack **CC0** (kandidat: Kenney, 16×16) dan sprite karakter/potret placeholder sederhana buatan sendiri. Fokus Fase 2 adalah mekanik; aset final diganti di Fase 3 atau nanti. Setiap aset pihak ketiga dicatat sumber + lisensinya di `CREDITS.md`. *(2.1: tile placeholder digambar lewat kode di `src/game/placeholderTiles.ts` — belum ada aset pihak ketiga.)*
 
 ## 4. Core loop (per level)
 
@@ -201,7 +201,7 @@ Tes otomatis memeriksa semua level: jawaban resmi bisa dijalankan, blok yang dis
 
 Dibangun bertahap — setiap fase menghasilkan sesuatu yang bisa dimainkan.
 
-**Status (13 Nov 2026):** ✅ **Fase 1 selesai.** Chapter 0–1 (10 level) bisa dimainkan dalam EN/ID, dengan pengecek jawaban, hint, progres tersimpan, dan 110 tes otomatis. Pemilik project sudah uji main dan menyetujui rasa belajarnya. 🚧 **Fase 2 sedang berjalan** — rencana dan keputusan ada di "Rencana Fase 2" di bawah.
+**Status (13 Nov 2026):** ✅ **Fase 1 selesai.** Chapter 0–1 (10 level) bisa dimainkan dalam EN/ID, dengan pengecek jawaban, hint, progres tersimpan, dan 110 tes otomatis. Pemilik project sudah uji main dan menyetujui rasa belajarnya. 🚧 **Fase 2 sedang berjalan** — rencana dan keputusan ada di "Rencana Fase 2" di bawah. Selesai: 2.1.
 
 Catatan dari Fase 1 untuk fase berikutnya:
 - Ukuran unduhan pertama PGlite besar (±3,5 MB wasm terkompresi + 6 MB data) — perlu layar loading yang jelas dan dicek saat memilih hosting.
@@ -225,7 +225,7 @@ Iterasi kecil, masing-masing: kerjakan → cek di browser → commit & push.
 
 | # | Iterasi | Selesai jika… |
 |---|---|---|
-| 2.1 | Pasang Phaser; kanvas game di halaman React; ruangan placeholder dari tilemap 16 px (zoom 3×) | Ruangan kafe tampil tajam di browser; halaman Fase 1 masih bisa dibuka di `?classic` selama transisi |
+| 2.1 ✅ | Pasang Phaser; kanvas game di halaman React; ruangan placeholder dari tilemap 16 px (zoom 3×) | Ruangan kafe tampil tajam di browser; halaman Fase 1 masih bisa dibuka di `?classic` selama transisi |
 | 2.2 | Pemain 16×32 berjalan dengan WASD/panah; tabrakan dengan dinding & furnitur; kamera mengikuti | Bisa berkeliling ruangan tanpa menembus objek |
 | 2.3 | Klik/tap untuk berjalan (pathfinding A* di grid) | Klik/tap lantai → pemain berjalan memutari halangan |
 | 2.4 | Grandma sebagai NPC + sistem interaksi (penanda "E" saat dekat) + kotak dialog React dengan potret 64×64 | Bicara dengan Grandma menampilkan dialog level aktif (EN/ID) |

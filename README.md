@@ -27,7 +27,7 @@ You inherit your grandma's struggling café and become its data analyst. Explore
 - Answers are graded on their **result**, not their text, with specific feedback ("Column `price` is missing", "Your result has 12 rows — expected 3")
 - Three-step hints, saved progress, beginner-friendly error messages
 
-Next: **Phase 2** — the top-down café world. See [GAME_DESIGN.md](GAME_DESIGN.md) for the full design and roadmap (written in Indonesian).
+🚧 **Phase 2 (the first world)** — in progress. The main page now shows the café's front room (Phaser, placeholder pixel art); levels are still played in **classic mode** at `?classic` until the world is wired up. See [GAME_DESIGN.md](GAME_DESIGN.md) for the full design and roadmap (written in Indonesian).
 
 ## Getting started
 
@@ -41,7 +41,7 @@ npm run build      # typecheck and build for production
 npm run preview    # serve the production build at http://localhost:4173
 ```
 
-While developing, open `http://localhost:5173/?level=ch1-3` to jump straight to a level.
+While developing, open `http://localhost:5173/?classic&level=ch1-3` to jump straight to a level in classic mode.
 
 ## Project structure
 
@@ -54,6 +54,9 @@ src/
 │   ├── data/        # café schema and seed data
 │   └── levels/      # chapters, levels and their translations (locales/id)
 ├── console/       # SQL console UI (React): blocks, fill-in-the-blank, editor, results
-├── app/           # page, level flow, level list, saved progress
+├── game/          # the 2D world (Phaser) — no React code allowed here
+│   ├── rooms/       # room maps as text (one character = one 16×16 tile)
+│   └── placeholderTiles.ts  # temporary tiles drawn in code
+├── app/           # pages (world + classic), level flow, level list, saved progress
 └── i18n.ts        # UI text in both languages
 ```
