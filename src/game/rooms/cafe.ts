@@ -65,8 +65,22 @@ const FURNITURE: Record<string, number> = {
   K: TILE.coffeeMachine,
 };
 
-/** Tiles the player cannot walk through (used from iteration 2.2). */
-export const BLOCKING = new Set('#fwSKCRTpM');
+/** Tiles the player cannot walk through. Chairs and the door mat are walkable. */
+export const BLOCKING_TILES: readonly number[] = [
+  TILE.wall,
+  TILE.wallFace,
+  TILE.window,
+  TILE.counter,
+  TILE.register,
+  TILE.table,
+  TILE.plant,
+  TILE.menuBoard,
+  TILE.shelf,
+  TILE.coffeeMachine,
+];
+
+/** Where the player appears: just inside the door (tile coordinates, can be fractional). */
+export const PLAYER_START = { x: 10, y: 10 };
 
 /** -1 = empty cell (Phaser's convention for "no tile"). */
 export function groundLayer(map: readonly string[] = CAFE_MAP): number[][] {

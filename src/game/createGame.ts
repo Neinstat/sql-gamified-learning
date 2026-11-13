@@ -14,6 +14,7 @@ export function createGame(parent: HTMLElement): Phaser.Game {
       width: parent.clientWidth,
       height: parent.clientHeight,
     },
+    physics: { default: 'arcade', arcade: { debug: false } },
     banner: false,
     scene: [CafeScene],
   });

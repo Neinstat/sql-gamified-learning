@@ -1,11 +1,17 @@
 import Phaser from 'phaser';
-import { CAFE_MAP, TILE_SIZE, furnitureLayer, groundLayer } from './rooms/cafe';
+import { BLOCKING_TILES, CAFE_MAP, PLAYER_START, TILE_SIZE, furnitureLayer, groundLayer } from './rooms/cafe';
 import { drawPlaceholderTileset } from './placeholderTiles';
+import { Player } from './Player';
 
 const TILESET_KEY = 'cafe-tiles';
+/** Never zoom out below this, so phones see big, readable pixels (the camera scrolls instead). */
+const MIN_ZOOM = 2;
+const MAX_ZOOM = 4;
 
-/** The café's front room (iteration 2.1: the room only, nobody walking yet). */
+/** The café's front room. */
 export class CafeScene extends Phaser.Scene {
+  private player!: Player;
+
   constructor() {
     super('cafe');
   }
@@ -24,23 +30,44 @@ export class CafeScene extends Phaser.Scene {
       tileHeight: TILE_SIZE,
     });
     const tileset = map.addTilesetImage(TILESET_KEY, TILESET_KEY, TILE_SIZE, TILE_SIZE, 0, 0)!;
-    for (const [name, data] of [
-      ['ground', groundLayer()],
-      ['furniture', furnitureLayer()],
-    ] as const) {
+    const layers = (
+      [
+        ['ground', groundLayer()],
+        ['furniture', furnitureLayer()],
+      ] as const
+    ).map(([name, data]) => {
       const layer = map.createBlankLayer(name, tileset)!;
       data.forEach((row, y) => row.forEach((index, x) => index >= 0 && layer.putTileAt(index, x, y)));
-    }
+      layer.setCollision([...BLOCKING_TILES]);
+      return layer;
+    });
 
-    this.fitCamera(map.widthInPixels, map.heightInPixels);
-    this.scale.on('resize', () => this.fitCamera(map.widthInPixels, map.heightInPixels));
+    this.physics.world.setBounds(0, 0, map.widthInPixels, map.heightInPixels);
+    // Feet just inside the door, centred between the two door tiles.
+    this.player = new Player(this, PLAYER_START.x * TILE_SIZE, (PLAYER_START.y + 1) * TILE_SIZE - 2);
+    for (const layer of layers) this.physics.add.collider(this.player, layer);
+
+    const fit = () => this.fitCamera(map.widthInPixels, map.heightInPixels);
+    fit();
+    this.cameras.main.startFollow(this.player, true);
+    this.scale.on('resize', fit);
+    this.events.once('shutdown', () => this.scale.off('resize', fit));
   }
 
-  /** Largest whole-number zoom that shows the whole room, so pixels stay square and sharp. */
+  /**
+   * Whole-number zoom so pixels stay square and sharp: as big as fits the room, but at
+   * least MIN_ZOOM. If the room is smaller than the screen it is centred; if larger, the
+   * camera follows the player without showing past the walls.
+   */
   private fitCamera(roomWidth: number, roomHeight: number): void {
     const cam = this.cameras.main;
-    const zoom = Math.max(1, Math.floor(Math.min(cam.width / roomWidth, cam.height / roomHeight)));
+    const fitZoom = Math.floor(Math.min(cam.width / roomWidth, cam.height / roomHeight));
+    const zoom = Phaser.Math.Clamp(fitZoom, MIN_ZOOM, MAX_ZOOM);
     cam.setZoom(zoom);
-    cam.centerOn(roomWidth / 2, roomHeight / 2);
+    const viewW = cam.width / zoom;
+    const viewH = cam.height / zoom;
+    const boundsW = Math.max(roomWidth, viewW);
+    const boundsH = Math.max(roomHeight, viewH);
+    cam.setBounds((roomWidth - boundsW) / 2, (roomHeight - boundsH) / 2, boundsW, boundsH);
   }
 }

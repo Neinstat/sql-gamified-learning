@@ -12,6 +12,8 @@ export function GameView({ t }: { t: UiText }) {
     import('../game/createGame').then(({ createGame }) => {
       if (cancelled || !parentRef.current) return;
       game = createGame(parentRef.current);
+      // Development only: lets the browser console inspect the running game.
+      if (import.meta.env.DEV) (window as unknown as { __game?: unknown }).__game = game;
       setReady(true);
     });
     return () => {

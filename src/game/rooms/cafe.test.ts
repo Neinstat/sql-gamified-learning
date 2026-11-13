@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { CAFE_MAP, TILE_COUNT, findTiles, furnitureLayer, groundLayer } from './cafe';
+import { BLOCKING_TILES, CAFE_MAP, PLAYER_START, TILE_COUNT, findTiles, furnitureLayer, groundLayer } from './cafe';
 
 describe('café map', () => {
   it('has rows of equal width', () => {
@@ -29,5 +29,14 @@ describe('café map', () => {
     for (const layer of [groundLayer(), furnitureLayer()]) {
       for (const index of layer.flat()) expect(index).toBeLessThan(TILE_COUNT);
     }
+  });
+});
+
+describe('player start', () => {
+  it('is on a walkable floor tile', () => {
+    const x = Math.floor(PLAYER_START.x);
+    const y = Math.floor(PLAYER_START.y);
+    expect(BLOCKING_TILES).not.toContain(groundLayer()[y][x]);
+    expect(furnitureLayer()[y][x]).toBe(-1);
   });
 });
