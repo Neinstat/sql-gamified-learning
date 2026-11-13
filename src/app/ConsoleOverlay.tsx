@@ -1,9 +1,10 @@
 import { useEffect, useState } from 'react';
 import type { CafeDatabase } from '../sql-core/db';
 import type { Lang } from '../sql-core/feedback';
-import type { Level } from '../sql-core/levels';
+import { isCase, type Level } from '../sql-core/levels';
 import type { UiText } from '../i18n';
 import { Console } from '../console/Console';
+import { CaseConsole } from '../console/CaseConsole';
 import type { Table } from '../console/SchemaPanel';
 import { Hints, Lesson } from './LevelParts';
 
@@ -44,6 +45,15 @@ export function ConsoleOverlay(props: Props) {
     return () => window.removeEventListener('keydown', onKey);
   }, [visible, onClose]);
 
+  const solvedPanelContent = (
+    <div className="solved">
+      <p className="solved-message">{solvedMessage}</p>
+      <button className="primary-button" onClick={onClose}>
+        {t.backToCafe}
+      </button>
+    </div>
+  );
+
   return (
     <div className="console-overlay" hidden={!visible}>
       <section className="console-panel" role="dialog" aria-label={stationName}>
@@ -67,7 +77,20 @@ export function ConsoleOverlay(props: Props) {
 
         <Hints hints={level.hints} used={hintsUsed} onReveal={onRevealHint} t={t} />
 
-        {db ? (
+        {db && isCase(level) ? (
+          <CaseConsole
+            db={db}
+            schema={schema}
+            level={level}
+            lang={lang}
+            t={t}
+            onSolved={() => {
+              setSolved(true);
+              onCorrect();
+            }}
+            solvedPanel={solved && solvedPanelContent}
+          />
+        ) : db && !isCase(level) ? (
           <Console
             db={db}
             schema={schema}
@@ -78,16 +101,7 @@ export function ConsoleOverlay(props: Props) {
               setSolved(true);
               onCorrect();
             }}
-            solvedPanel={
-              solved && (
-                <div className="solved">
-                  <p className="solved-message">{solvedMessage}</p>
-                  <button className="primary-button" onClick={onClose}>
-                    {t.backToCafe}
-                  </button>
-                </div>
-              )
-            }
+            solvedPanel={solved && solvedPanelContent}
           />
         ) : dbError ? (
           <div className="feedback feedback-wrong" role="alert">

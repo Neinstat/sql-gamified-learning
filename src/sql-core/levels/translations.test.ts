@@ -4,7 +4,7 @@
  * a lesson only where English has one).
  */
 import { describe, expect, it } from 'vitest';
-import { allLevels, chapters, getChapters, translations } from './index';
+import { allLevels, chapters, getChapters, isCase, translations, type RequestLevel } from './index';
 
 for (const [lang, byChapter] of Object.entries(translations)) {
   describe(`translations: ${lang}`, () => {
@@ -28,6 +28,19 @@ for (const [lang, byChapter] of Object.entries(translations)) {
         for (const s of [text.title, text.task, text.success, ...text.dialogue, ...text.hints]) {
           expect(s.trim()).not.toBe('');
         }
+        expect(Boolean(text.soWhat)).toBe(Boolean(level.soWhat));
+        if (text.soWhat && level.soWhat) expect(text.soWhat.choices).toHaveLength(level.soWhat.choices.length);
+        if (isCase(level)) {
+          expect(text.questions).toHaveLength(level.questions.length);
+          level.questions.forEach((q, i) => {
+            const qt = text.questions![i];
+            expect(qt.prompt.trim()).not.toBe('');
+            if (q.answer.kind === 'choice') expect(qt.choices).toHaveLength(q.answer.choices.length);
+            else expect(qt.choices).toBeUndefined();
+          });
+        } else {
+          expect(text.questions).toBeUndefined();
+        }
       });
     }
   });
@@ -39,10 +52,26 @@ describe('getChapters', () => {
   });
 
   it('returns Indonesian text but keeps SQL and solution in English', () => {
-    const level = getChapters('id')[0].levels[0];
+    const level = getChapters('id')[0].levels[0] as RequestLevel;
     expect(level.title).toBe('Buku Menu');
     expect(level.solution).toBe('SELECT * FROM menu_items;');
     expect(level.lesson?.example).toBe('SELECT * FROM table_name;');
-    expect(level.input).toEqual(allLevels[0].input);
+    expect(level.input).toEqual((allLevels[0] as RequestLevel).input);
+  });
+});
+
+describe('getChapters for a Mini Case', () => {
+  it('translates prompts and choices but keeps the answers and evidence', () => {
+    const en = allLevels.find(isCase)!;
+    const id = getChapters('id')
+      .flatMap((c) => c.levels)
+      .find((l) => l.id === en.id)!;
+    if (!isCase(id)) throw new Error('not a case');
+    expect(id.questions[1].prompt).not.toBe(en.questions[1].prompt);
+    expect(id.questions.map((q) => q.evidence)).toEqual(en.questions.map((q) => q.evidence));
+    expect(id.questions.map((q) => q.answer.kind === 'choice' && q.answer.correct)).toEqual(
+      en.questions.map((q) => q.answer.kind === 'choice' && q.answer.correct),
+    );
+    expect(id.starters).toEqual(en.starters);
   });
 });

@@ -232,6 +232,10 @@ Di luar MVP (nanti): subquery, CTE, window function, analisis waktu lanjutan (Mo
 
 ### Struktur kode (tambahan Fase 3)
 - `src/game/art/` — aset final: `palette.ts` (32 warna + `paintGrid`), `tiles.ts` (tileset kafe), `grandma.ts` (sprite 16×32 + potret 64×64). Karakter yang belum punya aset final tetap memakai `placeholderSprites.ts` / `placeholderPortraits.ts` (dipilih otomatis di `characters.ts` dan `characterPortrait`).
+- `src/sql-core/cases.ts` — cek kesimpulan Mini Case: jawaban dulu (`answer-wrong` dihitung sebagai kesimpulan salah untuk bintang), lalu bukti 📌 (`checkEvidence`). Pesan EN/ID lewat `formatCaseFeedback`.
+- `src/console/CaseConsole.tsx` — konsol Mini Case: tombol query awal, editor bebas, 📌 sematkan hasil, catatan investigasi, dan daftar kesimpulan (jawaban + pilih sematan sebagai bukti + Periksa). Sematan disimpan selama level yang sama (konsol tetap ter-mount), tapi **belum** disimpan ke browser — hilang bila halaman dimuat ulang.
+- `src/app/SoWhatCard.tsx` — kartu "So what?" setelah ucapan sukses tokoh, sebelum lanjut ke level berikutnya.
+- `resumeNewLevels` (`quest.ts`): pemain yang sudah "selesai semua" otomatis lanjut ke level yang baru ditambahkan (mis. Mini Case Ch1).
 
 ### Struktur kode (tambahan Fase 2)
 - `src/sql-core/stations.ts` — daftar stasiun dan tabel yang boleh diakses tiap stasiun (data murni, tanpa engine). Level mendapat field `station`; tes memastikan jawaban resmi tiap level hanya memakai tabel stasiunnya.
@@ -254,8 +258,10 @@ Setiap level adalah objek TypeScript (`src/sql-core/levels/`), satu file per cha
 - `dialogue` (ucapan tokoh) dan `task` (satu kalimat target yang jelas, selalu terlihat saat mengerjakan)
 - `input`: `blocks` (daftar blok, boleh ada pengecoh), `fill-blank` (template dengan `___`), atau `free`
 - `solution` (query jawaban resmi; hanya hasilnya yang dibandingkan), `check` (opsi pengecek), `hints` (tepat 3), `success` (ucapan setelah benar)
+- `soWhat` (opsional, Fase 3): pertanyaan "So what?" — `question`, 3 `choices`, `answer` (indeks), `explanation`
+- **Mini Case** (Fase 3): level dengan `kind: 'case'`, tanpa `input`/`solution`. Isinya `starters` (query awal yang bisa diubah, boleh berisi `___`) dan `questions`: tiap pertanyaan punya `answer` (`number` atau `choice`) dan `evidence` — query rujukan yang semua barisnya harus ada di hasil 📌 pemain (kolom dicocokkan dengan nama). `exact: true` = jumlah baris harus sama persis; selain itu hasil maksimal `maxRows` baris (bawaan: baris rujukan + 5) agar "seluruh tabel" tidak dianggap bukti. Id-nya mengikuti pola biasa (Mini Case Ch1 = `ch1-7`).
 
-Tes otomatis memeriksa semua level: jawaban resmi bisa dijalankan, blok yang disediakan cukup untuk menyusun jawaban, dan blok tidak ditampilkan dalam urutan jawaban.
+Tes otomatis memeriksa semua level: jawaban resmi bisa dijalankan, blok yang disediakan cukup untuk menyusun jawaban, dan blok tidak ditampilkan dalam urutan jawaban. Untuk Mini Case: query awal dan bukti hanya memakai tabel stasiunnya, bukti rujukan lolos ceknya sendiri, dan jawaban angka sama dengan jumlah baris bukti yang `exact`.
 
 **Terjemahan:** teks Indonesia per chapter ada di `src/sql-core/levels/locales/id/` (hanya teks; SQL, blok, dan jawaban tidak diterjemahkan). Umpan balik checker dikembalikan sebagai kode terstruktur lalu diubah jadi kalimat EN/ID oleh `formatFeedback`. Tes otomatis memastikan setiap level punya terjemahan dengan struktur yang sama (jumlah baris dialog, ada/tidaknya kartu materi).
 
@@ -332,8 +338,8 @@ Setiap iterasi bisa dimainkan sendiri: kerjakan → cek di browser → commit & 
 
 | # | Iterasi | Selesai jika… |
 |---|---|---|
-| 3.1 🚧 | **Arah visual:** file palet musim gugur, pilih pack tile CC0, ruang depan + Grandma (sprite & potret) dalam gaya final, `CREDITS.md` | Pemilik project melihat ruang depan + Grandma baru di browser dan menyetujui arahnya (atau memilih cadangan beli pack) |
-| 3.2 | **Mesin Mini Case + So what?:** catatan investigasi, 📌 sematkan hasil query, pertanyaan kesimpulan dengan cek bukti, field `soWhat`; Mini Case Ch1 **The Menu Audit**; So what? di 1–2 level Ch0–1 (EN/ID) | Setelah level terakhir Ch1, pemain menyelesaikan The Menu Audit di Menu board dengan bukti 📌; So what? muncul di Ch0–1 |
+| 3.1 ✅ | **Arah visual:** file palet musim gugur, pilih pack tile CC0, ruang depan + Grandma (sprite & potret) dalam gaya final, `CREDITS.md` | Pemilik project melihat ruang depan + Grandma baru di browser dan menyetujui arahnya (atau memilih cadangan beli pack) |
+| 3.2 ✅ | **Mesin Mini Case + So what?:** catatan investigasi, 📌 sematkan hasil query, pertanyaan kesimpulan dengan cek bukti, field `soWhat`; Mini Case Ch1 **The Menu Audit**; So what? di 1–2 level Ch0–1 (EN/ID) | Setelah level terakhir Ch1, pemain menyelesaikan The Menu Audit di Menu board dengan bukti 📌; So what? muncul di Ch0–1 |
 | 3.3 | **Bintang & koin:** catat hint + jawaban salah per level/kasus, layar hasil (⭐ + koin), bintang di Journal, penghitung koin di HUD; progres lama tetap terbaca | Menyelesaikan level/kasus menampilkan bintang & koin, tersimpan, dan terlihat di Journal |
 | 3.4 | **Chapter 2 First Reports** (ketik bebas: `ORDER BY`, `LIMIT`, `DISTINCT`, alias, kolom hitungan) + Mini Case **What Should We Promote?**; Barista dalam gaya final | Chapter 2 bisa dimainkan lengkap di Menu board, EN/ID |
 | 3.5 | **Data penjualan & stasiun kedua:** generator data `sales`/`customers` dengan seed tetap, Cash register terbuka, blokir tabel per stasiun (role PostgreSQL), PGlite di Web Worker + tombol hentikan query | Cash register membuka konsol berisi `sales`, `customers`, `menu_items`; query ke tabel lain ditolak dengan pesan ramah; query macet bisa dihentikan |

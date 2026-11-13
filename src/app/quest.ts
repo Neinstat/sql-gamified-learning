@@ -36,3 +36,13 @@ export function reportDone(progress: Progress, levelIds: readonly string[], leve
 export function startLevel(progress: Progress, levelId: string): Progress {
   return { ...progress, currentLevelId: levelId, quest: { levelId, stage: 'talk' } };
 }
+
+/**
+ * A player who had finished everything when new levels were added (e.g. the Chapter 1 Mini Case)
+ * continues with the first new one instead of staying "done".
+ */
+export function resumeNewLevels(progress: Progress, levelIds: readonly string[]): Progress {
+  if (progress.quest?.stage !== 'done') return progress;
+  const next = levelIds[levelIds.indexOf(progress.quest.levelId) + 1];
+  return next ? startLevel(progress, next) : progress;
+}

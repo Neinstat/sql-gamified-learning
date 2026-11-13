@@ -6,6 +6,8 @@
  * player's language. SQL names (columns, values) are never translated.
  */
 
+import type { CaseFeedback } from './cases';
+
 export type Lang = 'en' | 'id';
 export const LANGS: Lang[] = ['en', 'id'];
 
@@ -124,4 +126,37 @@ const id = (fb: Feedback): string => {
 
 export function formatFeedback(fb: Feedback, lang: Lang): string {
   return lang === 'id' ? id(fb) : en(fb);
+}
+
+/** Mini Case feedback: why a conclusion isn't accepted yet. */
+export function formatCaseFeedback(fb: CaseFeedback, lang: Lang): string {
+  const isId = lang === 'id';
+  switch (fb.kind) {
+    case 'no-answer':
+      return isId ? 'Isi jawabanmu dulu.' : 'Give your answer first.';
+    case 'answer-wrong':
+      return isId
+        ? 'Data belum mendukung jawaban itu. Jalankan query lagi dan lihat hasilnya baik-baik.'
+        : "The data doesn't support that answer. Run another query and look closely at the result.";
+    case 'no-evidence':
+      return isId
+        ? 'Jawabannya benar — sekarang pilih hasil 📌 yang membuktikannya.'
+        : "That's right — now pick a 📌 pinned result that proves it.";
+    case 'evidence-missing-column':
+      return isId
+        ? `Hasil yang dipilih perlu kolom \`${fb.column}\` untuk membuktikan jawaban ini.`
+        : `The pinned result needs a \`${fb.column}\` column to prove this answer.`;
+    case 'evidence-missing-rows':
+      return isId
+        ? `Hasil yang dipilih belum menunjukkan semua buktinya (${fb.missing} baris penting belum ada).`
+        : `The pinned result doesn't show all the evidence yet (${fb.missing} key ${fb.missing === 1 ? 'row is' : 'rows are'} missing).`;
+    case 'evidence-extra-rows':
+      return isId
+        ? `Hasil yang dipilih punya ${fb.actual} baris — buktinya seharusnya tepat ${fb.expected}. Saring lagi dengan WHERE.`
+        : `The pinned result has ${fb.actual} rows — the evidence should be exactly ${fb.expected}. Filter it with WHERE.`;
+    case 'evidence-too-broad':
+      return isId
+        ? `Hasil yang dipilih terlalu luas (${fb.actual} baris). Saring sampai yang penting saja terlihat (maks. ${fb.max}).`
+        : `The pinned result is too broad (${fb.actual} rows). Filter it down to what matters (at most ${fb.max}).`;
+  }
 }

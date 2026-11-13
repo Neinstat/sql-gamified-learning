@@ -39,7 +39,7 @@ export function getChapters(lang: Lang): Chapter[] {
 
 function applyText(level: Level, text: LevelText | undefined): Level {
   if (!text) return level;
-  return {
+  const translated = {
     ...level,
     title: text.title,
     dialogue: text.dialogue,
@@ -48,5 +48,16 @@ function applyText(level: Level, text: LevelText | undefined): Level {
     success: text.success,
     // Keep the English example: it is SQL.
     lesson: level.lesson && text.lesson ? { ...level.lesson, ...text.lesson } : level.lesson,
+    soWhat: level.soWhat && text.soWhat ? { ...level.soWhat, ...text.soWhat } : level.soWhat,
+  } as Level;
+  if (translated.kind !== 'case' || !text.questions) return translated;
+  return {
+    ...translated,
+    questions: translated.questions.map((q, i) => {
+      const qt = text.questions?.[i];
+      if (!qt) return q;
+      const answer = q.answer.kind === 'choice' && qt.choices ? { ...q.answer, choices: qt.choices } : q.answer;
+      return { ...q, prompt: qt.prompt, answer };
+    }),
   };
 }

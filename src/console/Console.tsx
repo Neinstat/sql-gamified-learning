@@ -2,9 +2,10 @@ import { useMemo, useState, type ReactNode } from 'react';
 import type { CafeDatabase } from '../sql-core/db';
 import { checkAnswer, type CheckOutcome } from '../sql-core/checker';
 import { formatFeedback, type Lang } from '../sql-core/feedback';
-import type { Level } from '../sql-core/levels';
+import type { RequestLevel } from '../sql-core/levels';
 import type { UiText } from '../i18n';
 import { ResultTable } from './ResultTable';
+import { WithCode } from './WithCode';
 import { SchemaPanel, type Table } from './SchemaPanel';
 import { SqlEditor } from './SqlEditor';
 import { BlockInput } from './BlockInput';
@@ -13,7 +14,7 @@ import { FillBlankInput } from './FillBlankInput';
 type Props = {
   db: CafeDatabase;
   schema: Table[];
-  level: Level;
+  level: RequestLevel;
   lang: Lang;
   t: UiText;
   /** Called once each time the player's answer is correct. */
@@ -98,14 +99,5 @@ export function Console({ db, schema, level, lang, t, onCorrect, solvedPanel }: 
         {result?.ok && <ResultTable columns={result.columns} rows={result.rows} rowsLabel={t.rows} />}
       </section>
     </div>
-  );
-}
-
-/** Show `backtick` parts of a message as code. */
-function WithCode({ text }: { text: string }) {
-  return (
-    <>
-      {text.split(/`([^`]+)`/).map((part, i) => (i % 2 === 1 ? <code key={i}>{part}</code> : part))}
-    </>
   );
 }

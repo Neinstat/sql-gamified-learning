@@ -28,6 +28,16 @@ export const chapter1Id: ChapterTranslation = {
         '… WHERE price < 3;',
       ],
       success: 'Espresso, Green Tea, Earl Grey… Hmm, mungkin anak-anak juga mau kue yang murah.',
+      soWhat: {
+        question: 'Nenek ingin anak-anak lebih sering jajan di sini. Apa yang diceritakan daftar ini?',
+        choices: [
+          'Semua menu di bawah $3 adalah minuman — tidak ada camilan murah untuk mereka',
+          'Anak-anak tidak suka pastry',
+          'Kafe sebaiknya menaikkan harga',
+        ],
+        explanation:
+          'Semua menu di bawah $3 adalah minuman, jadi camilan murah bisa jadi peluang. Tapi daftar ini tidak bisa memberi tahu apa yang disukai anak-anak — untuk itu kita butuh data penjualan.',
+      },
     },
     'ch1-2': {
       title: 'Kopi Saja',
@@ -134,6 +144,45 @@ export const chapter1Id: ChapterTranslation = {
       ],
       success:
         'Hot Chocolate tanpa harga, dan Banana Bread tanpa cost. Pantas saja hitungan Nenek tidak pernah cocok! Besok Nenek tanya ke pemasok.',
+    },
+    'ch1-7': {
+      title: 'Audit Menu',
+      lesson: {
+        title: 'Mini Case: berpikir seperti analis',
+        body: [
+          'Mini Case tidak punya satu query yang benar. Jalankan query sebanyak yang kamu mau untuk menyelidiki.',
+          'Kalau ada hasil yang menunjukkan hal penting, sematkan 📌 ke catatanmu.',
+          'Lalu jawab pertanyaannya. Setiap jawaban butuh hasil 📌 sebagai bukti — analis selalu mendukung kesimpulannya dengan data.',
+        ],
+      },
+      dialogue: [
+        'Besok tukang cetak datang untuk mencetak kartu menu baru kita.',
+        'Sebelum itu, Nenek mau yakin menunya sudah benar. Bisa tolong audit menunya?',
+        'Lihat-lihat datanya, sematkan temuanmu, lalu ceritakan pendapatmu.',
+      ],
+      task: 'Audit menu sebelum dicetak: selidiki, sematkan bukti 📌, lalu jawab pertanyaannya.',
+      questions: [
+        { prompt: 'Berapa menu yang price, cost, atau category-nya kosong?' },
+        {
+          prompt: 'Menu mana yang sama sekali tidak bisa diproses di kasir?',
+          choices: ['Banana Bread', 'Hot Chocolate', 'Lemonade'],
+        },
+        {
+          prompt: 'Menu dicetak besok. Apa yang harus diperbaiki lebih dulu?',
+          choices: [
+            'Isi harga Hot Chocolate — kita tidak bisa menjualnya tanpa harga',
+            'Perbaiki ejaan "Iced Capuccino"',
+            'Hapus menu yang tidak tersedia dari daftar',
+          ],
+        },
+      ],
+      hints: [
+        'Data yang hilang muncul sebagai NULL. Mulailah dengan melihat setiap menu beserta category, price, dan cost-nya.',
+        'Pakai WHERE … IS NULL, dan gabungkan beberapa syarat dengan OR untuk menangkap semua yang kosong sekaligus.',
+        'SELECT name, category, price, cost FROM menu_items WHERE category IS NULL OR price IS NULL OR cost IS NULL;',
+      ],
+      success:
+        'Empat yang kosong — dan Hot Chocolate tanpa harga sama sekali! Kamu berpikir seperti analis sungguhan, Nak. Nenek akan minta tukang cetak menunggu sehari lagi.',
     },
   },
 };

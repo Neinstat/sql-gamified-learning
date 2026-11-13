@@ -93,6 +93,16 @@ export const chapter0Id: ChapterTranslation = {
       ],
       success:
         'Lihat itu — Avocado Toast butuh hampir tiga dolar untuk membuatnya! Dan Banana Bread tidak punya cost sama sekali? Kita harus cek itu nanti.',
+      soWhat: {
+        question: 'Dengan price dan cost berdampingan, apa yang bisa Nenek ketahui untuk tiap menu?',
+        choices: [
+          'Berapa yang Nenek dapat dari setiap porsi terjual (price − cost)',
+          'Berapa banyak tiap menu terjual',
+          'Menu mana yang paling disukai pelanggan',
+        ],
+        explanation:
+          'Price dikurangi cost adalah keuntungan tiap penjualan — kamu akan menghitungnya di Chapter 2. Jumlah terjual atau menu favorit pelanggan butuh data penjualan: datanya tidak ada di tabel ini.',
+      },
     },
   },
 };

@@ -508,6 +508,223 @@ body {
   margin: 0;
 }
 
+/* Mini Case: starters, pins, conclusions (Phase 3) */
+.secondary-button {
+  padding: 7px 14px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--accent);
+  background: var(--surface);
+  border: 1px solid var(--accent);
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.secondary-button:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+.pin-button {
+  margin-left: auto;
+}
+
+.case-starters {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.case-label {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.case-help {
+  flex-basis: 100%;
+  margin: 0;
+  font-size: 0.85rem;
+  color: var(--muted);
+}
+
+.case-notes,
+.case-conclusions {
+  margin-top: 16px;
+  padding: 12px 14px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+}
+
+.case-title {
+  margin: 0 0 6px;
+  font-size: 1rem;
+}
+
+.pin-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.pin {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 8px;
+  background: #fdf3d8;
+  border-radius: 8px;
+}
+
+.pin-label {
+  flex-shrink: 0;
+  font-size: 0.85rem;
+  font-weight: 700;
+}
+
+.pin-sql {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  font-family: var(--code);
+  font-size: 0.8rem;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.pin-remove {
+  flex-shrink: 0;
+  width: 28px;
+  height: 28px;
+  color: var(--muted);
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+
+.conclusion {
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px dashed var(--line);
+}
+
+.conclusion-prompt {
+  margin: 0 0 8px;
+  font-weight: 600;
+}
+
+.conclusion-choices {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 8px;
+}
+
+.conclusion-choice {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  cursor: pointer;
+}
+
+.conclusion-choice input {
+  margin-top: 3px;
+}
+
+.conclusion-input {
+  width: 140px;
+  margin-bottom: 8px;
+  padding: 6px 10px;
+  font-size: 1rem;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+}
+
+.conclusion-footer {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+
+.conclusion-evidence {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.9rem;
+}
+
+.conclusion-evidence select {
+  padding: 5px 8px;
+  font-size: 0.9rem;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fff;
+}
+
+.conclusion-ok {
+  font-weight: 700;
+  color: var(--ok-ink);
+}
+
+.conclusion.done .conclusion-prompt {
+  color: var(--ok-ink);
+}
+
+/* So what? */
+.so-what-question {
+  margin: 0 0 12px;
+  font-size: 1.05rem;
+  font-weight: 600;
+}
+
+.so-what-choices {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+
+.so-what-choice {
+  padding: 10px 12px;
+  font-size: 0.95rem;
+  text-align: left;
+  color: var(--ink);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.so-what-choice.right {
+  color: var(--ok-ink);
+  background: var(--ok-bg);
+  border-color: #b9d8ae;
+}
+
+.so-what-choice.wrong {
+  color: var(--error-ink);
+  background: var(--error-bg);
+}
+
+.so-what-choice:disabled {
+  cursor: default;
+}
+
+.so-what-explanation {
+  margin: 0 0 14px;
+  line-height: 1.5;
+}
+
 /* Hints */
 .hints {
   margin: -6px 0 16px;

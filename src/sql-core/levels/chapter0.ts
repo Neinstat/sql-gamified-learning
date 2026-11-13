@@ -121,6 +121,17 @@ export const chapter0: Chapter = {
       ],
       success:
         "Look at that — Avocado Toast costs almost three dollars to make! And Banana Bread has no cost at all? We'll have to look into that.",
+      soWhat: {
+        question: 'With price and cost side by side, what can Grandma work out for each item?',
+        choices: [
+          'How much she earns on each one sold (price − cost)',
+          'How many of each item were sold',
+          'Which items customers like most',
+        ],
+        answer: 0,
+        explanation:
+          "Price minus cost is what each sale earns — you'll calculate it in Chapter 2. How many were sold, or what customers like, needs sales data: it isn't in this table.",
+      },
     },
   ],
 };

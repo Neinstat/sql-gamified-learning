@@ -35,7 +35,8 @@ export type InputMode =
 /** The gap marker used in fill-blank templates. */
 export const BLANK = '___';
 
-export type Level = {
+/** Shared by every kind of level. */
+type LevelBase = {
   /** Unique id, e.g. "ch0-1". Used to save progress — never change it once released. */
   id: string;
   title: string;
@@ -46,16 +47,70 @@ export type Level = {
   lesson?: { title: string; body: string[]; example?: string };
   /** What the character says, line by line. */
   dialogue: string[];
-  /** One clear sentence: what the result must contain. Always visible while solving. */
+  /** One clear sentence: what the player must do. Always visible while solving. */
   task: string;
-  input: InputMode;
-  /** The reference answer. Only its *result* is compared, never its text. */
-  solution: string;
-  check?: CheckOptions;
   /** Exactly 3 hints: general direction → clause needed → almost the answer. */
   hints: [string, string, string];
   /** Line the character says after a correct answer. */
   success: string;
+  /** Optional "So what?" question asked after reporting (GAME_DESIGN.md §5). */
+  soWhat?: SoWhat;
+};
+
+/** A request: one question, one correct result. */
+export type RequestLevel = LevelBase & {
+  kind?: 'request';
+  input: InputMode;
+  /** The reference answer. Only its *result* is compared, never its text. */
+  solution: string;
+  check?: CheckOptions;
+};
+
+/**
+ * A Mini Case (GAME_DESIGN.md §5): the player runs any queries, pins results as evidence,
+ * and answers conclusion questions. Always typed freely, in the editor.
+ */
+export type CaseLevel = LevelBase & {
+  kind: 'case';
+  /** Editable starting queries the player can load (may contain `___` to fill in). */
+  starters: string[];
+  questions: CaseQuestion[];
+};
+
+export type Level = RequestLevel | CaseLevel;
+
+export const isCase = (level: Level): level is CaseLevel => level.kind === 'case';
+
+/** "So what?": one multiple-choice question about what a result means. Never blocks progress. */
+export type SoWhat = {
+  question: string;
+  choices: string[];
+  /** Index of the right choice. */
+  answer: number;
+  /** Shown after any choice: why the right one is right. */
+  explanation: string;
+};
+
+export type CaseAnswer =
+  | { kind: 'number'; value: number }
+  | { kind: 'choice'; choices: string[]; correct: number };
+
+/**
+ * What a pinned result must show to back up an answer. `sql` is a reference query:
+ * the pinned result must contain all its rows (on its columns, matched by name).
+ */
+export type Evidence = {
+  sql: string;
+  /** The pinned result must have exactly as many rows as the reference (no extras). */
+  exact?: boolean;
+  /** Otherwise: at most this many rows, so "the whole table" isn't evidence. Default: reference rows + 5. */
+  maxRows?: number;
+};
+
+export type CaseQuestion = {
+  prompt: string;
+  answer: CaseAnswer;
+  evidence: Evidence;
 };
 
 export type Chapter = {
@@ -77,6 +132,9 @@ export type LevelText = {
   task: string;
   hints: [string, string, string];
   success: string;
+  soWhat?: { question: string; choices: string[]; explanation: string };
+  /** Mini Case only: each question's prompt, and its choices when it is multiple choice. */
+  questions?: { prompt: string; choices?: string[] }[];
 };
 
 /** A chapter's translation: chapter text + text for each level, by level id. */

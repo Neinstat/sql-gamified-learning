@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { emptyProgress } from './progress';
-import { acceptRequest, questStage, reportDone, solveRequest, startLevel } from './quest';
+import { emptyProgress, type Progress } from './progress';
+import { acceptRequest, questStage, reportDone, resumeNewLevels, solveRequest, startLevel } from './quest';
 
 const ids = ['ch0-1', 'ch0-2'];
 
@@ -34,5 +34,24 @@ describe('quest loop', () => {
     expect(questStage(p, 'ch0-1')).toBe('talk');
     p = solveRequest(acceptRequest(p, 'ch0-1'), 'ch0-1', 3);
     expect(p.completed['ch0-1']).toEqual({ hintsUsed: 0 });
+  });
+});
+
+describe('resumeNewLevels', () => {
+  const ids = ['a', 'b', 'c'];
+  it('moves a finished player on to a level added after their last one', () => {
+    const done: Progress = {
+      currentLevelId: 'b',
+      completed: { a: { hintsUsed: 0 }, b: { hintsUsed: 0 } },
+      quest: { levelId: 'b', stage: 'done' },
+    };
+    expect(resumeNewLevels(done, ids).quest).toEqual({ levelId: 'c', stage: 'talk' });
+  });
+
+  it('leaves everyone else alone', () => {
+    const finished: Progress = { currentLevelId: 'c', completed: {}, quest: { levelId: 'c', stage: 'done' } };
+    expect(resumeNewLevels(finished, ids)).toBe(finished);
+    const solving: Progress = { currentLevelId: 'b', completed: {}, quest: { levelId: 'b', stage: 'solve' } };
+    expect(resumeNewLevels(solving, ids)).toBe(solving);
   });
 });

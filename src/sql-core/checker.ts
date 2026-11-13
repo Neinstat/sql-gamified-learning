@@ -181,7 +181,7 @@ function rowKey(row: CellValue[]): string {
 
 const NUMERIC = /^-?\d+(\.\d+)?$/;
 
-function normalizeValue(value: CellValue): string | number | boolean | null {
+export function normalizeValue(value: CellValue): string | number | boolean | null {
   if (value === null || value === undefined) return null;
   if (typeof value === 'number') return roundNumber(value);
   if (typeof value === 'bigint') return roundNumber(Number(value));

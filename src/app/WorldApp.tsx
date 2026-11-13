@@ -14,10 +14,11 @@ import { LevelNav } from './LevelNav';
 import { Lesson } from './LevelParts';
 import { getDatabase } from './database';
 import { emptyProgress, loadProgress, saveProgress, type Progress } from './progress';
-import { acceptRequest, questStage, reportDone, solveRequest, startLevel } from './quest';
+import { acceptRequest, questStage, reportDone, resumeNewLevels, solveRequest, startLevel } from './quest';
+import { SoWhatCard } from './SoWhatCard';
 
 /** What is open over the world. `null` = the player is walking around. */
-type Overlay = InteractTarget | { kind: 'lesson' } | { kind: 'chapter' } | { kind: 'journal' };
+type Overlay = InteractTarget | { kind: 'lesson' } | { kind: 'chapter' } | { kind: 'journal' } | { kind: 'soWhat' };
 
 const levelIds = allLevels.map((l) => l.id);
 
@@ -27,7 +28,7 @@ export function WorldApp() {
   const t = ui[lang];
   const bridge = useMemo(() => new GameBridge(), []);
   const [overlay, setOverlay] = useState<Overlay | null>(null);
-  const [progress, setProgress] = useState<Progress>(() => withDevStart(loadProgress()));
+  const [progress, setProgress] = useState<Progress>(() => withDevStart(resumeNewLevels(loadProgress(), levelIds)));
   const [db, setDb] = useState<CafeDatabase | null>(null);
   const [dbError, setDbError] = useState<string | null>(null);
   const [schema, setSchema] = useState<Table[]>([]);
@@ -127,8 +128,12 @@ export function WorldApp() {
         ...base,
         lines: [level.success],
         onClose: () => {
-          setProgress((p) => reportDone(p, levelIds, level.id));
-          close();
+          if (level.soWhat) {
+            setOverlay({ kind: 'soWhat' });
+          } else {
+            setProgress((p) => reportDone(p, levelIds, level.id));
+            close();
+          }
         },
       };
     } else {
@@ -234,6 +239,19 @@ export function WorldApp() {
           >
             <Lesson lesson={level.lesson} />
           </WorldModal>
+        )}
+
+        {overlay?.kind === 'soWhat' && level.soWhat && (
+          <SoWhatCard
+            key={`${level.id}-${lang}`}
+            soWhat={level.soWhat}
+            speaker={giver}
+            t={t}
+            onDone={() => {
+              setProgress((p) => reportDone(p, levelIds, level.id));
+              close();
+            }}
+          />
         )}
 
         {overlay?.kind === 'chapter' && (

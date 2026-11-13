@@ -40,6 +40,17 @@ export const chapter1: Chapter = {
         '… WHERE price < 3;',
       ],
       success: 'Espresso, Green Tea, Earl Grey… Hmm, maybe the children would like a cheap cookie too.',
+      soWhat: {
+        question: 'Grandma wants the children to buy more. What does this list tell her?',
+        choices: [
+          "Every item under $3 is a drink — there's no cheap snack for them",
+          "The children don't like pastries",
+          'The café should raise its prices',
+        ],
+        answer: 0,
+        explanation:
+          "Every item under $3 is a drink, so a cheap snack could be an opportunity. But this list can't tell us what the children like — for that we'd need sales data.",
+      },
     },
     {
       id: 'ch1-2',
@@ -196,6 +207,66 @@ export const chapter1: Chapter = {
       ],
       success:
         "Hot Chocolate with no price, and Banana Bread with no cost. No wonder my sums never added up! I'll ask the supplier tomorrow.",
+    },
+    {
+      id: 'ch1-7',
+      kind: 'case',
+      title: 'The Menu Audit',
+      character: 'grandma',
+      station: 'menu-board',
+      lesson: {
+        title: 'Mini Case: think like an analyst',
+        body: [
+          'A Mini Case has no single right query. Run as many queries as you like to investigate.',
+          'When a result shows something important, pin it 📌 to your notes.',
+          'Then answer the questions. Every answer needs a pinned result as proof — analysts back every conclusion with data.',
+        ],
+      },
+      dialogue: [
+        'The printer comes tomorrow to print our new menu cards.',
+        'Before that, I want to be sure the menu is right. Can you audit it for me?',
+        'Look around the data, pin what you find, and tell me what you think.',
+      ],
+      task: 'Audit the menu before it goes to the printer: investigate, pin your evidence 📌, and answer the questions.',
+      starters: [
+        'SELECT name, category, price, cost FROM menu_items;',
+        'SELECT name, category, price, cost FROM menu_items WHERE ___ IS NULL;',
+      ],
+      questions: [
+        {
+          prompt: 'How many menu items have a missing price, cost, or category?',
+          answer: { kind: 'number', value: 4 },
+          evidence: {
+            sql: 'SELECT name FROM menu_items WHERE price IS NULL OR cost IS NULL OR category IS NULL;',
+            exact: true,
+          },
+        },
+        {
+          prompt: "Which item can't be rung up at the till at all?",
+          answer: { kind: 'choice', choices: ['Banana Bread', 'Hot Chocolate', 'Lemonade'], correct: 1 },
+          evidence: { sql: 'SELECT name, price FROM menu_items WHERE price IS NULL;' },
+        },
+        {
+          prompt: 'The menu goes to the printer tomorrow. What should we fix first?',
+          answer: {
+            kind: 'choice',
+            choices: [
+              "Add Hot Chocolate's price — we can't sell it without one",
+              'Fix the spelling of "Iced Capuccino"',
+              "Take the items that aren't available off the list",
+            ],
+            correct: 0,
+          },
+          evidence: { sql: 'SELECT name, price FROM menu_items WHERE price IS NULL;' },
+        },
+      ],
+      hints: [
+        'Missing data shows up as NULL. Start by looking at every item with its category, price, and cost.',
+        'Use WHERE … IS NULL, and join several conditions with OR to catch all the gaps at once.',
+        'SELECT name, category, price, cost FROM menu_items WHERE category IS NULL OR price IS NULL OR cost IS NULL;',
+      ],
+      success:
+        "Four gaps — and Hot Chocolate with no price at all! You think like a real analyst, dear. I'll ask the printer to wait one more day.",
     },
   ],
 };

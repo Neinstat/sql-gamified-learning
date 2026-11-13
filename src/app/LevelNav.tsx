@@ -1,4 +1,4 @@
-import { allLevels, type Chapter } from '../sql-core/levels';
+import { allLevels, isCase, type Chapter } from '../sql-core/levels';
 import type { UiText } from '../i18n';
 import type { Progress } from './progress';
 
@@ -39,7 +39,7 @@ export function LevelNav({ chapters, currentId, progress, t, onSelect }: Props) 
                 title={level.title}
                 onClick={() => onSelect(index)}
               >
-                {done ? '✓' : i + 1}
+                {done ? '✓' : isCase(level) ? '🔍' : i + 1}
               </button>
             );
           })}
