@@ -631,3 +631,79 @@ body {
   margin: 0;
   color: var(--bg);
 }
+
+.world-stage {
+  position: relative;
+  display: flex;
+  flex: 1;
+  min-height: 0;
+}
+
+/* Dialogue over the world */
+.dialogue-box {
+  position: absolute;
+  left: 50%;
+  bottom: 16px;
+  z-index: 10;
+  display: flex;
+  gap: 14px;
+  width: min(720px, calc(100% - 32px));
+  padding: 14px;
+  color: var(--ink);
+  background: var(--surface);
+  border: 3px solid #5b4033;
+  border-radius: 10px;
+  box-shadow: 0 6px 0 rgba(0, 0, 0, 0.25);
+  transform: translateX(-50%);
+  cursor: pointer;
+}
+
+.dialogue-portrait {
+  flex: none;
+  width: 96px;
+  height: 96px;
+  image-rendering: pixelated;
+  border: 2px solid #5b4033;
+  border-radius: 6px;
+}
+
+.dialogue-body {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.dialogue-line {
+  flex: 1;
+  margin: 4px 0 10px;
+  font-size: 1.05rem;
+  line-height: 1.5;
+}
+
+.dialogue-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
+
+.dialogue-hint {
+  font-size: 0.8rem;
+  color: var(--muted);
+}
+
+@media (max-width: 520px) {
+  .dialogue-portrait {
+    width: 64px;
+    height: 64px;
+  }
+
+  .dialogue-hint {
+    display: none;
+  }
+
+  .dialogue-footer {
+    justify-content: flex-end;
+  }
+}

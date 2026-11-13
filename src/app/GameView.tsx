@@ -1,8 +1,9 @@
 import { useEffect, useRef, useState } from 'react';
 import type { UiText } from '../i18n';
+import type { GameBridge } from '../game/bridge';
 
 /** Holds the Phaser canvas. Phaser is loaded on demand so classic mode never downloads it. */
-export function GameView({ t }: { t: UiText }) {
+export function GameView({ t, bridge }: { t: UiText; bridge: GameBridge }) {
   const parentRef = useRef<HTMLDivElement>(null);
   const [ready, setReady] = useState(false);
 
@@ -11,7 +12,7 @@ export function GameView({ t }: { t: UiText }) {
     let game: { destroy: (removeCanvas: boolean) => void } | null = null;
     import('../game/createGame').then(({ createGame }) => {
       if (cancelled || !parentRef.current) return;
-      game = createGame(parentRef.current);
+      game = createGame(parentRef.current, bridge);
       // Development only: lets the browser console inspect the running game.
       if (import.meta.env.DEV) (window as unknown as { __game?: unknown }).__game = game;
       setReady(true);
@@ -20,7 +21,7 @@ export function GameView({ t }: { t: UiText }) {
       cancelled = true;
       game?.destroy(true);
     };
-  }, []);
+  }, [bridge]);
 
   return (
     <div className="game-view" ref={parentRef}>

@@ -1,33 +1,12 @@
 import Phaser from 'phaser';
-import { CHAR_H, CHAR_W, FACINGS, FRAMES_PER_FACING, drawPlaceholderPlayer, frameIndex } from './placeholderSprites';
+import { CHAR_H, LOOKS, frameIndex } from './placeholderSprites';
+import { ensureCharacterTexture, facingToward, sheetFacing, standFacing } from './characters';
 import { WALK_SPEED, facingFor, moveVector, steerTowards, type Facing } from './movement';
 
 type Point = { x: number; y: number };
 /** Frames in a row the player may be pushed back by a wall before giving up on a path. */
 const STUCK_FRAMES = 12;
-
 const TEXTURE = 'player';
-
-/** Loads the player's frames and walk animations into the scene (once per game). */
-function ensurePlayerTexture(scene: Phaser.Scene): void {
-  if (scene.textures.exists(TEXTURE)) return;
-  const canvas = document.createElement('canvas');
-  drawPlaceholderPlayer(canvas);
-  const texture = scene.textures.addCanvas(TEXTURE, canvas)!;
-  for (let i = 0; i < FACINGS.length * FRAMES_PER_FACING; i++) {
-    texture.add(i, 0, i * CHAR_W, 0, CHAR_W, CHAR_H);
-  }
-  for (const facing of FACINGS) {
-    scene.anims.create({
-      key: `walk-${facing}`,
-      frames: [1, 0, 2, 0].map((step) => ({ key: TEXTURE, frame: frameIndex(facing, step) })),
-      frameRate: 8,
-      repeat: -1,
-    });
-  }
-}
-
-const sheetFacing = (facing: Facing) => (facing === 'left' || facing === 'right' ? 'side' : facing);
 
 /**
  * The player character: walks with WASD / the arrow keys, or along a path (click/tap).
@@ -37,10 +16,11 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
   private facing: Facing = 'up';
   private path: Point[] = [];
   private stuckFrames = 0;
+  private locked = false;
   private keys: Record<'up' | 'down' | 'left' | 'right' | 'w' | 'a' | 's' | 'd', Phaser.Input.Keyboard.Key>;
 
   constructor(scene: Phaser.Scene, x: number, y: number) {
-    ensurePlayerTexture(scene);
+    ensureCharacterTexture(scene, TEXTURE, LOOKS.player);
     super(scene, x, y, TEXTURE, frameIndex('up', 0));
     scene.add.existing(this);
     scene.physics.add.existing(this);
@@ -57,6 +37,11 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
     ) as Player['keys'];
   }
 
+  /** Centre of the feet hitbox: the point used for tiles and talk range. */
+  get feet(): Point {
+    return { x: this.x, y: this.y - 4 };
+  }
+
   /** Walk through these points (feet positions in world pixels). Replaces any current path. */
   walkPath(points: Point[]): void {
     if (this.path.length > 0) this.endPath(false);
@@ -64,8 +49,19 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
     this.stuckFrames = 0;
   }
 
-  get isWalkingPath(): boolean {
-    return this.path.length > 0;
+  /** While locked (an overlay is open) the player stands still and ignores input. */
+  setLocked(locked: boolean): void {
+    this.locked = locked;
+    if (locked) {
+      if (this.path.length > 0) this.endPath(false);
+      this.setVelocity(0, 0);
+      standFacing(this, this.facing);
+    }
+  }
+
+  lookAt(point: Point): void {
+    this.facing = facingToward(this.feet, point);
+    standFacing(this, this.facing);
   }
 
   private endPath(arrived: boolean): void {
@@ -75,6 +71,7 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
 
   preUpdate(time: number, delta: number): void {
     super.preUpdate(time, delta);
+    if (this.locked) return;
     const k = this.keys;
     let vector = moveVector({
       up: k.up.isDown || k.w.isDown,
@@ -85,17 +82,16 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
     // Keys always win: pressing one cancels the click/tap path.
     if ((vector.x !== 0 || vector.y !== 0) && this.path.length > 0) this.endPath(false);
     if (this.path.length > 0) vector = this.followPath(delta);
+    if (this.locked) return; // reaching the end of a path can open a dialogue
 
     this.setVelocity(vector.x * WALK_SPEED, vector.y * WALK_SPEED);
     this.facing = facingFor(vector, this.facing);
-    this.setFlipX(this.facing === 'right');
 
-    const sheet = sheetFacing(this.facing);
     if (vector.x !== 0 || vector.y !== 0) {
-      this.anims.play(`walk-${sheet}`, true);
+      this.setFlipX(this.facing === 'right');
+      this.anims.play(`${TEXTURE}-walk-${sheetFacing(this.facing)}`, true);
     } else {
-      this.anims.stop();
-      this.setFrame(frameIndex(sheet, 0));
+      standFacing(this, this.facing);
     }
     // Things lower on screen are drawn in front.
     this.setDepth(this.y);

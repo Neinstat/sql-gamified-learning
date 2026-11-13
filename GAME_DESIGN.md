@@ -58,7 +58,8 @@ Game ditampilkan sebagai **dunia 2D dengan kamera dari atas** (genre seperti gam
 
 - **Ruangan terbuka bertahap** mengikuti chapter — membuka ruangan baru adalah bagian dari sistem progres.
 - Konsol tampil sebagai **panel overlay** di atas dunia game (dunia tetap terlihat di belakang).
-- **Kontrol:** keyboard (WASD/panah untuk berjalan, E/Spasi untuk bicara/membuka stasiun) **dan** klik/tap tujuan untuk berjalan (pathfinding di grid), sehingga bisa dimainkan di desktop maupun HP. Klik/tap pada NPC atau stasiun = berjalan ke sana lalu berinteraksi. Klik pada benda/dinding = berjalan ke tile terdekat yang bisa dicapai. Jalur boleh diagonal tapi tidak memotong sudut; menekan tombol arah membatalkan jalur klik.
+- **Kontrol:** keyboard (WASD/panah untuk berjalan, E/Spasi untuk bicara/membuka stasiun) **dan** klik/tap tujuan untuk berjalan (pathfinding di grid), sehingga bisa dimainkan di desktop maupun HP. Klik/tap pada NPC atau stasiun = berjalan ke sana lalu berinteraksi. Klik pada benda/dinding = berjalan ke tile terdekat yang bisa dicapai. Bisa bicara bila pemain berdiri di tile yang menyentuh tile NPC (termasuk diagonal); gelembung "…" muncul di atas NPC sebagai tanda.
+- **Dialog:** kotak di bawah layar dengan potret 64×64 (ditampilkan 96 px), satu kalimat per langkah; lanjut dengan klik, Spasi, Enter, atau E; Esc menutup. Selama dialog terbuka, dunia berhenti menerima input. NPC yang punya permintaan di level aktif mengucapkan dialog level itu; NPC lain hanya mengobrol singkat. Jalur boleh diagonal tapi tidak memotong sudut; menekan tombol arah membatalkan jalur klik.
 
 ### Gaya visual & aset
 - **Pixel art cozy** ala game simulasi/bertani top-down — hanya *konvensi ukurannya* yang diikuti; gambar, karakter, dan warna tetap **orisinal**.
@@ -73,7 +74,7 @@ Game ditampilkan sebagai **dunia 2D dengan kamera dari atas** (genre seperti gam
 
 - Ditampilkan dengan **zoom bulat** (mis. 3×) dan `pixelArt: true` agar piksel tetap tajam. Zoom minimal 2× (maks. 4×): di layar kecil kamera mengikuti pemain, bukan memperkecil ruangan.
 - Hanya **kaki** karakter yang bertabrakan (kepala boleh menutupi benda di belakangnya); benda yang lebih bawah di layar digambar di depan.
-- **Sumber aset Fase 2: placeholder.** Tile dari pack **CC0** (kandidat: Kenney, 16×16) dan sprite karakter/potret placeholder sederhana buatan sendiri. Fokus Fase 2 adalah mekanik; aset final diganti di Fase 3 atau nanti. Setiap aset pihak ketiga dicatat sumber + lisensinya di `CREDITS.md`. *(2.1–2.2: tile dan sprite pemain placeholder digambar lewat kode di `src/game/placeholderTiles.ts` dan `placeholderSprites.ts` — belum ada aset pihak ketiga.)*
+- **Sumber aset Fase 2: placeholder.** Tile dari pack **CC0** (kandidat: Kenney, 16×16) dan sprite karakter/potret placeholder sederhana buatan sendiri. Fokus Fase 2 adalah mekanik; aset final diganti di Fase 3 atau nanti. Setiap aset pihak ketiga dicatat sumber + lisensinya di `CREDITS.md`. *(2.1–2.4: tile, sprite pemain & Grandma, dan potret Grandma placeholder digambar lewat kode di `src/game/placeholderTiles.ts`, `placeholderSprites.ts`, dan `placeholderPortraits.ts` — belum ada aset pihak ketiga.)*
 
 ## 4. Core loop (per level)
 
@@ -202,7 +203,7 @@ Tes otomatis memeriksa semua level: jawaban resmi bisa dijalankan, blok yang dis
 
 Dibangun bertahap — setiap fase menghasilkan sesuatu yang bisa dimainkan.
 
-**Status (13 Nov 2026):** ✅ **Fase 1 selesai.** Chapter 0–1 (10 level) bisa dimainkan dalam EN/ID, dengan pengecek jawaban, hint, progres tersimpan, dan 110 tes otomatis. Pemilik project sudah uji main dan menyetujui rasa belajarnya. 🚧 **Fase 2 sedang berjalan** — rencana dan keputusan ada di "Rencana Fase 2" di bawah. Selesai: 2.1, 2.2, 2.3.
+**Status (13 Nov 2026):** ✅ **Fase 1 selesai.** Chapter 0–1 (10 level) bisa dimainkan dalam EN/ID, dengan pengecek jawaban, hint, progres tersimpan, dan 110 tes otomatis. Pemilik project sudah uji main dan menyetujui rasa belajarnya. 🚧 **Fase 2 sedang berjalan** — rencana dan keputusan ada di "Rencana Fase 2" di bawah. Selesai: 2.1–2.4.
 
 Catatan dari Fase 1 untuk fase berikutnya:
 - Ukuran unduhan pertama PGlite besar (±3,5 MB wasm terkompresi + 6 MB data) — perlu layar loading yang jelas dan dicek saat memilih hosting.
@@ -229,7 +230,7 @@ Iterasi kecil, masing-masing: kerjakan → cek di browser → commit & push.
 | 2.1 ✅ | Pasang Phaser; kanvas game di halaman React; ruangan placeholder dari tilemap 16 px (zoom 3×) | Ruangan kafe tampil tajam di browser; halaman Fase 1 masih bisa dibuka di `?classic` selama transisi |
 | 2.2 ✅ | Pemain 16×32 berjalan dengan WASD/panah; tabrakan dengan dinding & furnitur; kamera mengikuti | Bisa berkeliling ruangan tanpa menembus objek |
 | 2.3 ✅ | Klik/tap untuk berjalan (pathfinding di grid) | Klik/tap lantai → pemain berjalan memutari halangan |
-| 2.4 | Grandma sebagai NPC + sistem interaksi (penanda "E" saat dekat) + kotak dialog React dengan potret 64×64 | Bicara dengan Grandma menampilkan dialog level aktif (EN/ID) |
+| 2.4 ✅ | Grandma sebagai NPC + sistem interaksi (gelembung "…" saat dekat; E/Spasi/klik untuk bicara) + kotak dialog React dengan potret 64×64 | Bicara dengan Grandma menampilkan dialog level aktif (EN/ID) |
 | 2.5 | `stations.ts` + field `station` di level; konsol sebagai overlay yang dibuka dari stasiun; daftar tabel difilter per stasiun; keyboard Phaser dimatikan saat overlay terbuka | Menu board membuka konsol berisi `menu_items`; tes memastikan setiap jawaban level hanya memakai tabel dari stasiunnya |
 | 2.6 | Alur level di dunia: penanda "!" di atas Grandma → dialog + kartu materi → penanda di stasiun → konsol → benar → kembali ke Grandma untuk ucapan sukses → level berikutnya. Hint, progres, dan daftar level (sebagai menu "Journal") tetap jalan | Chapter 0–1 bisa diselesaikan seluruhnya di dalam dunia game |
 | 2.7 | Layar loading (PGlite besar), tata letak overlay di HP, tombol bahasa & menu di HUD | Bisa dimainkan nyaman di desktop dan HP |

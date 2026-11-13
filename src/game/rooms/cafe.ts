@@ -79,6 +79,9 @@ export const BLOCKING_TILES: readonly number[] = [
   TILE.coffeeMachine,
 ];
 
+/** People standing in the room (tile coordinates). They block the tile they stand on. */
+export const NPCS = [{ id: 'grandma', tile: { x: 11, y: 4 } }] as const;
+
 /** Where the player appears: just inside the door (tile coordinates, can be fractional). */
 export const PLAYER_START = { x: 10, y: 10 };
 
@@ -101,6 +104,11 @@ export function walkableGrid(map: readonly string[] = CAFE_MAP): boolean[][] {
   const ground = groundLayer(map);
   const furniture = furnitureLayer(map);
   return ground.map((row, y) =>
-    row.map((g, x) => !BLOCKING_TILES.includes(g) && !BLOCKING_TILES.includes(furniture[y][x])),
+    row.map(
+      (g, x) =>
+        !BLOCKING_TILES.includes(g) &&
+        !BLOCKING_TILES.includes(furniture[y][x]) &&
+        !NPCS.some((npc) => npc.tile.x === x && npc.tile.y === y),
+    ),
   );
 }
