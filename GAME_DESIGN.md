@@ -257,8 +257,9 @@ Di luar MVP (nanti): subquery, CTE, window function, analisis waktu lanjutan (Mo
 ### Pengecek jawaban
 - Query pemain dan query jawaban resmi dijalankan di database yang sama; **hasilnya** yang dibandingkan.
 - Setiap query pemain berjalan di dalam transaksi **READ ONLY** yang selalu di-*rollback* (data tidak bisa rusak); perintah transaksi (`BEGIN`/`COMMIT`/…) ditolak.
-- Batas waktu query (`statement_timeout`) **tidak berfungsi** di PGlite karena berjalan di satu thread. PGlite dipindah ke Web Worker di Fase 3 (bersama data penjualan yang lebih besar, iterasi 3.5) agar query yang macet bisa dihentikan.
-- **Blokir tabel per stasiun (Fase 3):** cara utama memakai izin asli PostgreSQL — satu *role* per stasiun dengan `GRANT SELECT` hanya pada tabelnya, lalu `SET LOCAL ROLE` di dalam transaksi READ ONLY. Galat `permission denied for table …` diubah menjadi pesan ramah yang menyebut stasiun pemilik tabel. Bila PGlite ternyata tidak mendukung role dengan baik, cadangannya membaca nama tabel dari `EXPLAIN (FORMAT JSON)` sebelum query dijalankan (bukan scan teks seperti `tablesInQuery`, yang hanya untuk tes). Logikanya tinggal di `src/sql-core/` (stasiun tetap data murni).
+- Batas waktu query (`statement_timeout`) **tidak berfungsi** di PGlite karena berjalan di satu thread. **Sejak 3.5 database berjalan di Web Worker** (`src/app/db.worker.ts` + `workerDatabase.ts`): selama query berjalan, konsol menampilkan tombol **■ Stop** yang mengakhiri worker, menjawab query itu dengan "stopped" (tidak dihitung salah), lalu memulai worker baru (±1 detik; data dibuat ulang persis sama). Bila browser tidak bisa membuat worker, database jalan di halaman (tanpa Stop). `CafeDatabase` kini antarmuka (`run`, `schema`, `stop?`): `LocalCafeDatabase` dipakai tes dan di dalam worker.
+- Tabel hasil hanya menampilkan **200 baris pertama** ("Showing the first 200 of 7694 rows") agar halaman tetap ringan; pengecek jawaban tetap memakai semua baris.
+- **Blokir tabel per stasiun (Fase 3, ✅ 3.5):** memakai izin asli PostgreSQL — satu *role* per stasiun dengan `GRANT SELECT` hanya pada tabelnya, lalu `SET LOCAL ROLE` di dalam transaksi READ ONLY. Galat `permission denied for table …` diubah menjadi pesan ramah yang menyebut stasiun pemilik tabel. PGlite terbukti mendukung role (cadangan `EXPLAIN` tidak diperlukan). Celah untuk kembali ke role penuh ditutup: perintah `SET`/`RESET`/`DO` ditolak ("Only questions for the data here"), dan `set_config` dicabut dari role stasiun; tes `db.test.ts` mencoba semua celah itu. Jawaban resmi, query awal, dan bukti Mini Case dites berjalan dengan role stasiunnya. Jawaban resmi sendiri dijalankan tanpa role saat menilai.
 
 ### Format data level
 Setiap level adalah objek TypeScript (`src/sql-core/levels/`), satu file per chapter. Isinya:
@@ -280,7 +281,14 @@ Tes otomatis memeriksa semua level: jawaban resmi bisa dijalankan, blok yang dis
 - Semua nama tabel dan kolom dalam English, gaya `snake_case`.
 - Sengaja diberi **data kotor** (nilai kosong, duplikat, salah ketik) di level tertentu — karena itu kenyataan di dunia kerja.
 - Data Analysis Case dirancang dengan pola tersembunyi yang bisa ditemukan lewat query.
-- **Rancangan data penjualan (difinalkan di iterasi 3.5):** `sales` satu baris per item terjual (`sale_id`, `order_id`, `sold_at`, `item_id`, `quantity`, `unit_price`, `channel`, `customer_id` boleh kosong untuk pelanggan tanpa akun), agar KPI Chapter 3 tidak butuh JOIN (AOV = revenue ÷ `COUNT(DISTINCT order_id)`). Periode ±Agustus–Oktober. Dibuat oleh **generator dengan seed tetap** di TypeScript (hasil selalu sama, jadi jawaban level stabil dan bisa dites), dengan pola sengaja untuk tiap Mini Case dan Analysis Case.
+- **Data penjualan (3.5, `src/sql-core/data/sales.ts`):** dibuat oleh generator dengan **seed tetap** (hasil selalu sama, jadi jawaban level stabil dan bisa dites), 1 Agustus – 31 Oktober 2026, buka 07.00–17.59. ±4.600 order, ±7.700 baris.
+  - `customers` (`customer_id`, `name`, `joined_on`): 60 pelanggan — 16 pelanggan tetap, 39 sesekali, 5 yang mendaftar tapi tidak pernah membeli (untuk `LEFT JOIN`).
+  - `sales` satu baris per item terjual: `sale_id`, `order_id`, `sold_at` (TIMESTAMP tanpa zona waktu), `item_id`, `quantity`, `unit_price` (= harga menu), `channel` (`dine-in` / `takeaway` / `delivery`), `customer_id` (kosong untuk pembeli tanpa akun). KPI Chapter 3 tidak butuh JOIN: AOV = revenue ÷ `COUNT(DISTINCT order_id)`.
+  - **Pola tersembunyi** (dikunci oleh tes `sales.test.ts`):
+    - **Chapter 3 – The Quiet Day:** Selasa adalah hari pasar di lembah → revenue terendah karena **jumlah order** sedikit (±40% lebih sedikit), sedangkan nilai per order normal.
+    - **Chapter 4 – Where Did the Regulars Go?:** empat pelanggan tetap (`customer_id` 3, 7, 11, 14) datang untuk *Grandma's Secret Cake*; kue itu dihentikan setelah Agustus, dan mereka tidak pernah kembali.
+    - **Chapter 5 – Analysis Case:** di Oktober susu sering habis di pagi hari (sebabnya baru terlihat di stock ledger saat storeroom dibuka, 3.10). Minuman susu turun tajam, sebagian pelanggan beralih ke kopi hitam, sebagian pergi. Revenue Oktober **18% di bawah September**, dan Latte turun paling banyak. Pola ini memakai aliran acak terpisah agar bisa disetel tanpa mengubah data lain.
+    - Hot Chocolate (tanpa harga) dan Pumpkin Spice Latte (tidak tersedia) tidak pernah terjual; Secret Cake hanya terjual di Agustus.
 
 ## 12. Roadmap
 
@@ -290,12 +298,12 @@ Dibangun bertahap — setiap fase menghasilkan sesuatu yang bisa dimainkan.
 
 Catatan dari Fase 1 untuk fase berikutnya:
 - Ukuran unduhan pertama PGlite besar (±3,5 MB wasm terkompresi + 6 MB data) — perlu layar loading yang jelas dan dicek saat memilih hosting.
-- PGlite belum di Web Worker, jadi query yang macet tidak bisa dihentikan (lihat §10).
+- ~~PGlite belum di Web Worker~~ — sudah di Web Worker dengan tombol Stop (3.5, lihat §10).
 - ~~Di layar HP, daftar tabel muncul di atas area input~~ — konsol sudah menjadi overlay yang memenuhi layar HP (Fase 2).
 
 Catatan dari Fase 2 untuk fase berikutnya:
 - Semua aset masih placeholder yang digambar lewat kode (`src/game/placeholder*.ts`); keputusan aset final ada di §13.
-- Cash register sudah ada di dunia tapi belum dibuka; terbuka otomatis saat tabel `sales`/`customers` dibuat. *(Diputuskan di Fase 3: query ke tabel di luar stasiun diblokir — §3, §10.)*
+- Cash register sudah ada di dunia tapi belum dibuka; terbuka otomatis saat tabel `sales`/`customers` dibuat *(3.5: tabelnya sudah ada; stasiun ini dipakai mulai Chapter 3)*. *(Diputuskan di Fase 3: query ke tabel di luar stasiun diblokir — §3, §10.)*
 - Minimap belum dibuat (cukup zoom 1× + panah penunjuk untuk satu ruangan). *(Diputuskan di Fase 3: tanpa minimap, diganti tab Café map di Journal — §3.)*
 - **Mode klasik (`?classic`) dihapus** (keputusan pemilik project setelah Fase 2): mempertahankannya berarti setiap fitur Fase 3 (bintang, koin, Analysis Case, Rush Hour, tabel per stasiun) harus dibuat dua kali. Jalan pintas pengembangan `?level=ch1-3` kini membuka permintaan level itu langsung di dunia game.
 - Belum teruji otomatis: mengubah ukuran jendela/memutar HP saat game berjalan dan tampilan galat database (sudah dicoba manual oleh pemilik project untuk HP).
@@ -351,7 +359,7 @@ Setiap iterasi bisa dimainkan sendiri: kerjakan → cek di browser → commit & 
 | 3.2 ✅ | **Mesin Mini Case + So what?:** catatan investigasi, 📌 sematkan hasil query, pertanyaan kesimpulan dengan cek bukti, field `soWhat`; Mini Case Ch1 **The Menu Audit**; So what? di 1–2 level Ch0–1 (EN/ID) | Setelah level terakhir Ch1, pemain menyelesaikan The Menu Audit di Menu board dengan bukti 📌; So what? muncul di Ch0–1 |
 | 3.3 ✅ | **Bintang & koin:** catat hint + jawaban salah per level/kasus, layar hasil (⭐ + koin), bintang di Journal, penghitung koin di HUD; progres lama tetap terbaca | Menyelesaikan level/kasus menampilkan bintang & koin, tersimpan, dan terlihat di Journal |
 | 3.4 ✅ | **Chapter 2 First Reports** (ketik bebas: `ORDER BY`, `LIMIT`, `DISTINCT`, alias, kolom hitungan) + Mini Case **What Should We Promote?**; Barista dalam gaya final | Chapter 2 bisa dimainkan lengkap di Menu board, EN/ID |
-| 3.5 | **Data penjualan & stasiun kedua:** generator data `sales`/`customers` dengan seed tetap, Cash register terbuka, blokir tabel per stasiun (role PostgreSQL), PGlite di Web Worker + tombol hentikan query | Cash register membuka konsol berisi `sales`, `customers`, `menu_items`; query ke tabel lain ditolak dengan pesan ramah; query macet bisa dihentikan |
+| 3.5 ✅ | **Data penjualan & stasiun kedua:** generator data `sales`/`customers` dengan seed tetap, Cash register terbuka, blokir tabel per stasiun (role PostgreSQL), PGlite di Web Worker + tombol hentikan query | Cash register membuka konsol berisi `sales`, `customers`, `menu_items`; query ke tabel lain ditolak dengan pesan ramah; query macet bisa dihentikan |
 | 3.6 | **Chapter 3 Numbers Talk** (`COUNT`/`SUM`/`AVG`/`MIN`/`MAX`, `GROUP BY`, `HAVING`, dasar tanggal) + Mini Case **The Quiet Day** | Chapter 3 bisa dimainkan lengkap di Cash register, EN/ID |
 | 3.7 | **Kafe berkembang:** peta multi-ruangan dengan pintu terkunci per chapter, **Kitchen** + tabel `recipes` + Recipe book (gaya final), tab **Café map** di Journal, panah penunjuk ke pintu | Kitchen terbuka setelah Ch3; Café map menunjukkan ruangan dan target tugas |
 | 3.8 | **Chapter 4 Connecting the Dots** (`INNER`/`LEFT JOIN`, JOIN + agregasi) + Mini Case **Where Did the Regulars Go?**; Regular dalam gaya final | Chapter 4 bisa dimainkan lengkap di Kitchen & Cash register, EN/ID |

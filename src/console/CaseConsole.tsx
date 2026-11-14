@@ -120,6 +120,11 @@ export function CaseConsole({ db, schema, level, lang, t, onSolved, solvedPanel 
           <button className="run-button" onClick={run} disabled={running}>
             {running ? t.running : t.run}
           </button>
+          {running && db.stop && (
+            <button className="secondary-button" onClick={() => db.stop?.()}>
+              ■ {t.stop}
+            </button>
+          )}
           <span className="shortcut">{t.shortcut}</span>
           {result?.ok && (
             <button className="secondary-button pin-button" onClick={pin} disabled={Boolean(alreadyPinned)}>
@@ -133,7 +138,7 @@ export function CaseConsole({ db, schema, level, lang, t, onSolved, solvedPanel 
             <WithCode text={formatFeedback(result.error, lang)} />
           </p>
         )}
-        {result?.ok && <ResultTable columns={result.columns} rows={result.rows} rowsLabel={t.rows} />}
+        {result?.ok && <ResultTable columns={result.columns} rows={result.rows} rowsLabel={t.rows} shownLabel={t.rowsShown} />}
 
         <section className="case-notes" aria-label={t.notes}>
           <h3 className="case-title">🗒 {t.notes}</h3>

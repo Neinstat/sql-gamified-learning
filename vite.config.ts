@@ -7,6 +7,10 @@ export default defineConfig({
   optimizeDeps: {
     exclude: ['@electric-sql/pglite'],
   },
+  // The café database runs in a module Web Worker (src/app/db.worker.ts).
+  worker: {
+    format: 'es',
+  },
   test: {
     environment: 'node',
     include: ['src/**/*.test.ts'],

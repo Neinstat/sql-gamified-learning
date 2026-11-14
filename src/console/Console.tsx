@@ -48,7 +48,8 @@ export function Console({ db, schema, level, lang, t, onCorrect, solvedPanel }: 
       setOutcome(next);
       setCrash(null);
       if (next.verdict.correct) onCorrect(mistakes);
-      else setMistakes((n) => n + 1);
+      // A query the player stopped isn't a wrong answer.
+      else if (next.verdict.feedback.kind !== 'stopped') setMistakes((n) => n + 1);
     } catch (err) {
       // Only happens when the level's own solution is broken.
       setCrash(String(err));
@@ -81,6 +82,11 @@ export function Console({ db, schema, level, lang, t, onCorrect, solvedPanel }: 
           <button className="run-button" onClick={run} disabled={running}>
             {running ? t.running : t.run}
           </button>
+          {running && db.stop && (
+            <button className="secondary-button" onClick={() => db.stop?.()}>
+              ■ {t.stop}
+            </button>
+          )}
           {level.input.kind === 'free' && <span className="shortcut">{t.shortcut}</span>}
         </div>
 
@@ -98,7 +104,7 @@ export function Console({ db, schema, level, lang, t, onCorrect, solvedPanel }: 
             {solvedPanel}
           </>
         )}
-        {result?.ok && <ResultTable columns={result.columns} rows={result.rows} rowsLabel={t.rows} />}
+        {result?.ok && <ResultTable columns={result.columns} rows={result.rows} rowsLabel={t.rows} shownLabel={t.rowsShown} />}
       </section>
     </div>
   );

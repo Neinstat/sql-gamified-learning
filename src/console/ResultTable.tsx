@@ -4,12 +4,21 @@ type Props = {
   columns: string[];
   rows: CellValue[][];
   rowsLabel: (n: number) => string;
+  /** "Showing the first 200 of 7694 rows" */
+  shownLabel?: (shown: number, total: number) => string;
 };
 
-export function ResultTable({ columns, rows, rowsLabel }: Props) {
+/** Big results (the sales table has thousands of rows) only show their first rows, so the page stays quick. */
+export const MAX_SHOWN_ROWS = 200;
+
+export function ResultTable({ columns, rows, rowsLabel, shownLabel }: Props) {
+  const shown = rows.length > MAX_SHOWN_ROWS ? rows.slice(0, MAX_SHOWN_ROWS) : rows;
   return (
     <div className="result">
-      <p className="result-count">{rowsLabel(rows.length)}</p>
+      <p className="result-count">
+        {rowsLabel(rows.length)}
+        {shown.length < rows.length && shownLabel && <span className="result-shown"> · {shownLabel(shown.length, rows.length)}</span>}
+      </p>
       <div className="result-scroll">
         <table className="result-table">
           <thead>
@@ -20,7 +29,7 @@ export function ResultTable({ columns, rows, rowsLabel }: Props) {
             </tr>
           </thead>
           <tbody>
-            {rows.map((row, r) => (
+            {shown.map((row, r) => (
               <tr key={r}>
                 {row.map((cell, c) => (
                   <td key={c} className={cell === null ? 'cell-null' : undefined}>
