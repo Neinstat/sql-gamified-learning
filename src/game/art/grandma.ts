@@ -1,5 +1,4 @@
-import { CHAR_H, CHAR_W, FACINGS, FRAMES_PER_FACING, frameIndex } from '../placeholderSprites';
-import { paintGrid, type PaletteKey } from './palette';
+import { blank, drawSheet, ellipse, FEET_FRONT, FEET_SIDE, finishPortrait, portraitUrl, rect, ring, type Facing } from './characterKit';
 
 /**
  * Grandma in the final autumn style (GAME_DESIGN.md §3): our own pixel art.
@@ -103,86 +102,16 @@ const SIDE = [
   '..kkkkkkkkkkkk..',
 ];
 
-/** Feet (rows 29–31) per step: standing, left foot forward, right foot forward. */
-const FEET_FRONT = [
-  ['...kkk....kkk...', '...kkk....kkk...', '................'],
-  ['...kkk....kkk...', '...kkk..........', '...kkk..........'],
-  ['...kkk....kkk...', '..........kkk...', '..........kkk...'],
-];
-const FEET_SIDE = [
-  ['...kkkk.kkk.....', '...kkkk.kkk.....', '................'],
-  ['..kkk...kkk.....', '..kkk....kk.....', '................'],
-  ['....kkkkkk......', '.....kkkkk......', '................'],
-];
-
 const UPPER = { down: DOWN, up: UP, side: SIDE } as const;
 
 /** One 16×32 frame: head and body, then the feet for this step. */
-export function grandmaFrame(facing: (typeof FACINGS)[number], step: number): string[] {
+export function grandmaFrame(facing: Facing, step: number): string[] {
   return [...UPPER[facing], ...(facing === 'side' ? FEET_SIDE : FEET_FRONT)[step]];
 }
 
-/** All frames in the same order as the placeholder sheets (see placeholderSprites.ts). */
+/** Grandma's walking sheet. */
 export function drawGrandmaSheet(canvas: HTMLCanvasElement): void {
-  canvas.width = FACINGS.length * FRAMES_PER_FACING * CHAR_W;
-  canvas.height = CHAR_H;
-  const ctx = canvas.getContext('2d')!;
-  for (const facing of FACINGS) {
-    for (let step = 0; step < FRAMES_PER_FACING; step++) {
-      const x = frameIndex(facing, step) * CHAR_W;
-      // A soft shadow under the feet, then the character.
-      ctx.fillStyle = 'rgba(43, 29, 25, 0.25)';
-      ctx.fillRect(x + 3, CHAR_H - 2, 10, 2);
-      ctx.fillRect(x + 4, CHAR_H - 3, 8, 1);
-      paintGrid(ctx, grandmaFrame(facing, step), x, 0);
-    }
-  }
-}
-
-// --- Portrait (64×64) ---------------------------------------------------------------------------
-
-const SIZE = 64;
-type Layer = (PaletteKey | '.')[][];
-
-const blank = (): Layer => Array.from({ length: SIZE }, () => Array<PaletteKey | '.'>(SIZE).fill('.'));
-
-function ellipse(layer: Layer, cx: number, cy: number, rx: number, ry: number, key: PaletteKey, keep = (_x: number, _y: number) => true) {
-  for (let y = 0; y < SIZE; y++) {
-    for (let x = 0; x < SIZE; x++) {
-      const dx = (x + 0.5 - cx) / rx;
-      const dy = (y + 0.5 - cy) / ry;
-      if (dx * dx + dy * dy <= 1 && keep(x, y)) layer[y][x] = key;
-    }
-  }
-}
-
-function rect(layer: Layer, x: number, y: number, w: number, h: number, key: PaletteKey) {
-  for (let yy = y; yy < y + h; yy++) for (let xx = x; xx < x + w; xx++) layer[yy][xx] = key;
-}
-
-function ring(layer: Layer, cx: number, cy: number, r: number, key: PaletteKey) {
-  for (let y = 0; y < SIZE; y++) {
-    for (let x = 0; x < SIZE; x++) {
-      const d = Math.hypot(x + 0.5 - cx, y + 0.5 - cy);
-      if (d <= r && d > r - 1.2) layer[y][x] = key;
-    }
-  }
-}
-
-/** Dark outline around the figure: every empty pixel touching it (not the bottom edge). */
-function outline(layer: Layer) {
-  const edge: [number, number][] = [];
-  for (let y = 0; y < SIZE; y++) {
-    for (let x = 0; x < SIZE; x++) {
-      if (layer[y][x] !== '.') continue;
-      const near = [[1, 0], [-1, 0], [0, 1], [0, -1]].some(([dx, dy]) => {
-        const v = layer[y + dy]?.[x + dx];
-        return v !== undefined && v !== '.' && v !== 'k';
-      });
-      if (near) edge.push([x, y]);
-    }
-  }
-  for (const [x, y] of edge) layer[y][x] = 'k';
+  drawSheet(canvas, grandmaFrame);
 }
 
 /** Grandma's dialogue portrait as a 64×64 text grid (testable without a canvas). */
@@ -241,29 +170,12 @@ export function grandmaPortraitGrid(): string[] {
   rect(fig, 29, 44, 6, 1, 'B');
   rect(fig, 19, 33, 1, 2, 'S');
   rect(fig, 44, 33, 1, 2, 'q');
-  outline(fig);
-
-  // Warm background: cream wallpaper with the café's stripes, wainscot below.
-  const out = blank();
-  rect(out, 0, 0, SIZE, SIZE, '7');
-  for (const x of [4, 20, 36, 52]) rect(out, x, 0, 2, 50, '6');
-  rect(out, 0, 50, SIZE, 2, '5');
-  rect(out, 0, 52, SIZE, 12, '4');
-  for (let y = 0; y < SIZE; y++) for (let x = 0; x < SIZE; x++) if (fig[y][x] !== '.') out[y][x] = fig[y][x];
-  return out.map((row) => row.join(''));
+  return finishPortrait(fig);
 }
 
-let portraitUrl: string | null = null;
-
-/** Grandma's portrait as a data URL (drawn once). */
+/** Grandma's portrait as a data URL. */
 export function grandmaPortrait(): string {
-  if (portraitUrl) return portraitUrl;
-  const canvas = document.createElement('canvas');
-  canvas.width = SIZE;
-  canvas.height = SIZE;
-  paintGrid(canvas.getContext('2d')!, grandmaPortraitGrid());
-  portraitUrl = canvas.toDataURL();
-  return portraitUrl;
+  return portraitUrl('grandma', grandmaPortraitGrid);
 }
 
 /** For tests: every grid has the right size and only uses palette colours. */

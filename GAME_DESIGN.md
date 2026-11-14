@@ -185,6 +185,8 @@ Data penjualan (Fase 3) dirancang agar setiap Mini Case punya pola yang bisa dit
 | **4. Connecting the Dots** | `INNER JOIN`, `LEFT JOIN`, JOIN + agregasi | Penjualan per kategori, pelanggan yang tidak kembali | Bebas |
 | **5. The Analysis Case** 🎯 | Gabungan semua materi | Investigasi "sales dropped, why?" | Bebas, multi-query |
 
+**Chapter 2 (3.4):** 2-1 sandwich termahal (`ORDER BY … DESC`, dengan query awal) · 2-2 tiga dessert termurah (`LIMIT`) · 2-3 kategori untuk buletin Regular (`DISTINCT`) · 2-4 margin per menu (`price - cost AS margin`, nama kolom dinilai) · 2-5 lima margin terbesar — **jebakan sengaja:** saat `DESC`, PostgreSQL menaruh `NULL` paling atas, jadi harus disaring `IS NOT NULL` (atau `NULLS LAST`) · 2-6 Mini Case *What Should We Promote?*. Hasil yang diurutkan sengaja dipilih tanpa nilai kembar, agar urutan jawaban selalu pasti.
+
 Mulai Fase 3: Chapter 1–4 masing-masing ditutup dengan **Mini Case** 🔍, dan ±1–2 level per chapter (mulai Chapter 0) punya pertanyaan **So what?** 💭 (lihat §5).
 
 Di luar MVP (nanti): subquery, CTE, window function, analisis waktu lanjutan (MoM/YoY), `INSERT`/`UPDATE`, chapter cabang kafe baru.
@@ -237,6 +239,7 @@ Di luar MVP (nanti): subquery, CTE, window function, analisis waktu lanjutan (Mo
 
 ### Struktur kode (tambahan Fase 3)
 - `src/game/art/` — aset final: `palette.ts` (32 warna + `paintGrid`), `tiles.ts` (tileset kafe), `grandma.ts` (sprite 16×32 + potret 64×64). Karakter yang belum punya aset final tetap memakai `placeholderSprites.ts` / `placeholderPortraits.ts` (dipilih otomatis di `characters.ts` dan `characterPortrait`).
+- `src/game/art/characterKit.ts` — alat bersama tokoh gaya final: sheet jalan dari grid (`drawSheet`, sepatu `FEET_FRONT`/`FEET_SIDE`) dan potret 64×64 dari bentuk dasar dengan latar dinding kafe (`finishPortrait`). Tokoh final: `grandma.ts` (3.1), `barista.ts` (3.4).
 - `src/sql-core/cases.ts` — cek kesimpulan Mini Case: jawaban dulu (`answer-wrong` dihitung sebagai kesimpulan salah untuk bintang), lalu bukti 📌 (`checkEvidence`). Pesan EN/ID lewat `formatCaseFeedback`.
 - `src/console/CaseConsole.tsx` — konsol Mini Case: tombol query awal, editor bebas, 📌 sematkan hasil, catatan investigasi, dan daftar kesimpulan (jawaban + pilih sematan sebagai bukti + Periksa). Sematan disimpan selama level yang sama (konsol tetap ter-mount), tapi **belum** disimpan ke browser — hilang bila halaman dimuat ulang.
 - `src/app/SoWhatCard.tsx` — kartu "So what?" setelah ucapan sukses tokoh, sebelum lanjut ke level berikutnya.
@@ -347,7 +350,7 @@ Setiap iterasi bisa dimainkan sendiri: kerjakan → cek di browser → commit & 
 | 3.1 ✅ | **Arah visual:** file palet musim gugur, pilih pack tile CC0, ruang depan + Grandma (sprite & potret) dalam gaya final, `CREDITS.md` | Pemilik project melihat ruang depan + Grandma baru di browser dan menyetujui arahnya (atau memilih cadangan beli pack) |
 | 3.2 ✅ | **Mesin Mini Case + So what?:** catatan investigasi, 📌 sematkan hasil query, pertanyaan kesimpulan dengan cek bukti, field `soWhat`; Mini Case Ch1 **The Menu Audit**; So what? di 1–2 level Ch0–1 (EN/ID) | Setelah level terakhir Ch1, pemain menyelesaikan The Menu Audit di Menu board dengan bukti 📌; So what? muncul di Ch0–1 |
 | 3.3 ✅ | **Bintang & koin:** catat hint + jawaban salah per level/kasus, layar hasil (⭐ + koin), bintang di Journal, penghitung koin di HUD; progres lama tetap terbaca | Menyelesaikan level/kasus menampilkan bintang & koin, tersimpan, dan terlihat di Journal |
-| 3.4 | **Chapter 2 First Reports** (ketik bebas: `ORDER BY`, `LIMIT`, `DISTINCT`, alias, kolom hitungan) + Mini Case **What Should We Promote?**; Barista dalam gaya final | Chapter 2 bisa dimainkan lengkap di Menu board, EN/ID |
+| 3.4 ✅ | **Chapter 2 First Reports** (ketik bebas: `ORDER BY`, `LIMIT`, `DISTINCT`, alias, kolom hitungan) + Mini Case **What Should We Promote?**; Barista dalam gaya final | Chapter 2 bisa dimainkan lengkap di Menu board, EN/ID |
 | 3.5 | **Data penjualan & stasiun kedua:** generator data `sales`/`customers` dengan seed tetap, Cash register terbuka, blokir tabel per stasiun (role PostgreSQL), PGlite di Web Worker + tombol hentikan query | Cash register membuka konsol berisi `sales`, `customers`, `menu_items`; query ke tabel lain ditolak dengan pesan ramah; query macet bisa dihentikan |
 | 3.6 | **Chapter 3 Numbers Talk** (`COUNT`/`SUM`/`AVG`/`MIN`/`MAX`, `GROUP BY`, `HAVING`, dasar tanggal) + Mini Case **The Quiet Day** | Chapter 3 bisa dimainkan lengkap di Cash register, EN/ID |
 | 3.7 | **Kafe berkembang:** peta multi-ruangan dengan pintu terkunci per chapter, **Kitchen** + tabel `recipes` + Recipe book (gaya final), tab **Café map** di Journal, panah penunjuk ke pintu | Kitchen terbuka setelah Ch3; Café map menunjukkan ruangan dan target tugas |
@@ -372,7 +375,7 @@ Catatan: isi level tiap chapter (dialog, data, jawaban) ditulis di awal iterasi 
 - [x] Minimap — **tidak**; tab Café map di Journal (perencanaan Fase 3, lihat §3)
 - [x] Mata uang — **$ (USD)**
 - [ ] Nuansa setting kota (generik/internasional, atau ada sentuhan lokal tertentu)
-- [ ] Isi detail tiap level (dialog, data, jawaban) per chapter — Chapter 0 (4 level) dan Chapter 1 (6 level) sudah ditulis, lengkap dengan terjemahan Indonesia
+- [ ] Isi detail tiap level (dialog, data, jawaban) per chapter — Chapter 0 (4 level), Chapter 1 (6 level + Mini Case), dan Chapter 2 (5 level + Mini Case) sudah ditulis, lengkap dengan terjemahan Indonesia
 - [x] **Stasiun untuk Chapter 0–1** — stasiun baru **Menu board** di area depan membaca `menu_items` (cocok dengan cerita "Cleaning Up the Menu"); Kitchen tetap untuk `recipes` di Fase 3
 - [x] Bentuk Skill Check — **adaptif**, 2 soal per chapter, dibuat setelah Chapter 4 ada (perencanaan Fase 3, lihat §2)
 - [ ] Hosting (mis. GitHub Pages / Vercel / Netlify)

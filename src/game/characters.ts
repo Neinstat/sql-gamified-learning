@@ -1,6 +1,7 @@
 import Phaser from 'phaser';
 import { CHAR_H, CHAR_W, FACINGS, FRAMES_PER_FACING, LOOKS, drawPlaceholderCharacter, frameIndex } from './placeholderSprites';
 import { drawGrandmaSheet } from './art/grandma';
+import { drawBaristaSheet } from './art/barista';
 import type { Facing } from './movement';
 
 export type CharacterLook = keyof typeof LOOKS;
@@ -8,6 +9,7 @@ export type CharacterLook = keyof typeof LOOKS;
 /** Characters already drawn in the final style; the rest still use placeholders (GAME_DESIGN.md §3). */
 const FINAL_SHEETS: Partial<Record<CharacterLook, (canvas: HTMLCanvasElement) => void>> = {
   grandma: drawGrandmaSheet,
+  barista: drawBaristaSheet,
 };
 
 /**
