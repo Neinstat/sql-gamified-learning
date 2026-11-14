@@ -1023,6 +1023,36 @@ body {
   }
 }
 
+/* Rush Hour */
+.rush-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 10px;
+  font-size: 1.05rem;
+  font-weight: 700;
+}
+
+.rush-time.low {
+  color: var(--error-ink);
+}
+
+.rush-combo {
+  color: #b1532f;
+}
+
+.rush-flash {
+  color: var(--ok-ink);
+  animation: toast-in 0.3s ease-out;
+}
+
+.link-button:disabled {
+  color: var(--muted);
+  cursor: default;
+  text-decoration: none;
+}
+
 /* So what? */
 .so-what-question {
   margin: 0 0 12px;

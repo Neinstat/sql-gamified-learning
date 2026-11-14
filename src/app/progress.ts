@@ -24,6 +24,8 @@ export type Progress = {
   upgrades: string[];
   /** Daily streak: days in a row with at least one solved level (local days, YYYY-MM-DD). */
   streak: { count: number; lastDay: string | null; best: number };
+  /** Best Rush Hour score (personal best; a leaderboard needs a backend). */
+  rushBest: number;
 };
 
 /** Best result for a finished level: fewest hints, fewest mistakes, most stars. */
@@ -44,6 +46,7 @@ export const emptyProgress: Progress = {
   skillCheckOffered: false,
   upgrades: [],
   streak: { count: 0, lastDay: null, best: 0 },
+  rushBest: 0,
 };
 
 export function loadProgress(): Progress {
@@ -75,6 +78,7 @@ export function parseProgress(raw: string): Progress {
       skillCheckOffered: data.skillCheckOffered === true || Boolean(data.quest) || Object.keys(completed).length > 0,
       upgrades: Array.isArray(data.upgrades) ? data.upgrades.filter((id) => typeof id === 'string') : [],
       streak: readStreak(data.streak),
+      rushBest: typeof data.rushBest === 'number' ? data.rushBest : 0,
     };
   } catch {
     return emptyProgress;

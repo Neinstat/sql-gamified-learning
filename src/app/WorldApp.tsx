@@ -38,6 +38,8 @@ import { SoWhatCard } from './SoWhatCard';
 import { CafeMap } from './CafeMap';
 import { reachedChapter } from './rooms';
 import { SkillCheck } from './SkillCheck';
+import { RushHour } from './RushHour';
+import { RUSH_STATION, rushUnlocked } from '../sql-core/rushHour';
 import { Badges, BadgeToast, Shop } from './GrowthParts';
 import { buyUpgrade, currentStreak, earnedBadges, localDay, recordPlay, type BadgeId } from './growth';
 import { openRooms, roomOfTarget, type RoomId } from '../game/rooms/cafe';
@@ -51,7 +53,8 @@ type Overlay =
   | { kind: 'soWhat' }
   | { kind: 'welcome' }
   | { kind: 'skillCheck' }
-  | { kind: 'shop' };
+  | { kind: 'shop' }
+  | { kind: 'rush' };
 
 const levelIds = allLevels.map((l) => l.id);
 
@@ -131,7 +134,8 @@ export function WorldApp() {
     return { kind: 'npc', id: level.character };
   }, [stage, level.station, level.character]);
   // Rooms open chapter by chapter; the signs by the doors use the player's language.
-  const open = useMemo(() => openRooms(reachedChapter(progress, chapter.id)), [progress, chapter.id]);
+  const reached = useMemo(() => reachedChapter(progress, chapter.id), [progress, chapter.id]);
+  const open = useMemo(() => openRooms(reached), [reached]);
   const labels = useMemo(() => ({ names: t.rooms }), [t]);
   useEffect(() => bridge.emit('overlay', overlay !== null), [bridge, overlay]);
   useEffect(() => bridge.emit('quest', questTarget), [bridge, questTarget]);
@@ -424,6 +428,19 @@ export function WorldApp() {
           </WorldModal>
         )}
 
+        {overlay?.kind === 'rush' && (
+          <RushHour
+            db={db}
+            schema={stationTables(RUSH_STATION, schema)}
+            lang={lang}
+            t={t}
+            reached={reached}
+            best={progress.rushBest}
+            onFinish={(score) => setProgress((p) => ({ ...p, rushBest: Math.max(p.rushBest, score) }))}
+            onClose={close}
+          />
+        )}
+
         {newBadge && <BadgeToast badge={newBadge} t={t} />}
 
         {overlay?.kind === 'chapter' && (
@@ -505,6 +522,14 @@ export function WorldApp() {
                   onClick={() => setOverlay({ kind: 'skillCheck' })}
                 >
                   🎓 {t.welcomeCheck}
+                </button>
+                <button
+                  className="link-button world-modal-start-over"
+                  disabled={!rushUnlocked(reached)}
+                  title={rushUnlocked(reached) ? undefined : t.rushLocked}
+                  onClick={() => setOverlay({ kind: 'rush' })}
+                >
+                  ⏱ {t.rushHour}
                 </button>
               </>
             )}

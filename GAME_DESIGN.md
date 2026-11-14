@@ -145,6 +145,13 @@ Setiap level adalah satu permintaan dengan tahap yang disimpan di progres (`ques
 | **Analysis Case** 🎯 | Investigasi terbuka besar (lihat di bawah) | Chapter 5 |
 | **Rush Hour** ⏱ | Mode tantangan berwaktu: permintaan datang bertubi-tubi | Terbuka setelah Chapter 2 |
 
+### Rush Hour ⏱ (dibangun di 3.12)
+- Dibuka dari Journal setelah **Chapter 2 tuntas** (`src/sql-core/rushHour.ts`, `src/app/RushHour.tsx`).
+- Satu putaran **150 detik**: pelanggan meminta satu hal demi satu hal (16 permintaan cepat seputar `menu_items`, diacak; permintaan Chapter 3 seperti `COUNT`/`AVG`/`GROUP BY` baru muncul setelah pemain mencapai Chapter 4). Dijalankan dengan role Cash register.
+- Skor: **100 per jawaban benar + 20 untuk setiap jawaban beruntun sebelumnya**; Run yang salah hanya memakan waktu, "Lewati" memutus kombo. ✕ mengakhiri putaran lebih awal (skor tetap dihitung).
+- **Skor terbaik pribadi** disimpan di progres (`rushBest`); leaderboard antar pemain menunggu backend.
+- Tidak memberi koin atau bintang: Rush Hour adalah latihan kecepatan, bukan jalur progres.
+
 ### Berpikir seperti analis sejak awal (keputusan Fase 3)
 Masukan akhir Fase 2: nilai jual game ("berpikir seperti analis BI") baru terasa di Chapter 5. Karena itu rasa analis dimunculkan sejak awal lewat dua lapis:
 
@@ -392,7 +399,7 @@ Setiap iterasi bisa dimainkan sendiri: kerjakan → cek di browser → commit & 
 | 3.9 ✅ | **Skill Check** adaptif (soal Ch0–4) dari Grandma di hari pertama & dari Journal | Pemain yang sudah bisa SQL dasar bisa langsung mulai di chapter yang sesuai |
 | 3.10 ✅ | **Storeroom + Back office** (`inventory`, `suppliers`, Supplier NPC, Grandma's computer) + **Chapter 5 Analysis Case** "October sales dropped 18%" | Analysis Case bisa diselesaikan lengkap dengan bukti 📌 di Back office |
 | 3.11 ✅ | **Kafe yang tumbuh:** upgrade dengan koin (kursi, dekorasi, papan menu, NPC pelanggan berjalan), daily streak 🔥, badge | Koin bisa dibelanjakan dan kafe berubah terlihat di dunia |
-| 3.12 | **Rush Hour** ⏱ (terbuka setelah Chapter 2) + skor terbaik pribadi | Satu putaran Rush Hour bisa dimainkan dan skor terbaik tersimpan |
+| 3.12 ✅ | **Rush Hour** ⏱ (terbuka setelah Chapter 2) + skor terbaik pribadi | Satu putaran Rush Hour bisa dimainkan dan skor terbaik tersimpan |
 | 3.13 | Uji main akhir pemilik project, ganti sisa placeholder, perbaikan, README, status | Pemilik project menyetujui → MVP Chapter 0–5 selesai |
 
 Catatan: isi level tiap chapter (dialog, data, jawaban) ditulis di awal iterasi chapter itu dan ditinjau pemilik project sebelum dibangun. Di luar Fase 3: materi lanjutan (subquery, CTE, window function), leaderboard (butuh backend), audio, hosting (masih pertanyaan terbuka §13).
