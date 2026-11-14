@@ -29,11 +29,11 @@ describe('generated sales', () => {
   });
 
   it('only has sales from August to October, during opening hours (7:00–17:59)', async () => {
-    const [r] = await rows<{ first: Date; last: Date; early: number; late: number }>(
+    const [r] = await rows<{ first: string; last: string; early: number; late: number }>(
       'SELECT min(sold_at) AS first, max(sold_at) AS last, min(extract(hour FROM sold_at)) AS early, max(extract(hour FROM sold_at)) AS late FROM sales;',
     );
-    expect(r.first.toISOString() >= '2026-08-01').toBe(true);
-    expect(r.last.toISOString() < '2026-11-01').toBe(true);
+    expect(r.first >= '2026-08-01').toBe(true);
+    expect(r.last < '2026-11-01').toBe(true);
     expect(num(r.early)).toBe(7);
     expect(num(r.late)).toBe(17);
   });

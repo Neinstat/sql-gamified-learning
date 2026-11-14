@@ -38,6 +38,10 @@ export function stationTables<T extends { table: string }>(station: StationId, s
  * enough for our own level solutions (used by tests, not for grading players).
  */
 export function tablesInQuery(sql: string): string[] {
-  const found = [...sql.matchAll(/\b(?:from|join)\s+([a-z_][a-z0-9_]*)/gi)].map((m) => m[1].toLowerCase());
+  // EXTRACT(DOW FROM sold_at), SUBSTRING(x FROM 2), TRIM(BOTH FROM x): that FROM is not a table.
+  const withoutFunctionFrom = sql.replace(/\b(extract|substring|trim)\s*\([^()]*\)/gi, '$1()');
+  const found = [...withoutFunctionFrom.matchAll(/\b(?:from|join)\s+([a-z_][a-z0-9_]*)/gi)].map((m) =>
+    m[1].toLowerCase(),
+  );
   return [...new Set(found)];
 }

@@ -34,29 +34,24 @@ export async function checkEvidence(db: CafeDatabase, pinned: ResultSet, evidenc
   const reference = await runQuery(db, evidence.sql);
   if (!reference.ok) throw new Error(`Evidence query failed: ${JSON.stringify(reference.error)}`);
 
-  // Line up the reference columns with the pinned ones, by name.
+  // Line up the reference columns with the pinned ones: by name when the names match, otherwise
+  // by value (so `revenue`, `total` or an unnamed SUM all count), keeping the best fit.
   const names = pinned.columns.map((c) => c.toLowerCase());
-  const order: number[] = [];
-  for (const column of reference.columns) {
+  const candidates = reference.columns.map((column) => {
     const i = names.indexOf(column.toLowerCase());
-    if (i === -1) return { correct: false, feedback: { kind: 'evidence-missing-column', column } };
-    order.push(i);
+    return i >= 0 ? [i] : pinned.columns.map((_, j) => j);
+  });
+  let best: number | null = null;
+  for (const order of assignments(candidates)) {
+    const missing = missingRows(reference.rows, pinned.rows, order);
+    if (best === null || missing < best) best = missing;
+    if (best === 0) break;
   }
-
-  const key = (row: unknown[]) => JSON.stringify(row.map(normalizeValue));
-  const available = new Map<string, number>();
-  for (const row of pinned.rows) {
-    const k = key(order.map((i) => row[i]));
-    available.set(k, (available.get(k) ?? 0) + 1);
+  if (best === null) {
+    const column = reference.columns.find((c) => !names.includes(c.toLowerCase())) ?? reference.columns[0];
+    return { correct: false, feedback: { kind: 'evidence-missing-column', column } };
   }
-  let missing = 0;
-  for (const row of reference.rows) {
-    const k = key(row);
-    const left = available.get(k) ?? 0;
-    if (left === 0) missing++;
-    else available.set(k, left - 1);
-  }
-  if (missing > 0) return { correct: false, feedback: { kind: 'evidence-missing-rows', missing } };
+  if (best > 0) return { correct: false, feedback: { kind: 'evidence-missing-rows', missing: best } };
 
   const expected = reference.rows.length;
   if (evidence.exact && pinned.rows.length !== expected) {
@@ -67,6 +62,33 @@ export async function checkEvidence(db: CafeDatabase, pinned: ResultSet, evidenc
     return { correct: false, feedback: { kind: 'evidence-too-broad', actual: pinned.rows.length, max } };
   }
   return { correct: true };
+}
+
+/** Every way to pick one pinned column per reference column, each pinned column used once. */
+function* assignments(candidates: number[][], taken: number[] = []): Generator<number[]> {
+  if (taken.length === candidates.length) {
+    yield taken;
+    return;
+  }
+  for (const i of candidates[taken.length]) if (!taken.includes(i)) yield* assignments(candidates, [...taken, i]);
+}
+
+/** How many reference rows are not found among the pinned rows (pinned columns in `order`). */
+function missingRows(reference: unknown[][], pinned: unknown[][], order: number[]): number {
+  const key = (row: unknown[]) => JSON.stringify(row.map(normalizeValue));
+  const available = new Map<string, number>();
+  for (const row of pinned) {
+    const k = key(order.map((i) => row[i]));
+    available.set(k, (available.get(k) ?? 0) + 1);
+  }
+  let missing = 0;
+  for (const row of reference) {
+    const k = key(row);
+    const left = available.get(k) ?? 0;
+    if (left === 0) missing++;
+    else available.set(k, left - 1);
+  }
+  return missing;
 }
 
 /** Check one conclusion: an answer first, then the pinned evidence for it. */

@@ -2,22 +2,24 @@ import type { Lang } from '../feedback';
 import { chapter0 } from './chapter0';
 import { chapter1 } from './chapter1';
 import { chapter2 } from './chapter2';
+import { chapter3 } from './chapter3';
 import { chapter0Id } from './locales/id/chapter0';
 import { chapter1Id } from './locales/id/chapter1';
 import { chapter2Id } from './locales/id/chapter2';
+import { chapter3Id } from './locales/id/chapter3';
 import type { Chapter, ChapterTranslation, Level, LevelText } from './types';
 
 export * from './types';
 
 /** All playable chapters, in order (English, the source language). */
-export const chapters: Chapter[] = [chapter0, chapter1, chapter2];
+export const chapters: Chapter[] = [chapter0, chapter1, chapter2, chapter3];
 
 /** Every level, in play order. */
 export const allLevels: Level[] = chapters.flatMap((c) => c.levels);
 
 /** Translations by language and chapter id. English needs none. */
 export const translations: Record<Exclude<Lang, 'en'>, Record<number, ChapterTranslation>> = {
-  id: { 0: chapter0Id, 1: chapter1Id, 2: chapter2Id },
+  id: { 0: chapter0Id, 1: chapter1Id, 2: chapter2Id, 3: chapter3Id },
 };
 
 export function findLevel(id: string): Level | undefined {

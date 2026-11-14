@@ -45,6 +45,19 @@ describe('checkEvidence', () => {
     });
   });
 
+  it('matches a differently named column by its values', async () => {
+    const revenue = { sql: "SELECT SUM(quantity * unit_price) AS revenue FROM sales WHERE channel = 'delivery';" };
+    const pinned = await result('SELECT channel, SUM(quantity * unit_price) AS total FROM sales GROUP BY channel;');
+    expect(await checkEvidence(db, pinned, revenue)).toEqual({ correct: true });
+    const unnamed = await result('SELECT channel, SUM(quantity * unit_price) FROM sales GROUP BY 1;');
+    expect(await checkEvidence(db, unnamed, revenue)).toEqual({ correct: true });
+    const wrong = await result('SELECT channel, COUNT(*) AS lines FROM sales GROUP BY channel;');
+    expect(await checkEvidence(db, wrong, revenue)).toEqual({
+      correct: false,
+      feedback: { kind: 'evidence-missing-rows', missing: 1 },
+    });
+  });
+
   it('notices missing rows', async () => {
     const pinned = await result("SELECT name, price FROM menu_items WHERE category = 'coffee';");
     expect(await checkEvidence(db, pinned, noPrice)).toEqual({

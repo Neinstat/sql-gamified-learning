@@ -187,6 +187,8 @@ Data penjualan (Fase 3) dirancang agar setiap Mini Case punya pola yang bisa dit
 
 **Chapter 2 (3.4):** 2-1 sandwich termahal (`ORDER BY … DESC`, dengan query awal) · 2-2 tiga dessert termurah (`LIMIT`) · 2-3 kategori untuk buletin Regular (`DISTINCT`) · 2-4 margin per menu (`price - cost AS margin`, nama kolom dinilai) · 2-5 lima margin terbesar — **jebakan sengaja:** saat `DESC`, PostgreSQL menaruh `NULL` paling atas, jadi harus disaring `IS NOT NULL` (atau `NULLS LAST`) · 2-6 Mini Case *What Should We Promote?*. Hasil yang diurutkan sengaja dipilih tanpa nilai kembar, agar urutan jawaban selalu pasti.
 
+**Chapter 3 (3.6, Cash register):** 3-1 jumlah baris pesan antar (`COUNT(*)` + `WHERE`) · 3-2 total revenue (`SUM(quantity * unit_price)`) · 3-3 jumlah order + rata-rata nilai order (`COUNT(DISTINCT order_id)`, `ROUND`; 💭 kenapa bukan `AVG` per baris) · 3-4 revenue per channel (`GROUP BY`) · 3-5 revenue per bulan (`DATE_TRUNC`; 💭 Oktober turun → telusuri dulu, petunjuk pertama Analysis Case) · 3-6 nomor menu yang terjual > 400 porsi (`HAVING`; menu 6 tepat 400 → pelajaran `>` vs `>=`) · 3-7 Mini Case *The Quiet Day* (`EXTRACT(DOW …)`).
+
 Mulai Fase 3: Chapter 1–4 masing-masing ditutup dengan **Mini Case** 🔍, dan ±1–2 level per chapter (mulai Chapter 0) punya pertanyaan **So what?** 💭 (lihat §5).
 
 Di luar MVP (nanti): subquery, CTE, window function, analisis waktu lanjutan (MoM/YoY), `INSERT`/`UPDATE`, chapter cabang kafe baru.
@@ -258,6 +260,7 @@ Di luar MVP (nanti): subquery, CTE, window function, analisis waktu lanjutan (Mo
 - Query pemain dan query jawaban resmi dijalankan di database yang sama; **hasilnya** yang dibandingkan.
 - Setiap query pemain berjalan di dalam transaksi **READ ONLY** yang selalu di-*rollback* (data tidak bisa rusak); perintah transaksi (`BEGIN`/`COMMIT`/…) ditolak.
 - Batas waktu query (`statement_timeout`) **tidak berfungsi** di PGlite karena berjalan di satu thread. **Sejak 3.5 database berjalan di Web Worker** (`src/app/db.worker.ts` + `workerDatabase.ts`): selama query berjalan, konsol menampilkan tombol **■ Stop** yang mengakhiri worker, menjawab query itu dengan "stopped" (tidak dihitung salah), lalu memulai worker baru (±1 detik; data dibuat ulang persis sama). Bila browser tidak bisa membuat worker, database jalan di halaman (tanpa Stop). `CafeDatabase` kini antarmuka (`run`, `schema`, `stop?`): `LocalCafeDatabase` dipakai tes dan di dalam worker.
+- **Tanggal dan waktu dikembalikan sebagai teks** persis seperti tulisan PostgreSQL (`2026-08-01 07:16:02`), bukan objek `Date` JavaScript yang bergeser mengikuti zona waktu pemain (3.6).
 - Tabel hasil hanya menampilkan **200 baris pertama** ("Showing the first 200 of 7694 rows") agar halaman tetap ringan; pengecek jawaban tetap memakai semua baris.
 - **Blokir tabel per stasiun (Fase 3, ✅ 3.5):** memakai izin asli PostgreSQL — satu *role* per stasiun dengan `GRANT SELECT` hanya pada tabelnya, lalu `SET LOCAL ROLE` di dalam transaksi READ ONLY. Galat `permission denied for table …` diubah menjadi pesan ramah yang menyebut stasiun pemilik tabel. PGlite terbukti mendukung role (cadangan `EXPLAIN` tidak diperlukan). Celah untuk kembali ke role penuh ditutup: perintah `SET`/`RESET`/`DO` ditolak ("Only questions for the data here"), dan `set_config` dicabut dari role stasiun; tes `db.test.ts` mencoba semua celah itu. Jawaban resmi, query awal, dan bukti Mini Case dites berjalan dengan role stasiunnya. Jawaban resmi sendiri dijalankan tanpa role saat menilai.
 
@@ -269,7 +272,7 @@ Setiap level adalah objek TypeScript (`src/sql-core/levels/`), satu file per cha
 - `input`: `blocks` (daftar blok, boleh ada pengecoh), `fill-blank` (template dengan `___`), atau `free`
 - `solution` (query jawaban resmi; hanya hasilnya yang dibandingkan), `check` (opsi pengecek), `hints` (tepat 3), `success` (ucapan setelah benar)
 - `soWhat` (opsional, Fase 3): pertanyaan "So what?" — `question`, 3 `choices`, `answer` (indeks), `explanation`
-- **Mini Case** (Fase 3): level dengan `kind: 'case'`, tanpa `input`/`solution`. Isinya `starters` (query awal yang bisa diubah, boleh berisi `___`) dan `questions`: tiap pertanyaan punya `answer` (`number` atau `choice`) dan `evidence` — query rujukan yang semua barisnya harus ada di hasil 📌 pemain (kolom dicocokkan dengan nama). `exact: true` = jumlah baris harus sama persis; selain itu hasil maksimal `maxRows` baris (bawaan: baris rujukan + 5) agar "seluruh tabel" tidak dianggap bukti. Id-nya mengikuti pola biasa (Mini Case Ch1 = `ch1-7`).
+- **Mini Case** (Fase 3): level dengan `kind: 'case'`, tanpa `input`/`solution`. Isinya `starters` (query awal yang bisa diubah, boleh berisi `___`) dan `questions`: tiap pertanyaan punya `answer` (`number` atau `choice`) dan `evidence` — query rujukan yang semua barisnya harus ada di hasil 📌 pemain. Kolom dicocokkan dengan nama; bila nama tidak ada, dicocokkan lewat **nilainya** (3.6) — jadi `total`, `revenue`, atau `SUM` tanpa nama sama-sama sah, dan hari boleh berupa angka DOW maupun nama hari. `exact: true` = jumlah baris harus sama persis; selain itu hasil maksimal `maxRows` baris (bawaan: baris rujukan + 5) agar "seluruh tabel" tidak dianggap bukti. Id-nya mengikuti pola biasa (Mini Case Ch1 = `ch1-7`).
 
 Tes otomatis memeriksa semua level: jawaban resmi bisa dijalankan, blok yang disediakan cukup untuk menyusun jawaban, dan blok tidak ditampilkan dalam urutan jawaban. Untuk Mini Case: query awal dan bukti hanya memakai tabel stasiunnya, bukti rujukan lolos ceknya sendiri, dan jawaban angka sama dengan jumlah baris bukti yang `exact`.
 
@@ -360,7 +363,7 @@ Setiap iterasi bisa dimainkan sendiri: kerjakan → cek di browser → commit & 
 | 3.3 ✅ | **Bintang & koin:** catat hint + jawaban salah per level/kasus, layar hasil (⭐ + koin), bintang di Journal, penghitung koin di HUD; progres lama tetap terbaca | Menyelesaikan level/kasus menampilkan bintang & koin, tersimpan, dan terlihat di Journal |
 | 3.4 ✅ | **Chapter 2 First Reports** (ketik bebas: `ORDER BY`, `LIMIT`, `DISTINCT`, alias, kolom hitungan) + Mini Case **What Should We Promote?**; Barista dalam gaya final | Chapter 2 bisa dimainkan lengkap di Menu board, EN/ID |
 | 3.5 ✅ | **Data penjualan & stasiun kedua:** generator data `sales`/`customers` dengan seed tetap, Cash register terbuka, blokir tabel per stasiun (role PostgreSQL), PGlite di Web Worker + tombol hentikan query | Cash register membuka konsol berisi `sales`, `customers`, `menu_items`; query ke tabel lain ditolak dengan pesan ramah; query macet bisa dihentikan |
-| 3.6 | **Chapter 3 Numbers Talk** (`COUNT`/`SUM`/`AVG`/`MIN`/`MAX`, `GROUP BY`, `HAVING`, dasar tanggal) + Mini Case **The Quiet Day** | Chapter 3 bisa dimainkan lengkap di Cash register, EN/ID |
+| 3.6 ✅ | **Chapter 3 Numbers Talk** (`COUNT`/`SUM`/`AVG`/`MIN`/`MAX`, `GROUP BY`, `HAVING`, dasar tanggal) + Mini Case **The Quiet Day** | Chapter 3 bisa dimainkan lengkap di Cash register, EN/ID |
 | 3.7 | **Kafe berkembang:** peta multi-ruangan dengan pintu terkunci per chapter, **Kitchen** + tabel `recipes` + Recipe book (gaya final), tab **Café map** di Journal, panah penunjuk ke pintu | Kitchen terbuka setelah Ch3; Café map menunjukkan ruangan dan target tugas |
 | 3.8 | **Chapter 4 Connecting the Dots** (`INNER`/`LEFT JOIN`, JOIN + agregasi) + Mini Case **Where Did the Regulars Go?**; Regular dalam gaya final | Chapter 4 bisa dimainkan lengkap di Kitchen & Cash register, EN/ID |
 | 3.9 | **Skill Check** adaptif (soal Ch0–4) dari Grandma di hari pertama & dari Journal | Pemain yang sudah bisa SQL dasar bisa langsung mulai di chapter yang sesuai |
@@ -383,7 +386,7 @@ Catatan: isi level tiap chapter (dialog, data, jawaban) ditulis di awal iterasi 
 - [x] Minimap — **tidak**; tab Café map di Journal (perencanaan Fase 3, lihat §3)
 - [x] Mata uang — **$ (USD)**
 - [ ] Nuansa setting kota (generik/internasional, atau ada sentuhan lokal tertentu)
-- [ ] Isi detail tiap level (dialog, data, jawaban) per chapter — Chapter 0 (4 level), Chapter 1 (6 level + Mini Case), dan Chapter 2 (5 level + Mini Case) sudah ditulis, lengkap dengan terjemahan Indonesia
+- [ ] Isi detail tiap level (dialog, data, jawaban) per chapter — Chapter 0 (4 level), Chapter 1 (6 level + Mini Case), Chapter 2 (5 level + Mini Case), dan Chapter 3 (6 level + Mini Case) sudah ditulis, lengkap dengan terjemahan Indonesia
 - [x] **Stasiun untuk Chapter 0–1** — stasiun baru **Menu board** di area depan membaca `menu_items` (cocok dengan cerita "Cleaning Up the Menu"); Kitchen tetap untuk `recipes` di Fase 3
 - [x] Bentuk Skill Check — **adaptif**, 2 soal per chapter, dibuat setelah Chapter 4 ada (perencanaan Fase 3, lihat §2)
 - [ ] Hosting (mis. GitHub Pages / Vercel / Netlify)

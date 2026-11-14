@@ -8,6 +8,10 @@ describe('tablesInQuery', () => {
       tablesInQuery('select s.id from sales s join menu_items m on m.id = s.item_id left JOIN Sales x on true;'),
     ).toEqual(['sales', 'menu_items']);
   });
+
+  it("ignores the FROM inside EXTRACT and friends", () => {
+    expect(tablesInQuery('SELECT EXTRACT(DOW FROM sold_at) AS d FROM sales;')).toEqual(['sales']);
+  });
 });
 
 describe('stationTables', () => {
