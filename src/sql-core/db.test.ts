@@ -82,6 +82,44 @@ describe('runQuery', () => {
   });
 });
 
+describe('station consoles', () => {
+  it("only see their own tables, with a pointer to the right station", async () => {
+    expect(await runQuery(db, 'SELECT COUNT(*) FROM sales;', 'menu-board')).toEqual({
+      ok: false,
+      error: { kind: 'other-station', table: 'sales', station: 'cash-register' },
+    });
+    expect((await runQuery(db, 'SELECT COUNT(*) FROM sales;', 'cash-register')).ok).toBe(true);
+    expect((await runQuery(db, 'SELECT COUNT(*) FROM menu_items;', 'menu-board')).ok).toBe(true);
+  });
+
+  it('lets the cash register join sales with the menu', async () => {
+    const res = await runQuery(
+      db,
+      'SELECT m.name, COUNT(*) FROM sales s JOIN menu_items m ON m.item_id = s.item_id GROUP BY m.name;',
+      'cash-register',
+    );
+    expect(res.ok).toBe(true);
+  });
+
+  it("can't switch back to the all-seeing role", async () => {
+    const attempts = [
+      'RESET ROLE; SELECT * FROM sales;',
+      'SELECT 1; SET ROLE postgres; SELECT * FROM sales;',
+      '/* hi */ set role postgres; SELECT * FROM sales;',
+      "SELECT set_config('role', 'postgres', true); SELECT * FROM sales;",
+      "DO $$ BEGIN EXECUTE 'SET ROLE postgres'; END $$; SELECT * FROM sales;",
+      "SELECT query_to_xml('SET ROLE postgres', true, true, ''); SELECT * FROM sales;",
+    ];
+    for (const sql of attempts) expect((await runQuery(db, sql, 'menu-board')).ok, sql).toBe(false);
+    // And the next query is still limited.
+    expect((await runQuery(db, 'SELECT * FROM sales;', 'menu-board')).ok).toBe(false);
+  });
+
+  it('runs without a station for level solutions (everything visible)', async () => {
+    expect((await runQuery(db, 'SELECT COUNT(*) FROM sales;')).ok).toBe(true);
+  });
+});
+
 describe('getSchema', () => {
   it('lists menu_items and its columns', async () => {
     const schema = await getSchema(db);

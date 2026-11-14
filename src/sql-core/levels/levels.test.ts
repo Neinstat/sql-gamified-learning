@@ -78,7 +78,8 @@ function caseTests(level: CaseLevel) {
         }
       });
 
-      it('has evidence that runs on station tables and proves itself', async () => {
+      it('has evidence that the station can run, and that proves itself', async () => {
+        expect((await runQuery(db, q.evidence.sql, level.station)).ok).toBe(true);
         for (const table of tablesInQuery(q.evidence.sql)) expect(STATIONS[level.station].tables).toContain(table);
         const ref = await runQuery(db, q.evidence.sql);
         expect(ref.ok && ref.rows.length).toBeGreaterThan(0);
@@ -100,6 +101,10 @@ function caseTests(level: CaseLevel) {
 }
 
 function requestTests(level: RequestLevel) {
+  it("runs at its station's console (the station's role can see every table it needs)", async () => {
+    expect((await runQuery(db, level.solution, level.station)).ok).toBe(true);
+  });
+
   it("only uses tables its station's console can see", () => {
     const used = tablesInQuery(level.solution);
     expect(used.length).toBeGreaterThan(0);

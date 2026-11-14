@@ -52,7 +52,7 @@ export function CaseConsole({ db, schema, level, lang, t, onSolved, solvedPanel 
     if (running) return;
     setRunning(true);
     try {
-      setResult(await runQuery(db, sql));
+      setResult(await runQuery(db, sql, level.station));
       setLastSql(sql);
     } finally {
       setRunning(false);

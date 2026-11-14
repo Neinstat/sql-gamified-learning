@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import type { Lang } from './sql-core/feedback';
 import type { CharacterId } from './sql-core/levels';
-import type { StationId } from './sql-core/stations';
+import { STATION_NAMES, type StationId } from './sql-core/stations';
 
 export type { Lang };
 
@@ -29,7 +29,7 @@ const en = {
   dialogueNext: 'Next',
   dialogueClose: 'Close',
   dialogueHint: 'Click, or press Space / E',
-  stations: { 'menu-board': 'Menu board', 'cash-register': 'Cash register' } satisfies Record<StationId, string>,
+  stations: STATION_NAMES.en as Record<StationId, string>,
   stationClosed: "The register's records are still in a shoebox. Grandma will sort them out with you later.",
   stationNothing: 'Nothing to look up here right now. Check your task first.',
   stationTalkFirst: (name: string) => `${name} has a request for you first.`,
@@ -121,7 +121,7 @@ const id: UiText = {
   dialogueNext: 'Lanjut',
   dialogueClose: 'Tutup',
   dialogueHint: 'Klik, atau tekan Spasi / E',
-  stations: { 'menu-board': 'Papan menu', 'cash-register': 'Mesin kasir' },
+  stations: STATION_NAMES.id,
   stationClosed: 'Catatan kasir masih tersimpan di kotak sepatu. Nenek akan merapikannya bersamamu nanti.',
   stationNothing: 'Belum ada yang perlu dicari di sini. Cek dulu tugasmu.',
   stationTalkFirst: (name) => `${name} punya permintaan untukmu dulu.`,

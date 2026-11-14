@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { stationTables, tablesInQuery } from './stations';
+import { homeStation, stationTables, tablesInQuery } from './stations';
 
 describe('tablesInQuery', () => {
   it('finds tables after FROM and JOIN, once each', () => {
@@ -18,7 +18,15 @@ describe('stationTables', () => {
   });
 
   it('skips tables that do not exist yet', () => {
-    expect(stationTables('cash-register', schema)).toEqual([{ table: 'sales' }]);
-    expect(stationTables('cash-register', [{ table: 'menu_items' }])).toEqual([]);
+    expect(stationTables('cash-register', schema)).toEqual([{ table: 'menu_items' }, { table: 'sales' }]);
+    expect(stationTables('cash-register', [{ table: 'recipes' }])).toEqual([]);
+  });
+});
+
+describe('homeStation', () => {
+  it('finds where a table lives', () => {
+    expect(homeStation('menu_items')).toBe('menu-board');
+    expect(homeStation('sales')).toBe('cash-register');
+    expect(homeStation('nope')).toBeNull();
   });
 });

@@ -7,6 +7,7 @@
  */
 
 import type { CaseFeedback } from './cases';
+import { STATION_NAMES, type StationId } from './stations';
 
 export type Lang = 'en' | 'id';
 export const LANGS: Lang[] = ['en', 'id'];
@@ -21,6 +22,12 @@ export type Feedback =
   | { kind: 'empty-query' }
   | { kind: 'read-only' }
   | { kind: 'transaction' }
+  /** SET, RESET or DO: not a question for the data. */
+  | { kind: 'not-a-query' }
+  /** The table exists, but this station's console can't see it (GAME_DESIGN.md §3). */
+  | { kind: 'other-station'; table: string; station: StationId | null }
+  /** The player stopped a query that was taking too long. */
+  | { kind: 'stopped' }
   | { kind: 'missing-columns'; columns: string[] }
   | { kind: 'extra-columns'; columns: string[] }
   | { kind: 'column-count'; actual: number; expected: number }
@@ -56,6 +63,14 @@ const en = (fb: Feedback): string => {
       return 'This console is read-only: you can look at the data, but not change it.';
     case 'transaction':
       return 'Transaction commands (BEGIN, COMMIT, ROLLBACK…) are not needed here.';
+    case 'not-a-query':
+      return 'Only questions for the data here: start with SELECT (or WITH).';
+    case 'other-station':
+      return fb.station
+        ? `This station can't see \`${fb.table}\` — it's at the ${STATION_NAMES.en[fb.station]}.`
+        : `This station can't see \`${fb.table}\`.`;
+    case 'stopped':
+      return 'Query stopped. Try a smaller one — a WHERE or LIMIT helps.';
     case 'missing-columns':
       return fb.columns.length === 1
         ? `Column ${code(fb.columns)} is missing.`
@@ -101,6 +116,14 @@ const id = (fb: Feedback): string => {
       return 'Konsol ini hanya untuk membaca: kamu bisa melihat data, tapi tidak bisa mengubahnya.';
     case 'transaction':
       return 'Perintah transaksi (BEGIN, COMMIT, ROLLBACK…) tidak diperlukan di sini.';
+    case 'not-a-query':
+      return 'Di sini hanya untuk bertanya ke data: mulai dengan SELECT (atau WITH).';
+    case 'other-station':
+      return fb.station
+        ? `Stasiun ini tidak bisa melihat \`${fb.table}\` — tabel itu ada di ${STATION_NAMES.id[fb.station]}.`
+        : `Stasiun ini tidak bisa melihat \`${fb.table}\`.`;
+    case 'stopped':
+      return 'Query dihentikan. Coba yang lebih kecil — WHERE atau LIMIT bisa membantu.';
     case 'missing-columns':
       return `Kolom ${code(fb.columns)} belum ada.`;
     case 'extra-columns':

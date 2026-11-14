@@ -7,14 +7,26 @@ export type StationId = 'menu-board' | 'cash-register';
 
 export const STATIONS: Record<StationId, { tables: readonly string[] }> = {
   'menu-board': { tables: ['menu_items'] },
-  'cash-register': { tables: ['sales', 'customers'] },
+  // The till knows the menu too, so sales can be joined with menu_items here (Chapter 4).
+  'cash-register': { tables: ['sales', 'customers', 'menu_items'] },
 };
 
 export const STATION_IDS = Object.keys(STATIONS) as StationId[];
 
+/** Station names as players see them (used in feedback and in the UI). */
+export const STATION_NAMES: Record<'en' | 'id', Record<StationId, string>> = {
+  en: { 'menu-board': 'Menu board', 'cash-register': 'Cash register' },
+  id: { 'menu-board': 'Papan menu', 'cash-register': 'Mesin kasir' },
+};
+
+/** Where a table really lives: the first station that has it (menu_items → the menu board). */
+export function homeStation(table: string): StationId | null {
+  return STATION_IDS.find((id) => STATIONS[id].tables.includes(table)) ?? null;
+}
+
 /**
  * The tables a station shows, keeping only those that exist in the database.
- * A station whose tables do not exist yet (e.g. `sales` before Chapter 3) is not open.
+ * A station whose tables do not exist yet is not open.
  */
 export function stationTables<T extends { table: string }>(station: StationId, schema: readonly T[]): T[] {
   const allowed = STATIONS[station].tables;

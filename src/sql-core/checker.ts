@@ -1,4 +1,5 @@
 import { runQuery, type CafeDatabase, type CellValue, type QueryResult } from './db';
+import type { StationId } from './stations';
 import type { Feedback } from './feedback';
 
 /** A successful query result: column names + rows. */
@@ -39,8 +40,10 @@ export async function checkAnswer(
   playerSql: string,
   solutionSql: string,
   options: CheckOptions = {},
+  /** The player's query runs with this station's view of the data (the solution sees everything). */
+  station?: StationId,
 ): Promise<CheckOutcome> {
-  const result = await runQuery(db, playerSql);
+  const result = await runQuery(db, playerSql, station);
   if (!result.ok) {
     return { result, verdict: { correct: false, feedback: result.error } };
   }

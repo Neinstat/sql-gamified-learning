@@ -44,7 +44,7 @@ export function Console({ db, schema, level, lang, t, onCorrect, solvedPanel }: 
     if (running) return;
     setRunning(true);
     try {
-      const next = await checkAnswer(db, sql, level.solution, level.check);
+      const next = await checkAnswer(db, sql, level.solution, level.check, level.station);
       setOutcome(next);
       setCrash(null);
       if (next.verdict.correct) onCorrect(mistakes);
