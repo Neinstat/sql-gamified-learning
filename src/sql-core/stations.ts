@@ -3,7 +3,7 @@
  * Each one sees a different part of the data (GAME_DESIGN.md §3), which teaches that
  * company data lives in many systems. Pure data: no game engine or UI here.
  */
-export type StationId = 'menu-board' | 'cash-register' | 'recipe-book';
+export type StationId = 'menu-board' | 'cash-register' | 'recipe-book' | 'stock-ledger' | 'back-office';
 
 export const STATIONS: Record<StationId, { tables: readonly string[] }> = {
   'menu-board': { tables: ['menu_items'] },
@@ -11,14 +11,30 @@ export const STATIONS: Record<StationId, { tables: readonly string[] }> = {
   'cash-register': { tables: ['sales', 'customers', 'menu_items'] },
   // In the kitchen: what goes into each item, next to the menu it belongs to.
   'recipe-book': { tables: ['recipes', 'menu_items'] },
+  // In the storeroom: what came in, from whom, and when it ran out.
+  'stock-ledger': { tables: ['inventory', 'suppliers'] },
+  // Grandma's computer sees everything: the Analysis Case (Chapter 5).
+  'back-office': { tables: ['menu_items', 'sales', 'customers', 'recipes', 'inventory', 'suppliers'] },
 };
 
 export const STATION_IDS = Object.keys(STATIONS) as StationId[];
 
 /** Station names as players see them (used in feedback and in the UI). */
 export const STATION_NAMES: Record<'en' | 'id', Record<StationId, string>> = {
-  en: { 'menu-board': 'Menu board', 'cash-register': 'Cash register', 'recipe-book': 'Recipe book' },
-  id: { 'menu-board': 'Papan menu', 'cash-register': 'Mesin kasir', 'recipe-book': 'Buku resep' },
+  en: {
+    'menu-board': 'Menu board',
+    'cash-register': 'Cash register',
+    'recipe-book': 'Recipe book',
+    'stock-ledger': 'Stock ledger',
+    'back-office': "Grandma's computer",
+  },
+  id: {
+    'menu-board': 'Papan menu',
+    'cash-register': 'Mesin kasir',
+    'recipe-book': 'Buku resep',
+    'stock-ledger': 'Buku stok',
+    'back-office': 'Komputer Nenek',
+  },
 };
 
 /** Where a table really lives: the first station that has it (menu_items → the menu board). */

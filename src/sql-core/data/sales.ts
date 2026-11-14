@@ -96,7 +96,7 @@ const HOURS: Weighted = [[7, 6], [8, 10], [9, 9], [10, 6], [11, 5], [12, 9], [13
 const pad = (n: number) => String(n).padStart(2, '0');
 const dateOf = (day: Date) => `${day.getUTCFullYear()}-${pad(day.getUTCMonth() + 1)}-${pad(day.getUTCDate())}`;
 
-export function generateSalesData(): { customers: Customer[]; sales: Sale[] } {
+export function generateSalesData(): { customers: Customer[]; sales: Sale[]; shortMilkDays: string[] } {
   const rand = random(20261031);
   const pick = (list: Weighted): number => {
     const total = list.reduce((s, [, w]) => s + w, 0);
@@ -119,6 +119,8 @@ export function generateSalesData(): { customers: Customer[]; sales: Sale[] } {
   });
 
   const sales: Sale[] = [];
+  /** October days when the milk ran out before noon (the stock ledger shows the same days). */
+  const shortMilkDays: string[] = [];
   let orderId = 0;
 
   const addOrder = (day: Date, hour: number, items: number[], customerId: number | null) => {
@@ -180,6 +182,7 @@ export function generateSalesData(): { customers: Customer[]; sales: Sale[] } {
     const august = day.getUTCMonth() === 7;
     const october = day.getUTCMonth() === 9;
     const shortMilk = october && milkChance(MILK_SHORT_DAYS);
+    if (shortMilk) shortMilkDays.push(dateOf(day));
 
     const orders = Math.round(ORDERS_BY_WEEKDAY[weekday] * (0.88 + rand() * 0.24));
     for (let i = 0; i < orders; i++) {
@@ -215,7 +218,7 @@ export function generateSalesData(): { customers: Customer[]; sales: Sale[] } {
     s.sale_id = i + 1;
     s.order_id = orderOrder.get(s.order_id)!;
   });
-  return { customers, sales };
+  return { customers, sales, shortMilkDays };
 }
 
 export const SALES_SCHEMA_SQL = `

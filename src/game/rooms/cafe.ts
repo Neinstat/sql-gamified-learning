@@ -8,19 +8,21 @@
  *   1 2 3  doorways between rooms (locked until the room opens, see ROOMS)
  *   Front room:  S shelf  K coffee machine  C counter  R cash register  T table  h chair  p plant  M menu board
  *   Kitchen:     H pans on the wall  V stove  I sink  F fridge  W work table  Q recipe book
+ *   Back office: B bookshelf  J filing cabinet  D desk  Z Grandma's computer
+ *   Storeroom:   U shelves  x crate  m milk crates  n flour sacks  L stock ledger
  */
 export const CAFE_MAP = [
   '######################################################',
-  '#ffPfwwfff#ffSKSffPfwwffPfwwf#ffHffwwffHff#ffffwwffff#',
-  '#.........#..................#,,,VVI,,,,FF#..........#',
+  '#fBBfwwfPf#ffSKSffPfwwffPfwwf#ffHffwwffHff#UUffwwffUU#',
+  '#J........#..................#,,,VVI,,,,FF#xx......mm#',
   '#.........1..................2,,,,,,,,,,,,#..........#',
-  '#.........#CCCCCRCC.....p....#,,,,,,,,,,,,#..........#',
+  '#...DZD...#CCCCCRCC.....p....#,,,,,,,,,,,,#..nn......#',
   '#.........#..................#,,,WWWW,,,,,#..........#',
   '#.........#...........hTh....#,,,,,,,,,,,,#..........#',
-  '#.........#..hTh.............#,,,,,,Q,,,,,#..........#',
+  '#.........#..hTh.............#,,,,,,Q,,,,,#....L.....#',
   '#.........#..........hTh.....#,,,,,,,,,,,,3..........#',
-  '#.........#....M.............#,,,,,,,,,,,,#..........#',
-  '#.........#p................p#,,,,,,,,,,,,#..........#',
+  '#.........#....M.............#,,,,,,,,,,,,#.........x#',
+  '#p.......p#p................p#,,,,,,,,,,,,#xx......nn#',
   '###################dd#################################',
 ] as const;
 
@@ -55,6 +57,15 @@ export const TILE = {
   workTable: 21,
   recipeBook: 22,
   pans: 23,
+  bookshelf: 24,
+  filingCabinet: 25,
+  desk: 26,
+  computer: 27,
+  storeShelf: 28,
+  crate: 29,
+  milkCrate: 30,
+  sack: 31,
+  ledger: 32,
 } as const;
 
 export const TILE_COUNT = Object.keys(TILE).length;
@@ -78,6 +89,8 @@ const GROUND: Record<string, number> = {
   F: TILE.kitchenFloor,
   W: TILE.kitchenFloor,
   Q: TILE.kitchenFloor,
+  B: TILE.wallFace,
+  U: TILE.wallFace,
 };
 
 /** Furniture layer: objects drawn on top of the ground. */
@@ -95,6 +108,15 @@ const FURNITURE: Record<string, number> = {
   F: TILE.fridge,
   W: TILE.workTable,
   Q: TILE.recipeBook,
+  B: TILE.bookshelf,
+  J: TILE.filingCabinet,
+  D: TILE.desk,
+  Z: TILE.computer,
+  U: TILE.storeShelf,
+  x: TILE.crate,
+  m: TILE.milkCrate,
+  n: TILE.sack,
+  L: TILE.ledger,
 };
 
 /** Tiles the player cannot walk through. Chairs and the door mat are walkable. */
@@ -117,6 +139,15 @@ export const BLOCKING_TILES: readonly number[] = [
   TILE.fridge,
   TILE.workTable,
   TILE.recipeBook,
+  TILE.bookshelf,
+  TILE.filingCabinet,
+  TILE.desk,
+  TILE.computer,
+  TILE.storeShelf,
+  TILE.crate,
+  TILE.milkCrate,
+  TILE.sack,
+  TILE.ledger,
 ];
 
 /** People standing in the room (tile coordinates). They block the tile they stand on. */
@@ -126,6 +157,8 @@ export const NPCS = [
   { id: 'barista', tile: { x: 16, y: 2 }, facing: 'down' },
   // A regular by the window table.
   { id: 'regular', tile: { x: 26, y: 6 }, facing: 'left' },
+  // The supplier, checking deliveries in the storeroom.
+  { id: 'supplier', tile: { x: 49, y: 5 }, facing: 'down' },
 ] as const;
 
 /** Stations (SQL consoles), placed on furniture tiles. */
@@ -133,6 +166,8 @@ export const STATION_SPOTS = [
   { id: 'menu-board', mapChar: 'M' },
   { id: 'cash-register', mapChar: 'R' },
   { id: 'recipe-book', mapChar: 'Q' },
+  { id: 'stock-ledger', mapChar: 'L' },
+  { id: 'back-office', mapChar: 'Z' },
 ] as const;
 
 /** Where the player appears: just inside the street door (tile coordinates, can be fractional). */

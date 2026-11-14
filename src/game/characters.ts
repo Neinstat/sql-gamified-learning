@@ -3,6 +3,7 @@ import { CHAR_H, CHAR_W, FACINGS, FRAMES_PER_FACING, LOOKS, drawPlaceholderChara
 import { drawGrandmaSheet } from './art/grandma';
 import { drawBaristaSheet } from './art/barista';
 import { drawRegularSheet } from './art/regular';
+import { drawSupplierSheet } from './art/supplier';
 import type { Facing } from './movement';
 
 export type CharacterLook = keyof typeof LOOKS;
@@ -12,6 +13,7 @@ const FINAL_SHEETS: Partial<Record<CharacterLook, (canvas: HTMLCanvasElement) =>
   grandma: drawGrandmaSheet,
   barista: drawBaristaSheet,
   regular: drawRegularSheet,
+  supplier: drawSupplierSheet,
 };
 
 /**

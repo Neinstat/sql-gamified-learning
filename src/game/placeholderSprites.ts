@@ -66,6 +66,16 @@ export const LOOKS = {
     shoe: '#5b4033',
     cap: '#3f6f8a',
   },
+  // Not drawn with this look any more (final art in art/supplier.ts); kept so every character has one.
+  supplier: {
+    hair: '#4a2c22',
+    hairLight: '#6e4430',
+    skin: '#d39c74',
+    top: '#f6e7c8',
+    front: '#75853d',
+    legs: '#75853d',
+    shoe: '#6e4430',
+  },
 } satisfies Record<string, Look>;
 
 const SHADOW = 'rgba(0,0,0,0.22)';

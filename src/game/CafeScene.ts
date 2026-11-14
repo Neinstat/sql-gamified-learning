@@ -146,7 +146,6 @@ export class CafeScene extends Phaser.Scene {
     ];
 
     this.prompt = this.add.image(0, 0, PROMPT_KEY).setOrigin(0.5, 1).setVisible(false).setDepth(10_000);
-    this.tweens.add({ targets: this.prompt, y: '-=2', duration: 500, yoyo: true, repeat: -1, ease: 'Sine.inOut' });
     this.questMarker = this.add.image(0, 0, QUEST_KEY).setOrigin(0.5, 1).setVisible(false).setDepth(10_000);
     this.questArrow = this.add.image(0, 0, ARROW_KEY).setVisible(false).setDepth(10_001);
 
@@ -202,15 +201,10 @@ export class CafeScene extends Phaser.Scene {
     if (this.locked) return;
 
     if (near) {
-      this.prompt.setVisible(true);
-      this.prompt.x = near.promptX;
-      // Keep the bob tween's offset: only reset y when the prompt moves to a new target.
-      if (this.prompt.getData('for') !== near.id) {
-        this.prompt.y = near.promptY;
-        this.prompt.setData('for', near.id);
-      }
+      // A gentle bob, computed here: a tween on y would override this position every frame.
+      this.prompt.setVisible(true).setPosition(near.promptX, near.promptY - Math.round((Math.sin(time / 160) + 1) / 2) * 2);
     } else {
-      this.prompt.setVisible(false).setData('for', null);
+      this.prompt.setVisible(false);
     }
   }
 

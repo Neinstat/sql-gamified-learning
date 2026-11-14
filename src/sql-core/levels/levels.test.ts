@@ -79,20 +79,23 @@ function caseTests(level: CaseLevel) {
       });
 
       it('has evidence that the station can run, and that proves itself', async () => {
-        expect((await runQuery(db, q.evidence.sql, level.station)).ok).toBe(true);
-        for (const table of tablesInQuery(q.evidence.sql)) expect(STATIONS[level.station].tables).toContain(table);
-        const ref = await runQuery(db, q.evidence.sql);
-        expect(ref.ok && ref.rows.length).toBeGreaterThan(0);
-        if (!ref.ok) return;
-        expect(await checkEvidence(db, ref, q.evidence)).toEqual({ correct: true });
-        const given = q.answer.kind === 'choice' ? q.answer.correct : String(q.answer.value);
-        expect(await checkConclusion(db, q, given, ref)).toEqual({ correct: true });
+        for (const evidence of [q.evidence].flat()) {
+          expect((await runQuery(db, evidence.sql, level.station)).ok, evidence.sql).toBe(true);
+          for (const table of tablesInQuery(evidence.sql)) expect(STATIONS[level.station].tables).toContain(table);
+          const ref = await runQuery(db, evidence.sql);
+          expect(ref.ok && ref.rows.length).toBeGreaterThan(0);
+          if (!ref.ok) return;
+          expect(await checkEvidence(db, ref, evidence)).toEqual({ correct: true });
+          const given = q.answer.kind === 'choice' ? q.answer.correct : String(q.answer.value);
+          expect(await checkConclusion(db, q, given, ref)).toEqual({ correct: true });
+        }
       });
 
-      if (q.answer.kind === 'number' && q.evidence.exact) {
+      if (q.answer.kind === 'number' && !Array.isArray(q.evidence) && q.evidence.exact) {
         const value = q.answer.value;
+        const sql = q.evidence.sql;
         it('counts the same rows as its exact evidence', async () => {
-          const ref = await runQuery(db, q.evidence.sql);
+          const ref = await runQuery(db, sql);
           expect(ref.ok && ref.rows.length).toBe(value);
         });
       }

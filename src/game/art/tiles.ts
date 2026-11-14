@@ -7,7 +7,8 @@ import { fill, paintGrid } from './palette';
  * - Table, chair, potted plant, counter and painting: from Kenney's "Roguelike Indoors" pack
  *   (CC0, see CREDITS.md), recoloured to our palette.
  * - Floor, walls, window, shelf, coffee machine, cash register, menu board, door mat, doors and
- *   the kitchen (floor, stove, sink, fridge, work table, recipe book, pans): our own.
+ *   the kitchen (floor, stove, sink, fridge, work table, recipe book, pans), the back office (bookshelf,
+ *   filing cabinet, desk, computer) and the storeroom (shelves, crates, milk crates, sacks, ledger): our own.
  */
 
 // --- From Kenney "Roguelike Indoors" (CC0), recoloured ---------------------------------------
@@ -352,6 +353,109 @@ function pans(ctx: Ctx) {
   }
 }
 
+/** Books on a wall shelf in the back office. */
+function bookshelf(ctx: Ctx) {
+  wallFace(ctx);
+  fill(ctx, '2', 1, 0, 14, 10);
+  for (const y of [1, 5]) {
+    const colours = ['B', 'G', 'y', 'N', 'o', 'l', '8'] as const;
+    colours.forEach((c, i) => fill(ctx, c, 2 + i * 2, y, 2, 3));
+    fill(ctx, '3', 1, y + 3, 14, 1);
+  }
+}
+
+/** A wooden filing cabinet with three drawers. */
+function filingCabinet(ctx: Ctx) {
+  fill(ctx, 'k', 2, 0, 12, 16);
+  fill(ctx, '4', 3, 0, 10, 15);
+  for (const y of [1, 6, 11]) {
+    fill(ctx, '3', 3, y + 3, 10, 1);
+    fill(ctx, 'Y', 7, y + 1, 2, 1);
+  }
+}
+
+/** A wooden desk with papers. */
+function desk(ctx: Ctx) {
+  fill(ctx, '2', 0, 2, 16, 13);
+  fill(ctx, '4', 0, 2, 16, 9);
+  fill(ctx, '3', 0, 10, 16, 1);
+  fill(ctx, '8', 3, 4, 5, 4);
+  fill(ctx, 'X', 4, 5, 3, 1);
+  fill(ctx, '2', 1, 13, 2, 3);
+  fill(ctx, '2', 13, 13, 2, 3);
+}
+
+/** Grandma's old computer on the desk: a cream monitor with a green screen. */
+function computer(ctx: Ctx) {
+  desk(ctx);
+  fill(ctx, 'k', 2, 0, 12, 9);
+  fill(ctx, '7', 3, 0, 10, 8);
+  fill(ctx, 'g', 4, 1, 8, 5);
+  fill(ctx, 'L', 5, 2, 4, 1);
+  fill(ctx, 'l', 5, 4, 6, 1);
+  fill(ctx, 'X', 4, 9, 8, 2);
+  fill(ctx, 'z', 5, 9, 6, 1);
+}
+
+/** Storeroom shelves on the wall, with jars and sacks. */
+function storeShelf(ctx: Ctx) {
+  wallFace(ctx);
+  fill(ctx, '3', 0, 4, 16, 1);
+  fill(ctx, '3', 0, 9, 16, 1);
+  fill(ctx, 'y', 2, 1, 3, 3);
+  fill(ctx, '8', 7, 1, 3, 3);
+  fill(ctx, 'O', 11, 2, 3, 2);
+  fill(ctx, '6', 1, 6, 5, 3);
+  fill(ctx, '6', 9, 6, 5, 3);
+  fill(ctx, '5', 2, 6, 3, 1);
+}
+
+/** A wooden crate. */
+function crate(ctx: Ctx) {
+  fill(ctx, 'k', 1, 2, 14, 13);
+  fill(ctx, '4', 2, 3, 12, 11);
+  fill(ctx, '3', 2, 6, 12, 1);
+  fill(ctx, '3', 2, 10, 12, 1);
+  fill(ctx, '5', 2, 3, 12, 1);
+  fill(ctx, '2', 3, 4, 1, 9);
+  fill(ctx, '2', 12, 4, 1, 9);
+}
+
+/** A crate of milk bottles: mostly empty in October. */
+function milkCrate(ctx: Ctx) {
+  fill(ctx, 'k', 1, 4, 14, 11);
+  fill(ctx, 'N', 2, 5, 12, 9);
+  fill(ctx, 'c', 2, 5, 12, 2);
+  fill(ctx, '8', 3, 1, 3, 5);
+  fill(ctx, 'B', 3, 1, 3, 1);
+  fill(ctx, 'n', 7, 4, 3, 2);
+  fill(ctx, 'n', 11, 4, 2, 2);
+}
+
+/** A sack of flour. */
+function sack(ctx: Ctx) {
+  fill(ctx, 'k', 3, 2, 10, 13);
+  fill(ctx, '6', 4, 3, 8, 11);
+  fill(ctx, '7', 5, 4, 4, 6);
+  fill(ctx, '3', 6, 1, 4, 2);
+  fill(ctx, 'o', 6, 8, 4, 2);
+}
+
+/** The stock ledger, open on a stand: a green book. */
+function ledger(ctx: Ctx) {
+  fill(ctx, '2', 7, 9, 2, 6);
+  fill(ctx, '2', 4, 14, 8, 2);
+  fill(ctx, 'k', 1, 2, 14, 8);
+  fill(ctx, 'G', 1, 2, 14, 8);
+  fill(ctx, '8', 2, 3, 6, 6);
+  fill(ctx, '7', 8, 3, 6, 6);
+  for (const y of [4, 5, 6, 7]) {
+    fill(ctx, 'X', 3, y, 4, 1);
+    fill(ctx, 'X', 9, y, 3, 1);
+  }
+  fill(ctx, 'o', 12, 1, 1, 9);
+}
+
 const grid = (g: readonly string[], x = 0, y = 0, flip = false) => (ctx: Ctx) => paintGrid(ctx, g, x, y, flip);
 const both =
   (...draws: ((ctx: Ctx) => void)[]) =>
@@ -383,6 +487,15 @@ const TILES: Record<number, (ctx: Ctx) => void> = {
   [TILE.workTable]: workTable,
   [TILE.recipeBook]: recipeBook,
   [TILE.pans]: pans,
+  [TILE.bookshelf]: bookshelf,
+  [TILE.filingCabinet]: filingCabinet,
+  [TILE.desk]: desk,
+  [TILE.computer]: computer,
+  [TILE.storeShelf]: storeShelf,
+  [TILE.crate]: crate,
+  [TILE.milkCrate]: milkCrate,
+  [TILE.sack]: sack,
+  [TILE.ledger]: ledger,
 };
 
 /** How many tiles have a drawing (must equal TILE_COUNT; a test checks it). */

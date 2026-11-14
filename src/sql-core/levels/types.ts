@@ -92,7 +92,8 @@ export type SoWhat = {
 };
 
 export type CaseAnswer =
-  | { kind: 'number'; value: number }
+  /** A number; `tolerance` allows rounding (e.g. 18 for 18.36%). */
+  | { kind: 'number'; value: number; tolerance?: number }
   | { kind: 'choice'; choices: string[]; correct: number };
 
 /**
@@ -110,7 +111,8 @@ export type Evidence = {
 export type CaseQuestion = {
   prompt: string;
   answer: CaseAnswer;
-  evidence: Evidence;
+  /** Several ways to prove it: any one of them is enough (analysts reach the same fact by different queries). */
+  evidence: Evidence | Evidence[];
 };
 
 export type Chapter = {

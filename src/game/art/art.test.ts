@@ -4,6 +4,7 @@ import { TILE_GRIDS } from './tiles';
 import { GRANDMA_GRIDS, grandmaFrame, grandmaPortraitGrid } from './grandma';
 import { BARISTA_GRIDS, baristaFrame, baristaPortraitGrid } from './barista';
 import { REGULAR_GRIDS, regularFrame, regularPortraitGrid } from './regular';
+import { SUPPLIER_GRIDS, supplierFrame, supplierPortraitGrid } from './supplier';
 import { CHAR_H, CHAR_W, FACINGS, FRAMES_PER_FACING } from '../placeholderSprites';
 
 const onlyPalette = (grid: readonly string[]) =>
@@ -38,6 +39,7 @@ const CHARACTERS = [
   { name: 'Grandma', frame: grandmaFrame, grids: GRANDMA_GRIDS, portrait: grandmaPortraitGrid },
   { name: 'Barista', frame: baristaFrame, grids: BARISTA_GRIDS, portrait: baristaPortraitGrid },
   { name: 'Regular', frame: regularFrame, grids: REGULAR_GRIDS, portrait: regularPortraitGrid },
+  { name: 'Supplier', frame: supplierFrame, grids: SUPPLIER_GRIDS, portrait: supplierPortraitGrid },
 ];
 
 describe.each(CHARACTERS)('$name', ({ frame, grids, portrait }) => {

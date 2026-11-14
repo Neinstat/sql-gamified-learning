@@ -1,9 +1,10 @@
 import { PGlite, types } from '@electric-sql/pglite';
 
-const { DATE, TIMESTAMP, TIMESTAMPTZ } = types;
+const { DATE, TIME, TIMESTAMP, TIMESTAMPTZ } = types;
 import { CAFE_SCHEMA_SQL, CAFE_SEED_SQL } from './data/cafe';
 import { SALES_SCHEMA_SQL, salesSeedSql } from './data/sales';
 import { RECIPES_SCHEMA_SQL, recipesSeedSql } from './data/recipes';
+import { STOCK_SCHEMA_SQL, stockSeedSql } from './data/stock';
 import type { Feedback } from './feedback';
 import { STATION_IDS, STATIONS, homeStation, type StationId } from './stations';
 
@@ -37,13 +38,15 @@ export async function createCafeDatabase(): Promise<LocalCafeDatabase> {
   // Dates and times come back exactly as PostgreSQL writes them ('2026-08-01 07:05:00'),
   // not as JavaScript Dates, which would shift with the player's time zone.
   const asText = (value: string) => value;
-  const pg = new PGlite({ parsers: { [DATE]: asText, [TIMESTAMP]: asText, [TIMESTAMPTZ]: asText } });
+  const pg = new PGlite({ parsers: { [DATE]: asText, [TIME]: asText, [TIMESTAMP]: asText, [TIMESTAMPTZ]: asText } });
   await pg.exec(CAFE_SCHEMA_SQL);
   await pg.exec(CAFE_SEED_SQL);
   await pg.exec(SALES_SCHEMA_SQL);
   await pg.exec(salesSeedSql());
   await pg.exec(RECIPES_SCHEMA_SQL);
   await pg.exec(recipesSeedSql());
+  await pg.exec(STOCK_SCHEMA_SQL);
+  await pg.exec(stockSeedSql());
   await pg.exec(stationRolesSql());
   return new LocalCafeDatabase(pg);
 }

@@ -21,12 +21,12 @@ export type CaseFeedback =
 
 export type ConclusionVerdict = { correct: true } | { correct: false; feedback: CaseFeedback };
 
-/** Is the given answer right? Numbers ignore spaces, `$` and trailing zeros ("4", " 4.0 "). */
+/** Is the given answer right? Numbers ignore spaces, `$`, `%` and trailing zeros ("4", " 4.0 ", "18%"). */
 export function isAnswerRight(answer: CaseAnswer, given: GivenAnswer): boolean {
   if (given === null || given === '') return false;
   if (answer.kind === 'choice') return given === answer.correct;
-  const n = Number(String(given).replace(/[\s$,]/g, ''));
-  return Number.isFinite(n) && Math.abs(n - answer.value) < 1e-6;
+  const n = Number(String(given).replace(/[\s$,%]/g, ''));
+  return Number.isFinite(n) && Math.abs(n - answer.value) <= (answer.tolerance ?? 1e-6);
 }
 
 /** Does the pinned result back up the answer? */
@@ -101,5 +101,12 @@ export async function checkConclusion(
   if (given === null || given === '') return { correct: false, feedback: { kind: 'no-answer' } };
   if (!isAnswerRight(question.answer, given)) return { correct: false, feedback: { kind: 'answer-wrong' } };
   if (!pinned) return { correct: false, feedback: { kind: 'no-evidence' } };
-  return checkEvidence(db, pinned, question.evidence);
+  const alternatives = Array.isArray(question.evidence) ? question.evidence : [question.evidence];
+  let first: ConclusionVerdict | null = null;
+  for (const evidence of alternatives) {
+    const verdict = await checkEvidence(db, pinned, evidence);
+    if (verdict.correct) return verdict;
+    first ??= verdict;
+  }
+  return first!;
 }

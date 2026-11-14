@@ -21,7 +21,7 @@ describe('café map', () => {
   });
 
   it('only uses known characters', () => {
-    const known = new Set('#fwSKPdCRThpM.,123HVIFWQ');
+    const known = new Set('#fwSKPdCRThpM.,123HVIFWQBJDZUxmnL');
     for (const row of CAFE_MAP) for (const ch of row) expect(known.has(ch), `unknown "${ch}"`).toBe(true);
   });
 
@@ -102,11 +102,13 @@ describe('rooms', () => {
   });
 
   it('puts the NPCs, the player start and the first stations in the front room', () => {
-    for (const npc of NPCS) expect(roomAt(npc.tile.x)).toBe('front');
+    for (const npc of NPCS) expect(roomAt(npc.tile.x)).toBe(npc.id === 'supplier' ? 'storeroom' : 'front');
     expect(roomAt(PLAYER_START.x)).toBe('front');
     expect(roomAt(findTiles('M')[0].x)).toBe('front');
     expect(roomAt(findTiles('R')[0].x)).toBe('front');
     expect(roomAt(findTiles('Q')[0].x)).toBe('kitchen');
+    expect(roomAt(findTiles('L')[0].x)).toBe('storeroom');
+    expect(roomAt(findTiles('Z')[0].x)).toBe('back-office');
   });
 
   it('open chapter by chapter, and locked doors block the way', () => {

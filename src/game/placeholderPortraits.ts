@@ -2,6 +2,7 @@ import { LOOKS, type Look } from './placeholderSprites';
 import { grandmaPortrait } from './art/grandma';
 import { baristaPortrait } from './art/barista';
 import { regularPortrait } from './art/regular';
+import { supplierPortrait } from './art/supplier';
 
 /**
  * Placeholder 64×64 dialogue portraits, drawn in code — no third-party art.
@@ -76,6 +77,7 @@ export function characterPortrait(character: string): string {
   if (character === 'grandma') return grandmaPortrait();
   if (character === 'barista') return baristaPortrait();
   if (character === 'regular') return regularPortrait();
+  if (character === 'supplier') return supplierPortrait();
   const canvas = document.createElement('canvas');
   canvas.width = PORTRAIT_SIZE;
   canvas.height = PORTRAIT_SIZE;
