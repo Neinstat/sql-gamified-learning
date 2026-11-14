@@ -825,6 +825,90 @@ body {
   color: #7c3424;
 }
 
+/* Welcome card and Skill Check */
+.welcome-head {
+  display: flex;
+  gap: 16px;
+  align-items: flex-start;
+  margin-bottom: 16px;
+}
+
+.welcome-head p {
+  margin: 0;
+  line-height: 1.5;
+}
+
+.welcome-portrait {
+  flex-shrink: 0;
+  width: 96px;
+  height: 96px;
+  image-rendering: pixelated;
+  border: 3px solid #5b4033;
+  border-radius: 8px;
+}
+
+.welcome-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.skill-steps {
+  display: flex;
+  gap: 6px;
+  margin: 0 0 12px;
+  padding: 0;
+  list-style: none;
+}
+
+.skill-step {
+  width: 28px;
+  height: 28px;
+  line-height: 26px;
+  text-align: center;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--muted);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 50%;
+}
+
+.skill-step.now {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+
+.skill-step.passed {
+  color: var(--ok-ink);
+  background: var(--ok-bg);
+}
+
+.skill-step.missed {
+  color: var(--error-ink);
+  background: var(--error-bg);
+}
+
+.skill-result {
+  max-width: 640px;
+  line-height: 1.5;
+}
+
+.skill-result-title {
+  font-size: 1.15rem;
+  font-weight: 700;
+}
+
+.level-dot.skipped {
+  border-style: dashed;
+}
+
+@media (max-width: 520px) {
+  .welcome-head {
+    flex-direction: column;
+  }
+}
+
 /* So what? */
 .so-what-question {
   margin: 0 0 12px;

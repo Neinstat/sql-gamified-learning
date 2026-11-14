@@ -29,6 +29,11 @@ Kebanyakan sumber belajar SQL hanya mengajarkan **sintaks**:
 - Ditawarkan Grandma di hari pertama ("Worked with data before?") dan bisa diulang dari Journal. Pemula total cukup menjawab "No" dan mulai di Chapter 0.
 - Chapter yang dilewati **terbuka tapi tanpa bintang**, sehingga bisa dimainkan ulang kapan saja; Mini Case chapter yang dilewati tetap bisa dimainkan.
 - Soal Skill Check terpisah dari soal level (pemain tidak sekadar mengulang jawaban level), dinilai dengan pengecek jawaban yang sama.
+- **Dibangun di 3.9** (`src/sql-core/skillCheck.ts`, `src/app/SkillCheck.tsx`):
+  - 10 soal ketik bebas (Chapter 0–4), semua dijalankan dengan role **Cash register** (melihat `sales`, `customers`, `menu_items`). Tes memastikan setiap soal bisa dijalankan, tidak sama dengan jawaban level, dan sudah diterjemahkan (`locales/id/skillCheck.ts`).
+  - Pemain baru disambut kartu Grandma ("Worked with data before?") dengan dua pilihan: mulai dari awal, atau ikut Skill Check. Kartu ini hanya muncul sekali (`skillCheckOffered`); simpanan lama dianggap sudah ditawari. Skill Check juga bisa dibuka dari Journal.
+  - Tombol "I don't know this one" menghitung soal itu sebagai salah. Skill Check **tidak pernah memundurkan** pemain: dari Journal, hasilnya hanya dipakai bila chapter-nya lebih jauh dari posisi sekarang.
+  - Level yang dilewati disimpan di `skipped`: terbuka di Journal (titik bergaris putus-putus, tanpa bintang/koin) dan ikut dihitung untuk membuka ruangan.
 
 Target akhir: orang yang ingin berkarier sebagai **analis data / BI**, yang perlu paham SQL *dan* konteks bisnis. Pasar global — karena itu bahasa utama game English, dengan pilihan Bahasa Indonesia agar pemula di Indonesia mudah masuk.
 
@@ -375,7 +380,7 @@ Setiap iterasi bisa dimainkan sendiri: kerjakan → cek di browser → commit & 
 | 3.6 ✅ | **Chapter 3 Numbers Talk** (`COUNT`/`SUM`/`AVG`/`MIN`/`MAX`, `GROUP BY`, `HAVING`, dasar tanggal) + Mini Case **The Quiet Day** | Chapter 3 bisa dimainkan lengkap di Cash register, EN/ID |
 | 3.7 ✅ | **Kafe berkembang:** peta multi-ruangan dengan pintu terkunci per chapter, **Kitchen** + tabel `recipes` + Recipe book (gaya final), tab **Café map** di Journal, panah penunjuk ke pintu | Kitchen terbuka setelah Ch3; Café map menunjukkan ruangan dan target tugas |
 | 3.8 ✅ | **Chapter 4 Connecting the Dots** (`INNER`/`LEFT JOIN`, JOIN + agregasi) + Mini Case **Where Did the Regulars Go?**; Regular dalam gaya final | Chapter 4 bisa dimainkan lengkap di Kitchen & Cash register, EN/ID |
-| 3.9 | **Skill Check** adaptif (soal Ch0–4) dari Grandma di hari pertama & dari Journal | Pemain yang sudah bisa SQL dasar bisa langsung mulai di chapter yang sesuai |
+| 3.9 ✅ | **Skill Check** adaptif (soal Ch0–4) dari Grandma di hari pertama & dari Journal | Pemain yang sudah bisa SQL dasar bisa langsung mulai di chapter yang sesuai |
 | 3.10 | **Storeroom + Back office** (`inventory`, `suppliers`, Supplier NPC, Grandma's computer) + **Chapter 5 Analysis Case** "October sales dropped 18%" | Analysis Case bisa diselesaikan lengkap dengan bukti 📌 di Back office |
 | 3.11 | **Kafe yang tumbuh:** upgrade dengan koin (kursi, dekorasi, papan menu, NPC pelanggan berjalan), daily streak 🔥, badge | Koin bisa dibelanjakan dan kafe berubah terlihat di dunia |
 | 3.12 | **Rush Hour** ⏱ (terbuka setelah Chapter 2) + skor terbaik pribadi | Satu putaran Rush Hour bisa dimainkan dan skor terbaik tersimpan |

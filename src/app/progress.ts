@@ -16,6 +16,10 @@ export type Progress = {
   coins: number;
   /** Levels whose "So what?" was answered right (the bonus is paid once). */
   soWhatRight: string[];
+  /** Levels passed over by the Skill Check: open to play, but no stars or coins until played. */
+  skipped: string[];
+  /** The Skill Check was offered on the first day (taken or declined), so the welcome card isn't shown again. */
+  skillCheckOffered: boolean;
 };
 
 /** Best result for a finished level: fewest hints, fewest mistakes, most stars. */
@@ -27,7 +31,14 @@ const STAGES: QuestStage[] = ['talk', 'solve', 'report', 'done'];
 
 const STORAGE_KEY = 'sql-valley.progress.v1';
 
-export const emptyProgress: Progress = { currentLevelId: null, completed: {}, coins: 0, soWhatRight: [] };
+export const emptyProgress: Progress = {
+  currentLevelId: null,
+  completed: {},
+  coins: 0,
+  soWhatRight: [],
+  skipped: [],
+  skillCheckOffered: false,
+};
 
 export function loadProgress(): Progress {
   try {
@@ -53,6 +64,9 @@ export function parseProgress(raw: string): Progress {
       // Saves from before coins existed get the coins their stars are worth.
       coins: typeof data.coins === 'number' ? data.coins : coinsForAll(completed),
       soWhatRight: Array.isArray(data.soWhatRight) ? data.soWhatRight.filter((id) => typeof id === 'string') : [],
+      skipped: Array.isArray(data.skipped) ? data.skipped.filter((id) => typeof id === 'string') : [],
+      // Older saves already played on: don't greet them as a new player.
+      skillCheckOffered: data.skillCheckOffered === true || Boolean(data.quest) || Object.keys(completed).length > 0,
     };
   } catch {
     return emptyProgress;
@@ -116,3 +130,11 @@ export function markSoWhatRight(progress: Progress, levelId: string, bonus: numb
   if (progress.soWhatRight.includes(levelId)) return progress;
   return { ...progress, coins: progress.coins + bonus, soWhatRight: [...progress.soWhatRight, levelId] };
 }
+
+/** A level counts as done for unlocking (Journal, rooms) when it was played or skipped by the Skill Check. */
+export const isDone = (progress: Progress, levelId: string) =>
+  Boolean(progress.completed[levelId]) || progress.skipped.includes(levelId);
+
+/** A brand-new player, who should be offered the Skill Check. */
+export const isNewPlayer = (progress: Progress) =>
+  !progress.skillCheckOffered && !progress.quest && Object.keys(progress.completed).length === 0;

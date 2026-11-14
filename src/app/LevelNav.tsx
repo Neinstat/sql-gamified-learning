@@ -1,6 +1,6 @@
 import { allLevels, isCase, type Chapter } from '../sql-core/levels';
 import type { UiText } from '../i18n';
-import type { Progress } from './progress';
+import { isDone, type Progress } from './progress';
 import { Stars } from './Stars';
 
 type Props = {
@@ -17,7 +17,7 @@ type Props = {
  * the rest stay locked so the learning order is kept.
  */
 export function LevelNav({ chapters, currentId, progress, t, onSelect }: Props) {
-  const firstOpen = allLevels.findIndex((l) => !progress.completed[l.id]);
+  const firstOpen = allLevels.findIndex((l) => !isDone(progress, l.id));
   const unlockedUpTo = firstOpen === -1 ? allLevels.length - 1 : firstOpen;
 
   return (
@@ -36,9 +36,10 @@ export function LevelNav({ chapters, currentId, progress, t, onSelect }: Props) 
           {chapter.levels.map((level, i) => {
             const index = allLevels.findIndex((l) => l.id === level.id);
             const done = Boolean(progress.completed[level.id]);
+            const skipped = !done && progress.skipped.includes(level.id);
             const isCurrent = level.id === currentId;
             const locked = index > unlockedUpTo && !isCurrent;
-            const classes = ['level-dot', done && 'done', isCurrent && 'current'].filter(Boolean).join(' ');
+            const classes = ['level-dot', done && 'done', skipped && 'skipped', isCurrent && 'current'].filter(Boolean).join(' ');
             const stars = progress.completed[level.id]?.stars ?? 0;
             return (
               <span key={level.id} className="level-slot">

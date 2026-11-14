@@ -8,6 +8,7 @@
  *
  * Pure functions over Progress, so they are tested without a browser.
  */
+import { chapters } from '../sql-core/levels';
 import { markCompleted, type Progress, type QuestStage } from './progress';
 
 /** The stage of `levelId`: anything not recorded yet starts at "talk". */
@@ -45,4 +46,15 @@ export function resumeNewLevels(progress: Progress, levelIds: readonly string[])
   if (progress.quest?.stage !== 'done') return progress;
   const next = levelIds[levelIds.indexOf(progress.quest.levelId) + 1];
   return next ? startLevel(progress, next) : progress;
+}
+
+/**
+ * After the Skill Check (GAME_DESIGN.md §2): every level before `chapter` is skipped (open, no stars),
+ * and the player starts that chapter's first request. Past the last chapter: its last level.
+ */
+export function placeAfterSkillCheck(progress: Progress, chapter: number): Progress {
+  const before = chapters.filter((c) => c.id < chapter).flatMap((c) => c.levels.map((l) => l.id));
+  const start = chapters.find((c) => c.id === chapter)?.levels[0].id ?? chapters.at(-1)!.levels.at(-1)!.id;
+  const skipped = [...new Set([...progress.skipped, ...before.filter((id) => !progress.completed[id] && id !== start)])];
+  return { ...startLevel(progress, start), skipped, skillCheckOffered: true };
 }

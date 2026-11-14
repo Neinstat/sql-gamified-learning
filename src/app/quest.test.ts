@@ -1,6 +1,15 @@
 import { describe, expect, it } from 'vitest';
 import { emptyProgress, type Progress } from './progress';
-import { acceptRequest, questStage, reportDone, resumeNewLevels, solveRequest, startLevel } from './quest';
+import {
+  acceptRequest,
+  placeAfterSkillCheck,
+  questStage,
+  reportDone,
+  resumeNewLevels,
+  solveRequest,
+  startLevel,
+} from './quest';
+import { isDone, isNewPlayer, parseProgress } from './progress';
 
 const ids = ['ch0-1', 'ch0-2'];
 
@@ -40,13 +49,7 @@ describe('quest loop', () => {
 describe('resumeNewLevels', () => {
   const ids = ['a', 'b', 'c'];
   it('moves a finished player on to a level added after their last one', () => {
-    const done: Progress = {
-      currentLevelId: 'b',
-      completed: {},
-      coins: 0,
-      soWhatRight: [],
-      quest: { levelId: 'b', stage: 'done' },
-    };
+    const done: Progress = { ...emptyProgress, currentLevelId: 'b', quest: { levelId: 'b', stage: 'done' } };
     expect(resumeNewLevels(done, ids).quest).toEqual({ levelId: 'c', stage: 'talk' });
   });
 
@@ -55,5 +58,32 @@ describe('resumeNewLevels', () => {
     expect(resumeNewLevels(finished, ids)).toBe(finished);
     const solving: Progress = { ...emptyProgress, currentLevelId: 'b', quest: { levelId: 'b', stage: 'solve' } };
     expect(resumeNewLevels(solving, ids)).toBe(solving);
+  });
+});
+
+describe('after the Skill Check', () => {
+  it('skips the chapters before the starting one and starts its first request', () => {
+    const p = placeAfterSkillCheck(emptyProgress, 2);
+    expect(p.quest).toEqual({ levelId: 'ch2-1', stage: 'talk' });
+    expect(p.skipped).toContain('ch0-1');
+    expect(p.skipped).toContain('ch1-7');
+    expect(p.skipped).not.toContain('ch2-1');
+    expect(p.completed).toEqual({});
+    expect(p.coins).toBe(0);
+    expect(isDone(p, 'ch1-3')).toBe(true);
+    expect(isNewPlayer(p)).toBe(false);
+  });
+
+  it('starts a beginner at the very first level, with nothing skipped', () => {
+    const p = placeAfterSkillCheck(emptyProgress, 0);
+    expect(p.quest).toEqual({ levelId: 'ch0-1', stage: 'talk' });
+    expect(p.skipped).toEqual([]);
+  });
+
+  it('greets only brand-new players (older saves count as offered)', () => {
+    expect(isNewPlayer(emptyProgress)).toBe(true);
+    expect(
+      isNewPlayer(parseProgress(JSON.stringify({ currentLevelId: 'ch0-2', completed: { 'ch0-1': { hintsUsed: 0 } } }))),
+    ).toBe(false);
   });
 });

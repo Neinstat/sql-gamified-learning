@@ -13,16 +13,42 @@ import { WorldModal } from './WorldModal';
 import { LevelNav } from './LevelNav';
 import { Lesson } from './LevelParts';
 import { getDatabase } from './database';
-import { emptyProgress, loadProgress, markSoWhatRight, rewardForSolve, saveProgress, type Progress } from './progress';
+import {
+  emptyProgress,
+  isNewPlayer,
+  loadProgress,
+  markSoWhatRight,
+  rewardForSolve,
+  saveProgress,
+  type Progress,
+} from './progress';
+import { characterPortrait } from '../game/placeholderPortraits';
+import { SKILL_CHECK_STATION } from '../sql-core/skillCheck';
 import { SO_WHAT_BONUS, type Reward } from './rewards';
-import { acceptRequest, questStage, reportDone, resumeNewLevels, solveRequest, startLevel } from './quest';
+import {
+  acceptRequest,
+  placeAfterSkillCheck,
+  questStage,
+  reportDone,
+  resumeNewLevels,
+  solveRequest,
+  startLevel,
+} from './quest';
 import { SoWhatCard } from './SoWhatCard';
 import { CafeMap } from './CafeMap';
 import { reachedChapter } from './rooms';
+import { SkillCheck } from './SkillCheck';
 import { openRooms, roomOfTarget, type RoomId } from '../game/rooms/cafe';
 
 /** What is open over the world. `null` = the player is walking around. */
-type Overlay = InteractTarget | { kind: 'lesson' } | { kind: 'chapter' } | { kind: 'journal' } | { kind: 'soWhat' };
+type Overlay =
+  | InteractTarget
+  | { kind: 'lesson' }
+  | { kind: 'chapter' }
+  | { kind: 'journal' }
+  | { kind: 'soWhat' }
+  | { kind: 'welcome' }
+  | { kind: 'skillCheck' };
 
 const levelIds = allLevels.map((l) => l.id);
 
@@ -78,10 +104,15 @@ export function WorldApp() {
   // A new chapter starts with its title card.
   const firstOfChapter = chapter.levels[0].id === level.id;
   useEffect(() => {
+    if (isNewPlayer(progress)) {
+      // First visit: Grandma asks whether to take the Skill Check (GAME_DESIGN.md §2).
+      if (overlay === null) setOverlay({ kind: 'welcome' });
+      return;
+    }
     if (stage === 'talk' && firstOfChapter && !seenChapters.includes(chapter.id) && overlay === null) {
       setOverlay({ kind: 'chapter' });
     }
-  }, [stage, firstOfChapter, seenChapters, chapter.id, overlay]);
+  }, [progress, stage, firstOfChapter, seenChapters, chapter.id, overlay]);
 
   // Game → app: the player used something.
   useEffect(() => bridge.on('interact', (target) => setOverlay(target)), [bridge]);
@@ -296,6 +327,56 @@ export function WorldApp() {
           />
         )}
 
+        {overlay?.kind === 'welcome' && (
+          <div className="world-modal-backdrop">
+            <section className="world-modal welcome-card" role="dialog" aria-label={t.welcomeTitle}>
+              <div className="welcome-head">
+                <img className="welcome-portrait" src={characterPortrait('grandma')} alt="" />
+                <div>
+                  <h2 className="world-modal-title">{t.welcomeTitle}</h2>
+                  <p>{t.welcomeLine}</p>
+                </div>
+              </div>
+              <div className="welcome-actions">
+                <button
+                  className="primary-button"
+                  onClick={() => {
+                    setProgress((p) => ({ ...p, skillCheckOffered: true }));
+                    close();
+                  }}
+                  autoFocus
+                >
+                  {t.welcomeNew}
+                </button>
+                <button className="secondary-button" onClick={() => setOverlay({ kind: 'skillCheck' })}>
+                  🎓 {t.welcomeCheck}
+                </button>
+              </div>
+            </section>
+          </div>
+        )}
+
+        {overlay?.kind === 'skillCheck' && (
+          <SkillCheck
+            db={db}
+            schema={stationTables(SKILL_CHECK_STATION, schema)}
+            lang={lang}
+            t={t}
+            chapterTitle={(id) => chapters.find((c) => c.id === id)?.title ?? null}
+            onFinish={(start) => {
+              // Never sends a player back: only moves them forward, or keeps them where they are.
+              setProgress((p) =>
+                start > chapter.id ? placeAfterSkillCheck(p, start) : { ...p, skillCheckOffered: true },
+              );
+              close();
+            }}
+            onCancel={() => {
+              setProgress((p) => ({ ...p, skillCheckOffered: true }));
+              close();
+            }}
+          />
+        )}
+
         {overlay?.kind === 'chapter' && (
           <WorldModal
             label={chapter.title}
@@ -367,6 +448,12 @@ export function WorldApp() {
                   }}
                 >
                   {t.startOver}
+                </button>
+                <button
+                  className="link-button world-modal-start-over"
+                  onClick={() => setOverlay({ kind: 'skillCheck' })}
+                >
+                  🎓 {t.welcomeCheck}
                 </button>
               </>
             )}
