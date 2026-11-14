@@ -48,7 +48,7 @@ describe('findPath', () => {
 
   it('finds a way behind the café counter', () => {
     // From the door to the cash register's side of the counter.
-    const path = findPath(walkableGrid(), { x: 10, y: 10 }, { x: 6, y: 3 });
-    expect(last(path)).toEqual({ x: 6, y: 3 });
+    const path = findPath(walkableGrid(), { x: 20, y: 10 }, { x: 16, y: 3 });
+    expect(last(path)).toEqual({ x: 16, y: 3 });
   });
 });

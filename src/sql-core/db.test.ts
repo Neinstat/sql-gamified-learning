@@ -115,6 +115,24 @@ describe('station consoles', () => {
     expect((await runQuery(db, 'SELECT * FROM sales;', 'menu-board')).ok).toBe(false);
   });
 
+  it('lets the recipe book join recipes with the menu, but not see sales', async () => {
+    const join = await runQuery(
+      db,
+      "SELECT m.name, r.amount FROM recipes r JOIN menu_items m ON m.item_id = r.item_id WHERE r.ingredient = 'milk';",
+      'recipe-book',
+    );
+    expect(join.ok && join.rows.length).toBeGreaterThan(5);
+    expect(await runQuery(db, 'SELECT * FROM sales;', 'recipe-book')).toEqual({
+      ok: false,
+      error: { kind: 'other-station', table: 'sales', station: 'cash-register' },
+    });
+  });
+
+  it('has a recipe for every menu item except the secret cake', async () => {
+    const res = await runQuery(db, 'SELECT m.name FROM menu_items m LEFT JOIN recipes r ON r.item_id = m.item_id WHERE r.recipe_id IS NULL;');
+    expect(res.ok && res.rows).toEqual([["Grandma's Secret Cake"]]);
+  });
+
   it('runs without a station for level solutions (everything visible)', async () => {
     expect((await runQuery(db, 'SELECT COUNT(*) FROM sales;')).ok).toBe(true);
   });

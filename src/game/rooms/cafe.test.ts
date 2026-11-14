@@ -1,5 +1,18 @@
 import { describe, expect, it } from 'vitest';
-import { BLOCKING_TILES, CAFE_MAP, NPCS, PLAYER_START, STATION_SPOTS, TILE, TILE_COUNT, findTiles, furnitureLayer, groundLayer, walkableGrid } from './cafe';
+import { findPath } from '../pathfinding';
+import {
+  BLOCKING_TILES,
+  CAFE_MAP,
+  NPCS,
+  PLAYER_START,
+  ROOMS,
+  STATION_SPOTS,
+  TILE,
+  TILE_COUNT,
+  doorToward,
+  lockedDoors,
+  openRooms,
+  roomAt, findTiles, furnitureLayer, groundLayer, walkableGrid } from './cafe';
 
 describe('café map', () => {
   it('has rows of equal width', () => {
@@ -8,7 +21,7 @@ describe('café map', () => {
   });
 
   it('only uses known characters', () => {
-    const known = new Set('#fwSKPdCRThpM.');
+    const known = new Set('#fwSKPdCRThpM.,123HVIFWQ');
     for (const row of CAFE_MAP) for (const ch of row) expect(known.has(ch), `unknown "${ch}"`).toBe(true);
   });
 
@@ -72,5 +85,47 @@ describe('stations', () => {
       const [{ x, y }] = tiles;
       expect([[1, 0], [-1, 0], [0, 1], [0, -1]].some(([dx, dy]) => walkable[y + dy][x + dx])).toBe(true);
     }
+  });
+});
+
+describe('rooms', () => {
+  it('are separated by walls, with exactly one doorway between neighbours', () => {
+    for (const room of ROOMS) {
+      for (const wallX of [room.left, room.right]) {
+        const column = CAFE_MAP.map((row) => row[wallX]);
+        const gaps = column.filter((ch) => ch !== '#');
+        const isOuter = wallX === 0 || wallX === CAFE_MAP[0].length - 1;
+        expect(gaps.length, `wall at x=${wallX}`).toBe(isOuter ? 0 : 1);
+        if (!isOuter) expect('123').toContain(gaps[0]);
+      }
+    }
+  });
+
+  it('puts the NPCs, the player start and the first stations in the front room', () => {
+    for (const npc of NPCS) expect(roomAt(npc.tile.x)).toBe('front');
+    expect(roomAt(PLAYER_START.x)).toBe('front');
+    expect(roomAt(findTiles('M')[0].x)).toBe('front');
+    expect(roomAt(findTiles('R')[0].x)).toBe('front');
+    expect(roomAt(findTiles('Q')[0].x)).toBe('kitchen');
+  });
+
+  it('open chapter by chapter, and locked doors block the way', () => {
+    expect(openRooms(3)).toEqual(['front']);
+    expect(openRooms(4)).toEqual(['front', 'kitchen']);
+    expect(openRooms(5)).toEqual(['back-office', 'front', 'kitchen', 'storeroom']);
+    const book = findTiles('Q')[0];
+    const goal = { x: book.x, y: book.y + 1 };
+    const reaches = (locked: string[]) =>
+      findPath(walkableGrid(CAFE_MAP, locked), { x: PLAYER_START.x, y: PLAYER_START.y }, goal).at(-1);
+    expect(reaches(lockedDoors(openRooms(3)))).not.toEqual(goal);
+    expect(reaches(lockedDoors(openRooms(4)))).toEqual(goal);
+  });
+
+  it('points to the right doorway when the goal is in another room', () => {
+    expect(doorToward('front', 'kitchen')).toEqual(findTiles('2')[0]);
+    expect(doorToward('front', 'storeroom')).toEqual(findTiles('2')[0]);
+    expect(doorToward('storeroom', 'front')).toEqual(findTiles('3')[0]);
+    expect(doorToward('front', 'back-office')).toEqual(findTiles('1')[0]);
+    expect(doorToward('front', 'front')).toBeNull();
   });
 });

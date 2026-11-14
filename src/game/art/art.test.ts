@@ -17,6 +17,14 @@ describe('palette', () => {
   });
 });
 
+describe('tileset', () => {
+  it('has a drawing for every tile', async () => {
+    const { TILE_DRAWN } = await import('./tiles');
+    const { TILE_COUNT } = await import('../rooms/cafe');
+    expect(TILE_DRAWN).toBe(TILE_COUNT);
+  });
+});
+
 describe('tile art', () => {
   it.each(Object.entries(TILE_GRIDS))('%s fits in one 16×16 tile and uses palette colours only', (_name, grid) => {
     expect(grid.length).toBeLessThanOrEqual(16);

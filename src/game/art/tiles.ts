@@ -6,7 +6,8 @@ import { fill, paintGrid } from './palette';
  *
  * - Table, chair, potted plant, counter and painting: from Kenney's "Roguelike Indoors" pack
  *   (CC0, see CREDITS.md), recoloured to our palette.
- * - Floor, walls, window, shelf, coffee machine, cash register, menu board and door mat: our own.
+ * - Floor, walls, window, shelf, coffee machine, cash register, menu board, door mat, doors and
+ *   the kitchen (floor, stove, sink, fridge, work table, recipe book, pans): our own.
  */
 
 // --- From Kenney "Roguelike Indoors" (CC0), recoloured ---------------------------------------
@@ -240,6 +241,117 @@ function doorMat(ctx: Ctx) {
   fill(ctx, 'O', 4, 9, 8, 1);
 }
 
+/** Cream and stone kitchen tiles in a checkerboard, with thin grout lines. */
+function kitchenFloor(ctx: Ctx) {
+  fill(ctx, 'z', 0, 0, 16, 16);
+  fill(ctx, '7', 0, 0, 8, 8);
+  fill(ctx, '7', 8, 8, 8, 8);
+  fill(ctx, 'X', 0, 15, 16, 1);
+  fill(ctx, 'X', 15, 0, 1, 16);
+}
+
+/** An open doorway in a side wall: floorboards between two door posts. */
+function doorway(ctx: Ctx) {
+  floor(ctx);
+  fill(ctx, '2', 0, 0, 2, 16);
+  fill(ctx, '2', 14, 0, 2, 16);
+  fill(ctx, '1', 0, 0, 16, 1);
+  fill(ctx, '1', 0, 15, 16, 1);
+}
+
+/** A closed plank door with a padlock: that room isn't open yet. */
+function doorLocked(ctx: Ctx) {
+  fill(ctx, '1', 0, 0, 16, 16);
+  fill(ctx, '3', 2, 1, 12, 14);
+  for (const x of [5, 8, 11]) fill(ctx, '2', x, 1, 1, 14);
+  fill(ctx, '2', 2, 4, 12, 1);
+  fill(ctx, '2', 2, 11, 12, 1);
+  // Padlock.
+  fill(ctx, 'k', 5, 5, 6, 6);
+  fill(ctx, 'Y', 6, 7, 4, 3);
+  fill(ctx, 'k', 6, 4, 1, 2);
+  fill(ctx, 'k', 9, 4, 1, 2);
+  fill(ctx, 'k', 7, 3, 2, 1);
+  fill(ctx, 'r', 7, 8, 2, 1);
+}
+
+/** A cast-iron stove with two burners and a pot. */
+function stove(ctx: Ctx) {
+  fill(ctx, 'k', 0, 0, 16, 15);
+  fill(ctx, 'n', 1, 1, 14, 13);
+  fill(ctx, 'N', 1, 1, 14, 6);
+  for (const x of [2, 9]) {
+    fill(ctx, 'x', x, 2, 5, 4);
+    fill(ctx, 'k', x + 1, 3, 3, 2);
+  }
+  fill(ctx, 'o', 9, 1, 5, 4);
+  fill(ctx, 'O', 10, 1, 3, 1);
+  fill(ctx, 'x', 2, 9, 12, 1);
+  fill(ctx, 'O', 3, 11, 2, 1);
+  fill(ctx, 'O', 11, 11, 2, 1);
+}
+
+/** A stone counter with a sink and a tap. */
+function sink(ctx: Ctx) {
+  paintGrid(ctx, COUNTER);
+  fill(ctx, 'x', 3, 1, 10, 5);
+  fill(ctx, 'c', 4, 2, 8, 3);
+  fill(ctx, 'C', 5, 2, 3, 1);
+  fill(ctx, 'x', 7, 0, 2, 2);
+}
+
+/** A cream fridge with a chrome handle. */
+function fridge(ctx: Ctx) {
+  fill(ctx, 'k', 1, 0, 14, 16);
+  fill(ctx, '8', 2, 0, 12, 15);
+  fill(ctx, '7', 11, 0, 3, 15);
+  fill(ctx, 'X', 2, 6, 12, 1);
+  fill(ctx, 'x', 3, 2, 1, 3);
+  fill(ctx, 'x', 3, 8, 1, 4);
+  fill(ctx, 'y', 9, 2, 2, 2);
+}
+
+/** A wooden work table with a cutting board and a mixing bowl. */
+function workTable(ctx: Ctx) {
+  fill(ctx, '2', 0, 1, 16, 14);
+  fill(ctx, '5', 0, 1, 16, 10);
+  fill(ctx, '4', 0, 10, 16, 1);
+  fill(ctx, '6', 2, 3, 6, 5);
+  fill(ctx, 'l', 3, 4, 2, 1);
+  fill(ctx, 'O', 5, 5, 2, 1);
+  fill(ctx, 'B', 10, 3, 5, 5);
+  fill(ctx, 'p', 11, 4, 3, 2);
+  fill(ctx, '2', 1, 13, 2, 2);
+  fill(ctx, '2', 13, 13, 2, 2);
+}
+
+/** Grandma's recipe book, open on a wooden stand. */
+function recipeBook(ctx: Ctx) {
+  fill(ctx, '2', 7, 9, 2, 6);
+  fill(ctx, '2', 4, 14, 8, 2);
+  fill(ctx, 'k', 1, 2, 14, 8);
+  fill(ctx, 'B', 1, 2, 14, 8);
+  fill(ctx, '8', 2, 3, 6, 6);
+  fill(ctx, '7', 8, 3, 6, 6);
+  for (const y of [4, 6]) {
+    fill(ctx, 'X', 3, y, 4, 1);
+    fill(ctx, 'X', 9, y, 4, 1);
+  }
+  fill(ctx, 'o', 11, 1, 1, 9);
+}
+
+/** Copper pans hanging on the kitchen wall. */
+function pans(ctx: Ctx) {
+  wallFace(ctx);
+  fill(ctx, '2', 1, 1, 14, 1);
+  for (const [x, w] of [[2, 5], [9, 6]]) {
+    fill(ctx, 'x', x + Math.floor(w / 2), 2, 1, 2);
+    fill(ctx, 'k', x, 4, w, w - 1);
+    fill(ctx, 'O', x + 1, 4, w - 2, w - 2);
+    fill(ctx, 'y', x + 1, 4, 1, 1);
+  }
+}
+
 const grid = (g: readonly string[], x = 0, y = 0, flip = false) => (ctx: Ctx) => paintGrid(ctx, g, x, y, flip);
 const both =
   (...draws: ((ctx: Ctx) => void)[]) =>
@@ -262,7 +374,19 @@ const TILES: Record<number, (ctx: Ctx) => void> = {
   [TILE.coffeeMachine]: grid(COFFEE_MACHINE),
   [TILE.doorMat]: doorMat,
   [TILE.painting]: both(wallFace, grid(PAINTING)),
+  [TILE.doorway]: doorway,
+  [TILE.doorLocked]: doorLocked,
+  [TILE.kitchenFloor]: kitchenFloor,
+  [TILE.stove]: stove,
+  [TILE.sink]: sink,
+  [TILE.fridge]: fridge,
+  [TILE.workTable]: workTable,
+  [TILE.recipeBook]: recipeBook,
+  [TILE.pans]: pans,
 };
+
+/** How many tiles have a drawing (must equal TILE_COUNT; a test checks it). */
+export const TILE_DRAWN = Object.keys(TILES).length;
 
 /** Every pixel-art grid in this file, for tests (equal rows, palette colours only). */
 export const TILE_GRIDS = { TABLE, CHAIR, PLANT, COUNTER, PAINTING, WINDOW, SHELF, COFFEE_MACHINE, REGISTER, MENU_BOARD };

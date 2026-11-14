@@ -90,6 +90,15 @@ const en = {
   starsTipConclusions: 'Answer every question without a wrong conclusion for ★★★.',
   starsBest: (n: number) => `Your best is still ${'★'.repeat(n)}.`,
   coins: 'Coins',
+  rooms: { 'back-office': 'Back office', front: 'Café', kitchen: 'Kitchen', storeroom: 'Storeroom' } as Record<
+    'back-office' | 'front' | 'kitchen' | 'storeroom',
+    string
+  >,
+  cafeMap: 'Café map',
+  levelsTab: 'Levels',
+  youAreHere: 'You are here',
+  nextTaskHere: 'Your next task',
+  opensInChapter: (n: number) => `Opens in Chapter ${n}`,
   coinsBonus: (n: number) => `+${n} 🪙 for thinking like an analyst!`,
   chapterStars: (got: number, total: number) => `★ ${got}/${total}`,
   characters: { grandma: 'Grandma', barista: 'Barista', supplier: 'Supplier', regular: 'Regular' } satisfies Record<
@@ -184,6 +193,12 @@ const id: UiText = {
   starsTipConclusions: 'Jawab semua pertanyaan tanpa kesimpulan yang salah untuk ★★★.',
   starsBest: (n) => `Rekor terbaikmu tetap ${'★'.repeat(n)}.`,
   coins: 'Koin',
+  rooms: { 'back-office': 'Kantor belakang', front: 'Kafe', kitchen: 'Dapur', storeroom: 'Gudang' },
+  cafeMap: 'Peta kafe',
+  levelsTab: 'Level',
+  youAreHere: 'Kamu di sini',
+  nextTaskHere: 'Tugas berikutnya',
+  opensInChapter: (n) => `Terbuka di Chapter ${n}`,
   coinsBonus: (n) => `+${n} 🪙 karena berpikir seperti analis!`,
   chapterStars: (got, total) => `★ ${got}/${total}`,
   characters: { grandma: 'Nenek', barista: 'Barista', supplier: 'Pemasok', regular: 'Pelanggan tetap' },

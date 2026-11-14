@@ -4,12 +4,18 @@ import {
   CAFE_MAP,
   NPCS,
   PLAYER_START,
+  ROOMS,
   STATION_SPOTS,
+  TILE,
   TILE_SIZE,
+  doorToward,
   findTiles,
   furnitureLayer,
   groundLayer,
+  lockedDoors,
+  roomAt,
   walkableGrid,
+  type RoomId,
 } from './rooms/cafe';
 import { findPath, type Tile } from './pathfinding';
 import { drawTileset } from './art/tiles';
@@ -17,7 +23,7 @@ import { Player } from './Player';
 import { Npc } from './Npc';
 import { nearestInteractable } from './interaction';
 import { autoZoom, clampZoom, edgePointer } from './camera';
-import type { GameBridge, InteractTarget } from './bridge';
+import type { GameBridge, InteractTarget, RoomLabels } from './bridge';
 
 const TILESET_KEY = 'cafe-tiles';
 const PROMPT_KEY = 'talk-prompt';
@@ -53,7 +59,16 @@ export class CafeScene extends Phaser.Scene {
   private player!: Player;
   private npcs: Npc[] = [];
   private targets: Target[] = [];
-  private walkable = walkableGrid();
+  /** Rooms the player may enter; the rest have a padlocked door (set by the app). */
+  private openRoomIds: RoomId[] = ['front'];
+  private walkable = walkableGrid(CAFE_MAP, lockedDoors(this.openRoomIds));
+  private furniture!: Phaser.Tilemaps.TilemapLayer;
+  /** The room the camera shows: the one the player is in. */
+  private room: RoomId = 'front';
+  private doorSigns: Phaser.GameObjects.Text[] = [];
+  /** Darkness over every room but the player's, so neighbours don't show at the screen edges. */
+  private outside!: Phaser.GameObjects.Graphics;
+  private labels: RoomLabels | null = null;
   private marker?: Phaser.GameObjects.Rectangle;
   private prompt!: Phaser.GameObjects.Image;
   private questMarker!: Phaser.GameObjects.Image;
@@ -94,6 +109,9 @@ export class CafeScene extends Phaser.Scene {
       layer.setCollision([...BLOCKING_TILES]);
       return layer;
     });
+    this.furniture = layers[1];
+    this.outside = this.add.graphics().setDepth(9_500);
+    this.applyDoors();
 
     this.physics.world.setBounds(0, 0, map.widthInPixels, map.heightInPixels);
     // Feet just inside the door, centred between the two door tiles.
@@ -140,6 +158,14 @@ export class CafeScene extends Phaser.Scene {
     const offOverlay = this.bridge.on('overlay', (open) => this.setLocked(open));
     const offQuest = this.bridge.on('quest', (target) => this.setQuest(target));
     const offZoom = this.bridge.on('zoom', (step) => this.zoomBy(step));
+    const offRooms = this.bridge.on('rooms', (open) => {
+      this.openRoomIds = open;
+      this.applyDoors();
+    });
+    const offLabels = this.bridge.on('labels', (labels) => {
+      this.labels = labels;
+      this.drawDoorSigns();
+    });
     this.input.on('wheel', (_p: unknown, _o: unknown, _dx: number, dy: number) => {
       if (this.locked || dy === 0 || this.time.now - this.lastWheel < WHEEL_STEP_MS) return;
       this.lastWheel = this.time.now;
@@ -147,7 +173,7 @@ export class CafeScene extends Phaser.Scene {
     });
     this.bridge.emit('ready', true);
 
-    const fit = () => this.fitCamera(map.widthInPixels, map.heightInPixels);
+    const fit = () => this.fitCamera();
     this.refit = fit;
     fit();
     this.cameras.main.startFollow(this.player, true);
@@ -157,15 +183,20 @@ export class CafeScene extends Phaser.Scene {
       offOverlay();
       offQuest();
       offZoom();
+      offRooms();
+      offLabels();
     });
   }
 
   update(time: number): void {
+    this.followRoom();
     // The "!" floats over where the player should go next, unless the "…" is already there.
+    // When that is in another room, it floats over the doorway to walk through instead.
     const near = this.locked ? null : nearestInteractable(this.player.feet, this.targets);
-    if (this.quest) {
-      this.questMarker.setVisible(near?.id !== this.quest.id);
-      this.questMarker.setPosition(this.quest.promptX, this.quest.promptY - 1 + Math.round(Math.sin(time / 250)));
+    const goal = this.questGoal();
+    if (goal) {
+      this.questMarker.setVisible(goal.viaDoor || near?.id !== this.quest?.id);
+      this.questMarker.setPosition(goal.promptX, goal.promptY - 1 + Math.round(Math.sin(time / 250)));
     }
     this.updateQuestArrow();
     if (this.locked) return;
@@ -188,11 +219,22 @@ export class CafeScene extends Phaser.Scene {
     this.questMarker.setVisible(this.quest !== null);
   }
 
+  /** Where the "!" goes: the quest target, or the doorway towards it when it is in another room. */
+  private questGoal(): { x: number; y: number; promptX: number; promptY: number; viaDoor: boolean } | null {
+    if (!this.quest) return null;
+    const targetRoom = roomAt(toTile(this.quest).x);
+    const door = targetRoom ? doorToward(this.room, targetRoom) : null;
+    if (!door) return { ...this.quest, viaDoor: false };
+    const x = (door.x + 0.5) * TILE_SIZE;
+    return { x, y: (door.y + 0.5) * TILE_SIZE, promptX: x, promptY: door.y * TILE_SIZE - 1, viaDoor: true };
+  }
+
   /** A golden arrow on the screen edge, pointing at the quest target when it is off screen. */
   private updateQuestArrow(): void {
     const cam = this.cameras.main;
     const zoom = cam.zoom;
-    const pointer = this.quest ? edgePointer(cam.worldView, this.quest, 14 / zoom + 6) : null;
+    const goal = this.questGoal();
+    const pointer = goal ? edgePointer(cam.worldView, goal, 14 / zoom + 6) : null;
     this.questArrow.setVisible(pointer !== null);
     if (!pointer) return;
     // Keep the arrow a readable size on screen at every zoom.
@@ -318,12 +360,83 @@ export class CafeScene extends Phaser.Scene {
     }
   }
 
+  /** Padlock the doors of rooms that aren't open yet, and open the others. */
+  private applyDoors(): void {
+    if (!this.furniture) return;
+    const locked = lockedDoors(this.openRoomIds);
+    for (const room of ROOMS) {
+      if (!room.door) continue;
+      for (const { x, y } of findTiles(room.door)) {
+        if (locked.includes(room.door)) this.furniture.putTileAt(TILE.doorLocked, x, y);
+        else this.furniture.removeTileAt(x, y);
+      }
+    }
+    this.walkable = walkableGrid(CAFE_MAP, locked);
+    this.drawDoorSigns();
+  }
+
+  /** A small sign by each doorway, on both sides: the room it leads to (🔒 while locked). */
+  private drawDoorSigns(): void {
+    for (const sign of this.doorSigns) sign.destroy();
+    this.doorSigns = [];
+    if (!this.labels) return;
+    for (const room of ROOMS) {
+      if (!room.door) continue;
+      const [door] = findTiles(room.door);
+      // The door sits in a shared wall: name the room on the far side, seen from each side.
+      const west = ROOMS.find((r) => r.right === door.x)!;
+      const east = ROOMS.find((r) => r.left === door.x)!;
+      const locked = !this.openRoomIds.includes(room.id);
+      const name = (id: RoomId) => `${locked && id === room.id ? '🔒 ' : ''}${this.labels!.names[id]}`;
+      const y = door.y * TILE_SIZE - 2;
+      const style = {
+        fontFamily: 'system-ui, sans-serif',
+        fontSize: '6px',
+        color: '#fff6e3',
+        backgroundColor: '#6e4430',
+        padding: { x: 2, y: 1 },
+        resolution: 6,
+      };
+      this.doorSigns.push(
+        this.add.text(door.x * TILE_SIZE - 1, y, `${name(east.id)} ›`, style).setOrigin(1, 1).setDepth(9_000),
+        this.add.text((door.x + 1) * TILE_SIZE + 1, y, `‹ ${name(west.id)}`, style).setOrigin(0, 1).setDepth(9_000),
+      );
+    }
+  }
+
+  /** Keep the camera on the player's room; a short fade when they walk into another one. */
+  private followRoom(): void {
+    const now = roomAt(toTile(this.player.feet).x);
+    if (!now || now === this.room) return;
+    this.room = now;
+    this.bridge.emit('room', now);
+    const cam = this.cameras.main;
+    cam.fadeOut(90, 43, 29, 25);
+    cam.once('camerafadeoutcomplete', () => {
+      this.refit();
+      cam.fadeIn(140, 43, 29, 25);
+    });
+  }
+
   /**
    * Whole-number zoom so pixels stay square and sharp: the player's choice, or automatic
-   * (see camera.ts). If the room is smaller than the screen it is centred; if larger, the camera follows
-   * the player without showing past the walls.
+   * (see camera.ts), for the room the player is in. If the room is smaller than the screen it is
+   * centred; if larger, the camera follows the player without showing past its walls.
    */
-  private fitCamera(roomWidth: number, roomHeight: number): void {
+  private fitCamera(): void {
+    const room = ROOMS.find((r) => r.id === this.room)!;
+    const roomX = room.left * TILE_SIZE;
+    const roomWidth = (room.right - room.left + 1) * TILE_SIZE;
+    const roomHeight = CAFE_MAP.length * TILE_SIZE;
+    // Cover the rest of the café (far beyond its edges too, for wide screens).
+    const far = 4000;
+    this.outside
+      .clear()
+      .fillStyle(0x2b1d19)
+      .fillRect(-far, -far, roomX + far, roomHeight + 2 * far)
+      .fillRect(roomX + roomWidth, -far, far * 2, roomHeight + 2 * far)
+      .fillRect(roomX, -far, roomWidth, far)
+      .fillRect(roomX, roomHeight, roomWidth, far);
     const cam = this.cameras.main;
     // Use the new canvas size: on 'resize' the camera may not have been resized yet.
     const { width, height } = this.scale.gameSize;
@@ -334,7 +447,7 @@ export class CafeScene extends Phaser.Scene {
     const viewH = height / zoom;
     const boundsW = Math.max(roomWidth, viewW);
     const boundsH = Math.max(roomHeight, viewH);
-    cam.setBounds((roomWidth - boundsW) / 2, (roomHeight - boundsH) / 2, boundsW, boundsH);
+    cam.setBounds(roomX + (roomWidth - boundsW) / 2, (roomHeight - boundsH) / 2, boundsW, boundsH);
   }
 }
 

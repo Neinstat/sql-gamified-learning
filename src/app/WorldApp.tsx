@@ -17,6 +17,9 @@ import { emptyProgress, loadProgress, markSoWhatRight, rewardForSolve, saveProgr
 import { SO_WHAT_BONUS, type Reward } from './rewards';
 import { acceptRequest, questStage, reportDone, resumeNewLevels, solveRequest, startLevel } from './quest';
 import { SoWhatCard } from './SoWhatCard';
+import { CafeMap } from './CafeMap';
+import { reachedChapter } from './rooms';
+import { openRooms, roomOfTarget, type RoomId } from '../game/rooms/cafe';
 
 /** What is open over the world. `null` = the player is walking around. */
 type Overlay = InteractTarget | { kind: 'lesson' } | { kind: 'chapter' } | { kind: 'journal' } | { kind: 'soWhat' };
@@ -36,6 +39,9 @@ export function WorldApp() {
   const [hintsUsed, setHintsUsed] = useState(0);
   /** Stars and coins from the last correct answer at a station. */
   const [reward, setReward] = useState<Reward | null>(null);
+  /** The room the player is standing in (from the game), and which Journal tab is open. */
+  const [here, setHere] = useState<RoomId>('front');
+  const [journalTab, setJournalTab] = useState<'levels' | 'map'>('levels');
   /** Chapters whose title card was shown this visit. */
   const [seenChapters, setSeenChapters] = useState<number[]>([]);
 
@@ -86,15 +92,23 @@ export function WorldApp() {
     if (stage === 'solve') return { kind: 'station', id: level.station };
     return { kind: 'npc', id: level.character };
   }, [stage, level.station, level.character]);
+  // Rooms open chapter by chapter; the signs by the doors use the player's language.
+  const open = useMemo(() => openRooms(reachedChapter(progress, chapter.id)), [progress, chapter.id]);
+  const labels = useMemo(() => ({ names: t.rooms }), [t]);
   useEffect(() => bridge.emit('overlay', overlay !== null), [bridge, overlay]);
   useEffect(() => bridge.emit('quest', questTarget), [bridge, questTarget]);
+  useEffect(() => bridge.emit('rooms', open), [bridge, open]);
+  useEffect(() => bridge.emit('labels', labels), [bridge, labels]);
+  useEffect(() => bridge.on('room', setHere), [bridge]);
   useEffect(
     () =>
       bridge.on('ready', () => {
         bridge.emit('quest', questTarget);
         bridge.emit('overlay', overlay !== null);
+        bridge.emit('rooms', open);
+        bridge.emit('labels', labels);
       }),
-    [bridge, questTarget, overlay],
+    [bridge, questTarget, overlay, open, labels],
   );
 
   const close = useCallback(() => {
@@ -147,8 +161,7 @@ export function WorldApp() {
     }
   } else if (station && !consoleOpen) {
     const closed = db !== null && stationTables(station, schema).length === 0;
-    const line =
-      station === level.station ? t.stationTalkFirst(giver) : closed ? t.stationClosed : t.stationNothing;
+    const line = station === level.station ? t.stationTalkFirst(giver) : closed ? t.stationClosed : t.stationNothing;
     dialogue = { speaker: t.stations[station], lines: [line], onClose: close };
   }
 
@@ -198,10 +211,22 @@ export function WorldApp() {
       <div className="world-stage">
         <GameView t={t} bridge={bridge} />
         <div className="zoom-controls">
-          <button className="zoom-button" onMouseDown={noFocus} onClick={() => bridge.emit('zoom', 1)} aria-label={t.zoomIn} title={t.zoomIn}>
+          <button
+            className="zoom-button"
+            onMouseDown={noFocus}
+            onClick={() => bridge.emit('zoom', 1)}
+            aria-label={t.zoomIn}
+            title={t.zoomIn}
+          >
             +
           </button>
-          <button className="zoom-button" onMouseDown={noFocus} onClick={() => bridge.emit('zoom', -1)} aria-label={t.zoomOut} title={t.zoomOut}>
+          <button
+            className="zoom-button"
+            onMouseDown={noFocus}
+            onClick={() => bridge.emit('zoom', -1)}
+            aria-label={t.zoomOut}
+            title={t.zoomOut}
+          >
             −
           </button>
         </div>
@@ -291,30 +316,60 @@ export function WorldApp() {
         )}
 
         {overlay?.kind === 'journal' && (
-          <WorldModal label={t.journal} action={t.backToCafe} onAction={close} onClose={close} closeLabel={t.dialogueClose}>
+          <WorldModal
+            label={t.journal}
+            action={t.backToCafe}
+            onAction={close}
+            onClose={close}
+            closeLabel={t.dialogueClose}
+          >
             <h2 className="world-modal-title">{t.journal}</h2>
-            <p className="world-modal-hint">{t.journalHint}</p>
-            <LevelNav
-              chapters={chapters}
-              currentId={level.id}
-              progress={progress}
-              t={t}
-              onSelect={(index) => {
-                setProgress((p) => startLevel(p, levelIds[index]));
-                close();
-              }}
-            />
-            <button
-              className="link-button world-modal-start-over"
-              onClick={() => {
-                if (!window.confirm(t.confirmStartOver)) return;
-                setProgress(emptyProgress);
-                setSeenChapters([]);
-                close();
-              }}
-            >
-              {t.startOver}
-            </button>
+            <div className="journal-tabs" role="tablist">
+              {(['levels', 'map'] as const).map((tab) => (
+                <button
+                  key={tab}
+                  role="tab"
+                  aria-selected={journalTab === tab}
+                  className={journalTab === tab ? 'journal-tab active' : 'journal-tab'}
+                  onClick={() => setJournalTab(tab)}
+                >
+                  {tab === 'levels' ? t.levelsTab : `🗺 ${t.cafeMap}`}
+                </button>
+              ))}
+            </div>
+            {journalTab === 'map' ? (
+              <CafeMap
+                open={open}
+                here={here}
+                task={questTarget ? roomOfTarget(questTarget.kind, questTarget.id) : null}
+                t={t}
+              />
+            ) : (
+              <>
+                <p className="world-modal-hint">{t.journalHint}</p>
+                <LevelNav
+                  chapters={chapters}
+                  currentId={level.id}
+                  progress={progress}
+                  t={t}
+                  onSelect={(index) => {
+                    setProgress((p) => startLevel(p, levelIds[index]));
+                    close();
+                  }}
+                />
+                <button
+                  className="link-button world-modal-start-over"
+                  onClick={() => {
+                    if (!window.confirm(t.confirmStartOver)) return;
+                    setProgress(emptyProgress);
+                    setSeenChapters([]);
+                    close();
+                  }}
+                >
+                  {t.startOver}
+                </button>
+              </>
+            )}
           </WorldModal>
         )}
       </div>

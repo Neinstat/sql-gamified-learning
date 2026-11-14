@@ -8,8 +8,15 @@
  *                            ignores input while one is open
  *   app → game   'quest'     where the player should go next (a "!" is shown there), or null
  *   app → game   'zoom'      zoom in (+1) or out (−1) one step
+ *   app → game   'rooms'     which rooms are open (the others stay padlocked)
+ *   app → game   'labels'    room names for the signs by the doors, in the player's language
+ *   game → app   'room'      the player walked into another room (for the café map)
  */
 export type InteractTarget = { kind: 'npc' | 'station'; id: string };
+
+/** Same ids as ROOMS in rooms/cafe.ts (kept here so the bridge imports nothing). */
+export type BridgeRoomId = 'back-office' | 'front' | 'kitchen' | 'storeroom';
+export type RoomLabels = { names: Record<BridgeRoomId, string> };
 
 type Events = {
   ready: true;
@@ -17,6 +24,9 @@ type Events = {
   overlay: boolean;
   quest: InteractTarget | null;
   zoom: 1 | -1;
+  rooms: BridgeRoomId[];
+  labels: RoomLabels;
+  room: BridgeRoomId;
 };
 
 type Listener<T> = (payload: T) => void;

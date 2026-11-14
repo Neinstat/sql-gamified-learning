@@ -3,20 +3,22 @@
  * Each one sees a different part of the data (GAME_DESIGN.md §3), which teaches that
  * company data lives in many systems. Pure data: no game engine or UI here.
  */
-export type StationId = 'menu-board' | 'cash-register';
+export type StationId = 'menu-board' | 'cash-register' | 'recipe-book';
 
 export const STATIONS: Record<StationId, { tables: readonly string[] }> = {
   'menu-board': { tables: ['menu_items'] },
   // The till knows the menu too, so sales can be joined with menu_items here (Chapter 4).
   'cash-register': { tables: ['sales', 'customers', 'menu_items'] },
+  // In the kitchen: what goes into each item, next to the menu it belongs to.
+  'recipe-book': { tables: ['recipes', 'menu_items'] },
 };
 
 export const STATION_IDS = Object.keys(STATIONS) as StationId[];
 
 /** Station names as players see them (used in feedback and in the UI). */
 export const STATION_NAMES: Record<'en' | 'id', Record<StationId, string>> = {
-  en: { 'menu-board': 'Menu board', 'cash-register': 'Cash register' },
-  id: { 'menu-board': 'Papan menu', 'cash-register': 'Mesin kasir' },
+  en: { 'menu-board': 'Menu board', 'cash-register': 'Cash register', 'recipe-book': 'Recipe book' },
+  id: { 'menu-board': 'Papan menu', 'cash-register': 'Mesin kasir', 'recipe-book': 'Buku resep' },
 };
 
 /** Where a table really lives: the first station that has it (menu_items → the menu board). */
