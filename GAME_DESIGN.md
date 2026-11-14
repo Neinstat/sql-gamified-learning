@@ -229,6 +229,11 @@ Di luar MVP (nanti): subquery, CTE, window function, analisis waktu lanjutan (Mo
 - Upgrade dengan koin: kursi bertambah, dekorasi, papan menu baru, pelanggan (NPC) makin ramai berjalan di kafe.
 - Ruangan baru (kitchen, storeroom, back office) terbuka mengikuti chapter.
 - Kafe yang tumbuh = bukti visual progres belajar pemain.
+- **Dibangun di 3.11** (`src/app/growth.ts`, `GrowthParts.tsx`, `UPGRADE_LAYOUT` di `rooms/cafe.ts`):
+  - **Toko upgrade** dibuka dengan menekan saldo 🪙 di header. Lima upgrade, sekali beli: 🪴 tanaman tambahan (40), 🧶 karpet hangat (60), 🪑 dua meja tambahan (100), 🖼️ papan menu mewah (120), 🧑‍🤝‍🧑 kafe ramai — dua pelanggan berjalan-jalan di ruang depan (200). Total 520 koin, terjangkau oleh pemain yang teliti sampai Chapter 5. Tes memastikan semua NPC dan stasiun tetap bisa dicapai walau semua upgrade dibeli.
+  - Pelanggan adalah tokoh gaya final yang diwarnai ulang (`art/customers.ts`); hanya dekorasi: tanpa tabrakan, tidak bisa diajak bicara.
+  - **Daily streak 🔥**: bertambah satu untuk setiap hari (kalender lokal pemain) dengan minimal satu level/kasus selesai; terputus bila ada hari terlewat. Tampil di header selama masih hidup (main hari ini atau kemarin).
+  - **Badge 🏅** (tab Badges di Journal, notifikasi singkat saat didapat): Query Pertama, Pembersih Menu (Chapter 1 tuntas), Pemecah Kasus (Mini Case pertama), JOIN Pertama, Tanpa Cela (⭐⭐⭐ di seluruh satu chapter), Sedang Semangat (streak 3 hari), Pemilik Toko (upgrade pertama), **Analis Sejati** (Analysis Case). Badge dihitung dari progres, jadi tidak pernah tidak sinkron.
 
 ## 10. Keputusan teknis
 
@@ -386,7 +391,7 @@ Setiap iterasi bisa dimainkan sendiri: kerjakan → cek di browser → commit & 
 | 3.8 ✅ | **Chapter 4 Connecting the Dots** (`INNER`/`LEFT JOIN`, JOIN + agregasi) + Mini Case **Where Did the Regulars Go?**; Regular dalam gaya final | Chapter 4 bisa dimainkan lengkap di Kitchen & Cash register, EN/ID |
 | 3.9 ✅ | **Skill Check** adaptif (soal Ch0–4) dari Grandma di hari pertama & dari Journal | Pemain yang sudah bisa SQL dasar bisa langsung mulai di chapter yang sesuai |
 | 3.10 ✅ | **Storeroom + Back office** (`inventory`, `suppliers`, Supplier NPC, Grandma's computer) + **Chapter 5 Analysis Case** "October sales dropped 18%" | Analysis Case bisa diselesaikan lengkap dengan bukti 📌 di Back office |
-| 3.11 | **Kafe yang tumbuh:** upgrade dengan koin (kursi, dekorasi, papan menu, NPC pelanggan berjalan), daily streak 🔥, badge | Koin bisa dibelanjakan dan kafe berubah terlihat di dunia |
+| 3.11 ✅ | **Kafe yang tumbuh:** upgrade dengan koin (kursi, dekorasi, papan menu, NPC pelanggan berjalan), daily streak 🔥, badge | Koin bisa dibelanjakan dan kafe berubah terlihat di dunia |
 | 3.12 | **Rush Hour** ⏱ (terbuka setelah Chapter 2) + skor terbaik pribadi | Satu putaran Rush Hour bisa dimainkan dan skor terbaik tersimpan |
 | 3.13 | Uji main akhir pemilik project, ganti sisa placeholder, perbaikan, README, status | Pemilik project menyetujui → MVP Chapter 0–5 selesai |
 

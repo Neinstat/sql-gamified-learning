@@ -736,10 +736,124 @@ body {
 }
 
 .hud-coins {
+  padding: 4px 8px;
   font-size: 0.95rem;
   font-weight: 700;
   color: #9c6b10;
   white-space: nowrap;
+  background: #fdf3d8;
+  border: 1px solid #ecc995;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.hud-streak {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #b1532f;
+  white-space: nowrap;
+}
+
+/* Upgrade shop and badges */
+.shop-balance {
+  margin: 0 0 10px;
+  font-weight: 700;
+  color: #9c6b10;
+}
+
+.shop-list,
+.badge-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 0 0 20px;
+  padding: 0;
+  list-style: none;
+}
+
+.shop-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 10px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+}
+
+.shop-item.owned {
+  background: var(--ok-bg);
+}
+
+.shop-icon,
+.badge-icon {
+  font-size: 1.6rem;
+}
+
+.shop-text {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-width: 0;
+  font-size: 0.9rem;
+}
+
+.shop-owned {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--ok-ink);
+  white-space: nowrap;
+}
+
+.badge-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+}
+
+.badge {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 10px;
+  font-size: 0.8rem;
+  text-align: center;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  opacity: 0.45;
+  filter: grayscale(1);
+}
+
+.badge.earned {
+  opacity: 1;
+  filter: none;
+  background: #fdf3d8;
+  border-color: #ecc995;
+}
+
+.badge-toast {
+  position: absolute;
+  top: 12px;
+  left: 50%;
+  z-index: 40;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 16px;
+  color: var(--ink);
+  background: #fdf3d8;
+  border: 2px solid #eda552;
+  border-radius: 999px;
+  box-shadow: 0 4px 12px rgba(43, 29, 25, 0.3);
+  transform: translateX(-50%);
+  animation: toast-in 0.3s ease-out;
+}
+
+@keyframes toast-in {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -10px);
+  }
 }
 
 .level-slot {

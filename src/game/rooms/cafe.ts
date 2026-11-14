@@ -66,6 +66,15 @@ export const TILE = {
   milkCrate: 30,
   sack: 31,
   ledger: 32,
+  /** A cosy rug (upgrade), 3×2 tiles: corners and edges. */
+  rugTopLeft: 33,
+  rugTop: 34,
+  rugTopRight: 35,
+  rugBottomLeft: 36,
+  rugBottom: 37,
+  rugBottomRight: 38,
+  /** The menu board after the "fancy board" upgrade. */
+  menuBoardFancy: 39,
 } as const;
 
 export const TILE_COUNT = Object.keys(TILE).length;
@@ -148,6 +157,7 @@ export const BLOCKING_TILES: readonly number[] = [
   TILE.milkCrate,
   TILE.sack,
   TILE.ledger,
+  TILE.menuBoardFancy,
 ];
 
 /** People standing in the room (tile coordinates). They block the tile they stand on. */
@@ -235,10 +245,51 @@ export function findTiles(ch: string, map: readonly string[] = CAFE_MAP): { x: n
   return map.flatMap((row, y) => [...row].flatMap((c, x) => (c === ch ? [{ x, y }] : [])));
 }
 
+/** A tile put on the furniture layer by a café upgrade. */
+export type Placement = { x: number; y: number; tile: number };
+
+/**
+ * What each café upgrade adds to the front room (GAME_DESIGN.md §9). Ids match UPGRADES in
+ * app/growth.ts. 'busy-cafe' adds walking customers instead of tiles.
+ */
+export const UPGRADE_LAYOUT: Record<string, Placement[]> = {
+  'more-plants': [
+    { x: 11, y: 8, tile: TILE.plant },
+    { x: 28, y: 9, tile: TILE.plant },
+  ],
+  'cosy-rug': [
+    { x: 18, y: 6, tile: TILE.rugTopLeft },
+    { x: 19, y: 6, tile: TILE.rugTop },
+    { x: 20, y: 6, tile: TILE.rugTopRight },
+    { x: 18, y: 7, tile: TILE.rugBottomLeft },
+    { x: 19, y: 7, tile: TILE.rugBottom },
+    { x: 20, y: 7, tile: TILE.rugBottomRight },
+  ],
+  'more-tables': [
+    { x: 24, y: 9, tile: TILE.chair },
+    { x: 25, y: 9, tile: TILE.table },
+    { x: 26, y: 9, tile: TILE.chairFlipped },
+    { x: 26, y: 4, tile: TILE.chair },
+    { x: 27, y: 4, tile: TILE.table },
+    { x: 28, y: 4, tile: TILE.chairFlipped },
+  ],
+  'fancy-board': [{ x: 15, y: 9, tile: TILE.menuBoardFancy }],
+};
+
+/** All placements for the bought upgrades, in buying order (a later one wins on the same tile). */
+export function upgradePlacements(upgrades: readonly string[]): Placement[] {
+  return upgrades.flatMap((id) => UPGRADE_LAYOUT[id] ?? []);
+}
+
 /** true where the player can stand: neither the ground nor the furniture blocks it, nor a locked door. */
-export function walkableGrid(map: readonly string[] = CAFE_MAP, locked: readonly string[] = []): boolean[][] {
+export function walkableGrid(
+  map: readonly string[] = CAFE_MAP,
+  locked: readonly string[] = [],
+  placements: readonly Placement[] = [],
+): boolean[][] {
   const ground = groundLayer(map);
   const furniture = furnitureLayer(map);
+  for (const { x, y, tile } of placements) furniture[y][x] = tile;
   return ground.map((row, y) =>
     row.map(
       (g, x) =>

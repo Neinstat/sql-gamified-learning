@@ -12,7 +12,10 @@ import {
   doorToward,
   lockedDoors,
   openRooms,
-  roomAt, findTiles, furnitureLayer, groundLayer, walkableGrid } from './cafe';
+  roomAt,
+  UPGRADE_LAYOUT,
+  upgradePlacements,
+  findTiles, furnitureLayer, groundLayer, walkableGrid } from './cafe';
 
 describe('café map', () => {
   it('has rows of equal width', () => {
@@ -129,5 +132,31 @@ describe('rooms', () => {
     expect(doorToward('storeroom', 'front')).toEqual(findTiles('3')[0]);
     expect(doorToward('front', 'back-office')).toEqual(findTiles('1')[0]);
     expect(doorToward('front', 'front')).toBeNull();
+  });
+});
+
+describe('café upgrades', () => {
+  it('keep every NPC and station reachable from the street door, with everything bought', () => {
+    const placements = upgradePlacements(Object.keys(UPGRADE_LAYOUT));
+    const walkable = walkableGrid(CAFE_MAP, [], placements);
+    const start = { x: PLAYER_START.x, y: PLAYER_START.y };
+    const reachableNextTo = (tile: { x: number; y: number }) =>
+      [[1, 0], [-1, 0], [0, 1], [0, -1]].some(([dx, dy]) => {
+        const goal = { x: tile.x + dx, y: tile.y + dy };
+        if (!walkable[goal.y]?.[goal.x]) return false;
+        const end = findPath(walkable, start, goal).at(-1) ?? start;
+        return end.x === goal.x && end.y === goal.y;
+      });
+    for (const npc of NPCS) expect(reachableNextTo(npc.tile), npc.id).toBe(true);
+    for (const { mapChar } of STATION_SPOTS) expect(reachableNextTo(findTiles(mapChar)[0]), mapChar).toBe(true);
+  });
+
+  it('only place things on free front-room floor', () => {
+    for (const { x, y } of upgradePlacements(Object.keys(UPGRADE_LAYOUT))) {
+      if (x === 15 && y === 9) continue; // the fancy board replaces the menu board
+      expect(CAFE_MAP[y][x], `${x},${y}`).toBe('.');
+      expect(roomAt(x)).toBe('front');
+      expect(NPCS.some((n) => n.tile.x === x && n.tile.y === y)).toBe(false);
+    }
   });
 });

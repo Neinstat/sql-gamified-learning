@@ -8,15 +8,18 @@ import {
   STATION_SPOTS,
   TILE,
   TILE_SIZE,
+  UPGRADE_LAYOUT,
   doorToward,
   findTiles,
   furnitureLayer,
   groundLayer,
   lockedDoors,
   roomAt,
+  upgradePlacements,
   walkableGrid,
   type RoomId,
 } from './rooms/cafe';
+import { Customer } from './Customer';
 import { findPath, type Tile } from './pathfinding';
 import { drawTileset } from './art/tiles';
 import { Player } from './Player';
@@ -69,6 +72,9 @@ export class CafeScene extends Phaser.Scene {
   /** Darkness over every room but the player's, so neighbours don't show at the screen edges. */
   private outside!: Phaser.GameObjects.Graphics;
   private labels: RoomLabels | null = null;
+  /** Café upgrades bought so far (set by the app), and the customers of the "busy café" one. */
+  private upgrades: string[] = [];
+  private customers: Customer[] = [];
   private marker?: Phaser.GameObjects.Rectangle;
   private prompt!: Phaser.GameObjects.Image;
   private questMarker!: Phaser.GameObjects.Image;
@@ -112,6 +118,7 @@ export class CafeScene extends Phaser.Scene {
     this.furniture = layers[1];
     this.outside = this.add.graphics().setDepth(9_500);
     this.applyDoors();
+    this.applyUpgrades();
 
     this.physics.world.setBounds(0, 0, map.widthInPixels, map.heightInPixels);
     // Feet just inside the door, centred between the two door tiles.
@@ -165,6 +172,10 @@ export class CafeScene extends Phaser.Scene {
       this.labels = labels;
       this.drawDoorSigns();
     });
+    const offUpgrades = this.bridge.on('upgrades', (upgrades) => {
+      this.upgrades = upgrades;
+      this.applyUpgrades();
+    });
     this.input.on('wheel', (_p: unknown, _o: unknown, _dx: number, dy: number) => {
       if (this.locked || dy === 0 || this.time.now - this.lastWheel < WHEEL_STEP_MS) return;
       this.lastWheel = this.time.now;
@@ -184,6 +195,7 @@ export class CafeScene extends Phaser.Scene {
       offZoom();
       offRooms();
       offLabels();
+      offUpgrades();
     });
   }
 
@@ -365,8 +377,43 @@ export class CafeScene extends Phaser.Scene {
         else this.furniture.removeTileAt(x, y);
       }
     }
-    this.walkable = walkableGrid(CAFE_MAP, locked);
+    this.rebuildWalkable();
     this.drawDoorSigns();
+  }
+
+  /** Where the player can walk, with the current doors and upgrades. */
+  private rebuildWalkable(): void {
+    this.walkable = walkableGrid(CAFE_MAP, lockedDoors(this.openRoomIds), upgradePlacements(this.upgrades));
+  }
+
+  /** Show the bought upgrades in the front room (and take back any that aren't, e.g. after "Start over"). */
+  private applyUpgrades(): void {
+    if (!this.furniture) return;
+    const base = furnitureLayer();
+    for (const placements of Object.values(UPGRADE_LAYOUT)) {
+      for (const { x, y } of placements) {
+        if (base[y][x] >= 0) this.furniture.putTileAt(base[y][x], x, y);
+        else this.furniture.removeTileAt(x, y);
+      }
+    }
+    for (const { x, y, tile } of upgradePlacements(this.upgrades)) this.furniture.putTileAt(tile, x, y);
+    this.rebuildWalkable();
+
+    const busy = this.upgrades.includes('busy-cafe');
+    if (busy && this.customers.length === 0) {
+      const front = ROOMS.find((r) => r.id === 'front')!;
+      const spots = this.walkable.flatMap((row, y) =>
+        row.flatMap((ok, x) => (ok && x > front.left && x < front.right && y >= 5 ? [{ x, y }] : [])),
+      );
+      const walkable = () => this.walkable;
+      this.customers = [
+        new Customer(this, 'customer-beanie', { x: 17, y: 8 }, spots, walkable),
+        new Customer(this, 'customer-jumper', { x: 26, y: 7 }, spots, walkable),
+      ];
+    } else if (!busy && this.customers.length > 0) {
+      for (const customer of this.customers) customer.destroy();
+      this.customers = [];
+    }
   }
 
   /** A small sign by each doorway, on both sides: the room it leads to (🔒 while locked). */

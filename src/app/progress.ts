@@ -20,6 +20,10 @@ export type Progress = {
   skipped: string[];
   /** The Skill Check was offered on the first day (taken or declined), so the welcome card isn't shown again. */
   skillCheckOffered: boolean;
+  /** Café upgrades bought with coins (see growth.ts). */
+  upgrades: string[];
+  /** Daily streak: days in a row with at least one solved level (local days, YYYY-MM-DD). */
+  streak: { count: number; lastDay: string | null; best: number };
 };
 
 /** Best result for a finished level: fewest hints, fewest mistakes, most stars. */
@@ -38,6 +42,8 @@ export const emptyProgress: Progress = {
   soWhatRight: [],
   skipped: [],
   skillCheckOffered: false,
+  upgrades: [],
+  streak: { count: 0, lastDay: null, best: 0 },
 };
 
 export function loadProgress(): Progress {
@@ -67,6 +73,8 @@ export function parseProgress(raw: string): Progress {
       skipped: Array.isArray(data.skipped) ? data.skipped.filter((id) => typeof id === 'string') : [],
       // Older saves already played on: don't greet them as a new player.
       skillCheckOffered: data.skillCheckOffered === true || Boolean(data.quest) || Object.keys(completed).length > 0,
+      upgrades: Array.isArray(data.upgrades) ? data.upgrades.filter((id) => typeof id === 'string') : [],
+      streak: readStreak(data.streak),
     };
   } catch {
     return emptyProgress;
@@ -79,6 +87,16 @@ export function saveProgress(progress: Progress): void {
   } catch {
     // Storage blocked (e.g. private mode): the game still works, progress just isn't kept.
   }
+}
+
+function readStreak(raw: unknown): Progress['streak'] {
+  const s = (raw ?? {}) as Partial<Progress['streak']>;
+  const count = typeof s.count === 'number' ? s.count : 0;
+  return {
+    count,
+    lastDay: typeof s.lastDay === 'string' ? s.lastDay : null,
+    best: typeof s.best === 'number' ? s.best : count,
+  };
 }
 
 /** Fill in what older saves didn't record: no mistake count (assume some), so at most ⭐⭐. */

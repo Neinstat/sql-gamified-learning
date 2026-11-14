@@ -10,6 +10,7 @@
  *   app → game   'zoom'      zoom in (+1) or out (−1) one step
  *   app → game   'rooms'     which rooms are open (the others stay padlocked)
  *   app → game   'labels'    room names for the signs by the doors, in the player's language
+ *   app → game   'upgrades'  café upgrades the player has bought (ids from app/growth.ts)
  *   game → app   'room'      the player walked into another room (for the café map)
  */
 export type InteractTarget = { kind: 'npc' | 'station'; id: string };
@@ -26,6 +27,7 @@ type Events = {
   zoom: 1 | -1;
   rooms: BridgeRoomId[];
   labels: RoomLabels;
+  upgrades: string[];
   room: BridgeRoomId;
 };
 

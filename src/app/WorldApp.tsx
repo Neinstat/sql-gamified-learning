@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { LANGS } from '../sql-core/feedback';
 import { getSchema, type CafeDatabase } from '../sql-core/db';
 import { allLevels, getChapters, type CharacterId } from '../sql-core/levels';
@@ -38,6 +38,8 @@ import { SoWhatCard } from './SoWhatCard';
 import { CafeMap } from './CafeMap';
 import { reachedChapter } from './rooms';
 import { SkillCheck } from './SkillCheck';
+import { Badges, BadgeToast, Shop } from './GrowthParts';
+import { buyUpgrade, currentStreak, earnedBadges, localDay, recordPlay, type BadgeId } from './growth';
 import { openRooms, roomOfTarget, type RoomId } from '../game/rooms/cafe';
 
 /** What is open over the world. `null` = the player is walking around. */
@@ -48,7 +50,8 @@ type Overlay =
   | { kind: 'journal' }
   | { kind: 'soWhat' }
   | { kind: 'welcome' }
-  | { kind: 'skillCheck' };
+  | { kind: 'skillCheck' }
+  | { kind: 'shop' };
 
 const levelIds = allLevels.map((l) => l.id);
 
@@ -67,7 +70,11 @@ export function WorldApp() {
   const [reward, setReward] = useState<Reward | null>(null);
   /** The room the player is standing in (from the game), and which Journal tab is open. */
   const [here, setHere] = useState<RoomId>('front');
-  const [journalTab, setJournalTab] = useState<'levels' | 'map'>('levels');
+  const [journalTab, setJournalTab] = useState<'levels' | 'map' | 'badges'>('levels');
+  /** A badge just earned: shown in a short toast. */
+  const [newBadge, setNewBadge] = useState<BadgeId | null>(null);
+  const badgesSeen = useRef<BadgeId[] | null>(null);
+  const today = localDay(new Date());
   /** Chapters whose title card was shown this visit. */
   const [seenChapters, setSeenChapters] = useState<number[]>([]);
 
@@ -130,6 +137,22 @@ export function WorldApp() {
   useEffect(() => bridge.emit('quest', questTarget), [bridge, questTarget]);
   useEffect(() => bridge.emit('rooms', open), [bridge, open]);
   useEffect(() => bridge.emit('labels', labels), [bridge, labels]);
+  useEffect(() => bridge.emit('upgrades', progress.upgrades), [bridge, progress.upgrades]);
+
+  // A badge earned while playing shows a toast (not the ones already earned when the page opened).
+  const badges = useMemo(() => earnedBadges(progress), [progress]);
+  useEffect(() => {
+    if (badgesSeen.current === null) {
+      badgesSeen.current = badges;
+      return;
+    }
+    const fresh = badges.find((b) => !badgesSeen.current!.includes(b));
+    badgesSeen.current = badges;
+    if (!fresh) return;
+    setNewBadge(fresh);
+    const timer = setTimeout(() => setNewBadge(null), 3500);
+    return () => clearTimeout(timer);
+  }, [badges]);
   useEffect(() => bridge.on('room', setHere), [bridge]);
   useEffect(
     () =>
@@ -138,6 +161,7 @@ export function WorldApp() {
         bridge.emit('overlay', overlay !== null);
         bridge.emit('rooms', open);
         bridge.emit('labels', labels);
+        bridge.emit('upgrades', progress.upgrades);
       }),
     [bridge, questTarget, overlay, open, labels],
   );
@@ -201,9 +225,20 @@ export function WorldApp() {
       <header className="world-hud">
         <h1 className="world-title">SQL Valley</h1>
         <div className="world-hud-actions">
-          <span className="hud-coins" title={t.coins} aria-label={`${t.coins}: ${progress.coins}`}>
+          {currentStreak(progress, today) > 0 && (
+            <span className="hud-streak" title={t.streak(currentStreak(progress, today))}>
+              🔥 {currentStreak(progress, today)}
+            </span>
+          )}
+          <button
+            className="hud-coins"
+            onMouseDown={noFocus}
+            onClick={() => setOverlay({ kind: 'shop' })}
+            title={t.shop}
+            aria-label={`${t.coins}: ${progress.coins}. ${t.shop}`}
+          >
             🪙 {progress.coins}
-          </span>
+          </button>
           {/* onMouseDown: clicking doesn't keep focus here, so Space still talks in the world. */}
           <button className="hud-button" onMouseDown={noFocus} onClick={() => setOverlay({ kind: 'journal' })}>
             📖 {t.journal}
@@ -289,7 +324,7 @@ export function WorldApp() {
             onRevealHint={() => setHintsUsed((n) => n + 1)}
             onCorrect={(mistakes) => {
               setReward(rewardForSolve(progress, level.id, hintsUsed, mistakes));
-              setProgress((p) => solveRequest(p, level.id, hintsUsed, mistakes));
+              setProgress((p) => recordPlay(solveRequest(p, level.id, hintsUsed, mistakes), today));
             }}
             reward={reward}
             solvedMessage={t.solvedGoReport(giver)}
@@ -377,6 +412,20 @@ export function WorldApp() {
           />
         )}
 
+        {overlay?.kind === 'shop' && (
+          <WorldModal
+            label={t.shop}
+            action={t.backToCafe}
+            onAction={close}
+            onClose={close}
+            closeLabel={t.dialogueClose}
+          >
+            <Shop progress={progress} t={t} onBuy={(id) => setProgress((p) => buyUpgrade(p, id))} />
+          </WorldModal>
+        )}
+
+        {newBadge && <BadgeToast badge={newBadge} t={t} />}
+
         {overlay?.kind === 'chapter' && (
           <WorldModal
             label={chapter.title}
@@ -406,7 +455,7 @@ export function WorldApp() {
           >
             <h2 className="world-modal-title">{t.journal}</h2>
             <div className="journal-tabs" role="tablist">
-              {(['levels', 'map'] as const).map((tab) => (
+              {(['levels', 'map', 'badges'] as const).map((tab) => (
                 <button
                   key={tab}
                   role="tab"
@@ -414,11 +463,13 @@ export function WorldApp() {
                   className={journalTab === tab ? 'journal-tab active' : 'journal-tab'}
                   onClick={() => setJournalTab(tab)}
                 >
-                  {tab === 'levels' ? t.levelsTab : `🗺 ${t.cafeMap}`}
+                  {tab === 'levels' ? t.levelsTab : tab === 'map' ? `🗺 ${t.cafeMap}` : `🏅 ${t.badgesTab}`}
                 </button>
               ))}
             </div>
-            {journalTab === 'map' ? (
+            {journalTab === 'badges' ? (
+              <Badges earned={badges} t={t} />
+            ) : journalTab === 'map' ? (
               <CafeMap
                 open={open}
                 here={here}

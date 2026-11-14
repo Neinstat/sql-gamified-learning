@@ -345,7 +345,10 @@ function recipeBook(ctx: Ctx) {
 function pans(ctx: Ctx) {
   wallFace(ctx);
   fill(ctx, '2', 1, 1, 14, 1);
-  for (const [x, w] of [[2, 5], [9, 6]]) {
+  for (const [x, w] of [
+    [2, 5],
+    [9, 6],
+  ]) {
     fill(ctx, 'x', x + Math.floor(w / 2), 2, 1, 2);
     fill(ctx, 'k', x, 4, w, w - 1);
     fill(ctx, 'O', x + 1, 4, w - 2, w - 2);
@@ -456,7 +459,48 @@ function ledger(ctx: Ctx) {
   fill(ctx, 'o', 12, 1, 1, 9);
 }
 
-const grid = (g: readonly string[], x = 0, y = 0, flip = false) => (ctx: Ctx) => paintGrid(ctx, g, x, y, flip);
+/** One tile of a 3×2 berry rug with a mustard pattern; borders only on the rug's outer edges. */
+const rug = (edges: { top?: boolean; bottom?: boolean; left?: boolean; right?: boolean }) => (ctx: Ctx) => {
+  floor(ctx);
+  const x0 = edges.left ? 1 : 0;
+  const y0 = edges.top ? 2 : 0;
+  const x1 = edges.right ? 15 : 16;
+  const y1 = edges.bottom ? 14 : 16;
+  fill(ctx, 'b', x0, y0, x1 - x0, y1 - y0);
+  fill(
+    ctx,
+    'B',
+    x0 + (edges.left ? 1 : 0),
+    y0 + (edges.top ? 1 : 0),
+    x1 - x0 - (edges.left ? 1 : 0) - (edges.right ? 1 : 0),
+    y1 - y0 - (edges.top ? 1 : 0) - (edges.bottom ? 1 : 0),
+  );
+  // A small diamond in the middle of every tile.
+  fill(ctx, 'y', 7, 5, 2, 1);
+  fill(ctx, 'y', 6, 6, 4, 2);
+  fill(ctx, 'y', 7, 8, 2, 1);
+  fill(ctx, 'Y', 7, 6, 2, 2);
+  // Fringe on the short ends.
+  if (edges.left) for (let y = y0 + 1; y < y1; y += 2) fill(ctx, '7', 0, y, 1, 1);
+  if (edges.right) for (let y = y0 + 1; y < y1; y += 2) fill(ctx, '7', 15, y, 1, 1);
+};
+
+/** The menu board after the upgrade: a gold frame and a little lamp. */
+function menuBoardFancy(ctx: Ctx) {
+  paintGrid(ctx, MENU_BOARD);
+  fill(ctx, 'y', 3, 1, 10, 1);
+  fill(ctx, 'y', 3, 11, 10, 1);
+  fill(ctx, 'y', 3, 1, 1, 11);
+  fill(ctx, 'y', 12, 1, 1, 11);
+  fill(ctx, 'Y', 7, 0, 2, 1);
+  fill(ctx, 'O', 5, 7, 2, 2);
+  fill(ctx, 'B', 9, 9, 2, 1);
+}
+
+const grid =
+  (g: readonly string[], x = 0, y = 0, flip = false) =>
+  (ctx: Ctx) =>
+    paintGrid(ctx, g, x, y, flip);
 const both =
   (...draws: ((ctx: Ctx) => void)[]) =>
   (ctx: Ctx) =>
@@ -496,13 +540,31 @@ const TILES: Record<number, (ctx: Ctx) => void> = {
   [TILE.milkCrate]: milkCrate,
   [TILE.sack]: sack,
   [TILE.ledger]: ledger,
+  [TILE.rugTopLeft]: rug({ top: true, left: true }),
+  [TILE.rugTop]: rug({ top: true }),
+  [TILE.rugTopRight]: rug({ top: true, right: true }),
+  [TILE.rugBottomLeft]: rug({ bottom: true, left: true }),
+  [TILE.rugBottom]: rug({ bottom: true }),
+  [TILE.rugBottomRight]: rug({ bottom: true, right: true }),
+  [TILE.menuBoardFancy]: menuBoardFancy,
 };
 
 /** How many tiles have a drawing (must equal TILE_COUNT; a test checks it). */
 export const TILE_DRAWN = Object.keys(TILES).length;
 
 /** Every pixel-art grid in this file, for tests (equal rows, palette colours only). */
-export const TILE_GRIDS = { TABLE, CHAIR, PLANT, COUNTER, PAINTING, WINDOW, SHELF, COFFEE_MACHINE, REGISTER, MENU_BOARD };
+export const TILE_GRIDS = {
+  TABLE,
+  CHAIR,
+  PLANT,
+  COUNTER,
+  PAINTING,
+  WINDOW,
+  SHELF,
+  COFFEE_MACHINE,
+  REGISTER,
+  MENU_BOARD,
+};
 
 /** Draws every tile side by side into a canvas of TILE_COUNT × 1 tiles. */
 export function drawTileset(canvas: HTMLCanvasElement): void {

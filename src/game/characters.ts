@@ -21,11 +21,15 @@ const FINAL_SHEETS: Partial<Record<CharacterLook, (canvas: HTMLCanvasElement) =>
  * Animations are named `<key>-walk-<down|up|side>`.
  */
 export function ensureCharacterTexture(scene: Phaser.Scene, key: string, who: CharacterLook): void {
+  const drawFinal = FINAL_SHEETS[who];
+  ensureSheetTexture(scene, key, (canvas) => (drawFinal ? drawFinal(canvas) : drawPlaceholderCharacter(canvas, LOOKS[who])));
+}
+
+/** Same as ensureCharacterTexture, for any sheet-drawing function (e.g. the café's customers). */
+export function ensureSheetTexture(scene: Phaser.Scene, key: string, draw: (canvas: HTMLCanvasElement) => void): void {
   if (scene.textures.exists(key)) return;
   const canvas = document.createElement('canvas');
-  const drawFinal = FINAL_SHEETS[who];
-  if (drawFinal) drawFinal(canvas);
-  else drawPlaceholderCharacter(canvas, LOOKS[who]);
+  draw(canvas);
   const texture = scene.textures.addCanvas(key, canvas)!;
   for (let i = 0; i < FACINGS.length * FRAMES_PER_FACING; i++) {
     texture.add(i, 0, i * CHAR_W, 0, CHAR_W, CHAR_H);
