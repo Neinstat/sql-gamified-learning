@@ -2,6 +2,7 @@ import Phaser from 'phaser';
 import { CHAR_H, CHAR_W, FACINGS, FRAMES_PER_FACING, LOOKS, drawPlaceholderCharacter, frameIndex } from './placeholderSprites';
 import { drawGrandmaSheet } from './art/grandma';
 import { drawBaristaSheet } from './art/barista';
+import { drawRegularSheet } from './art/regular';
 import type { Facing } from './movement';
 
 export type CharacterLook = keyof typeof LOOKS;
@@ -10,6 +11,7 @@ export type CharacterLook = keyof typeof LOOKS;
 const FINAL_SHEETS: Partial<Record<CharacterLook, (canvas: HTMLCanvasElement) => void>> = {
   grandma: drawGrandmaSheet,
   barista: drawBaristaSheet,
+  regular: drawRegularSheet,
 };
 
 /**

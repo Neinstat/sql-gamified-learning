@@ -194,6 +194,8 @@ Data penjualan (Fase 3) dirancang agar setiap Mini Case punya pola yang bisa dit
 
 **Chapter 3 (3.6, Cash register):** 3-1 jumlah baris pesan antar (`COUNT(*)` + `WHERE`) · 3-2 total revenue (`SUM(quantity * unit_price)`) · 3-3 jumlah order + rata-rata nilai order (`COUNT(DISTINCT order_id)`, `ROUND`; 💭 kenapa bukan `AVG` per baris) · 3-4 revenue per channel (`GROUP BY`) · 3-5 revenue per bulan (`DATE_TRUNC`; 💭 Oktober turun → telusuri dulu, petunjuk pertama Analysis Case) · 3-6 nomor menu yang terjual > 400 porsi (`HAVING`; menu 6 tepat 400 → pelajaran `>` vs `>=`) · 3-7 Mini Case *The Quiet Day* (`EXTRACT(DOW …)`).
 
+**Chapter 4 (3.8, Kitchen → Cash register):** 4-1 menu yang memakai susu (`JOIN … ON`, alias tabel; di Recipe book) · 4-2 menu tanpa resep (`LEFT JOIN … IS NULL` → Secret Cake) · 4-3 porsi terjual per kategori (`JOIN` + `GROUP BY`) · 4-4 lima menu dengan revenue tertinggi (💭 Avocado Toast untung per porsi terbesar, tapi Latte menang karena volume) · 4-5 pelanggan paling setia (`LIMIT 1`; top-5 sengaja dihindari karena ada nilai kembar) · 4-6 pelanggan yang mendaftar tapi tak pernah membeli (`LEFT JOIN`) · 4-7 Mini Case *Where Did the Regulars Go?* (Regular; empat pelanggan tetap pecinta Secret Cake). Jawaban dengan urutan tabel lain, tanpa alias, atau `NOT EXISTS` juga diterima (dites).
+
 Mulai Fase 3: Chapter 1–4 masing-masing ditutup dengan **Mini Case** 🔍, dan ±1–2 level per chapter (mulai Chapter 0) punya pertanyaan **So what?** 💭 (lihat §5).
 
 Di luar MVP (nanti): subquery, CTE, window function, analisis waktu lanjutan (MoM/YoY), `INSERT`/`UPDATE`, chapter cabang kafe baru.
@@ -246,7 +248,7 @@ Di luar MVP (nanti): subquery, CTE, window function, analisis waktu lanjutan (Mo
 
 ### Struktur kode (tambahan Fase 3)
 - `src/game/art/` — aset final: `palette.ts` (32 warna + `paintGrid`), `tiles.ts` (tileset kafe), `grandma.ts` (sprite 16×32 + potret 64×64). Karakter yang belum punya aset final tetap memakai `placeholderSprites.ts` / `placeholderPortraits.ts` (dipilih otomatis di `characters.ts` dan `characterPortrait`).
-- `src/game/art/characterKit.ts` — alat bersama tokoh gaya final: sheet jalan dari grid (`drawSheet`, sepatu `FEET_FRONT`/`FEET_SIDE`) dan potret 64×64 dari bentuk dasar dengan latar dinding kafe (`finishPortrait`). Tokoh final: `grandma.ts` (3.1), `barista.ts` (3.4).
+- `src/game/art/characterKit.ts` — alat bersama tokoh gaya final: sheet jalan dari grid (`drawSheet`, sepatu `FEET_FRONT`/`FEET_SIDE`) dan potret 64×64 dari bentuk dasar dengan latar dinding kafe (`finishPortrait`). Tokoh final: `grandma.ts` (3.1), `barista.ts` (3.4), `regular.ts` (3.8). Tinggal pemain dan Supplier yang masih placeholder.
 - `src/sql-core/data/recipes.ts` — tabel `recipes` (`recipe_id`, `item_id`, `ingredient`, `amount`, `unit`): satu baris per bahan. Grandma's Secret Cake sengaja **tanpa resep** (rahasia → bahan `LEFT JOIN` di Chapter 4); susu ada di banyak minuman (awal cerita Chapter 5). Stasiun **Recipe book** di Kitchen melihat `recipes` + `menu_items`.
 - `src/app/CafeMap.tsx` — tab **Café map** di Journal: ruangan berderet, yang terkunci bergaris dengan "Opens in Chapter N", posisi pemain (📍) dan ruangan tugas berikutnya (❗).
 - `src/sql-core/cases.ts` — cek kesimpulan Mini Case: jawaban dulu (`answer-wrong` dihitung sebagai kesimpulan salah untuk bintang), lalu bukti 📌 (`checkEvidence`). Pesan EN/ID lewat `formatCaseFeedback`.
@@ -372,7 +374,7 @@ Setiap iterasi bisa dimainkan sendiri: kerjakan → cek di browser → commit & 
 | 3.5 ✅ | **Data penjualan & stasiun kedua:** generator data `sales`/`customers` dengan seed tetap, Cash register terbuka, blokir tabel per stasiun (role PostgreSQL), PGlite di Web Worker + tombol hentikan query | Cash register membuka konsol berisi `sales`, `customers`, `menu_items`; query ke tabel lain ditolak dengan pesan ramah; query macet bisa dihentikan |
 | 3.6 ✅ | **Chapter 3 Numbers Talk** (`COUNT`/`SUM`/`AVG`/`MIN`/`MAX`, `GROUP BY`, `HAVING`, dasar tanggal) + Mini Case **The Quiet Day** | Chapter 3 bisa dimainkan lengkap di Cash register, EN/ID |
 | 3.7 ✅ | **Kafe berkembang:** peta multi-ruangan dengan pintu terkunci per chapter, **Kitchen** + tabel `recipes` + Recipe book (gaya final), tab **Café map** di Journal, panah penunjuk ke pintu | Kitchen terbuka setelah Ch3; Café map menunjukkan ruangan dan target tugas |
-| 3.8 | **Chapter 4 Connecting the Dots** (`INNER`/`LEFT JOIN`, JOIN + agregasi) + Mini Case **Where Did the Regulars Go?**; Regular dalam gaya final | Chapter 4 bisa dimainkan lengkap di Kitchen & Cash register, EN/ID |
+| 3.8 ✅ | **Chapter 4 Connecting the Dots** (`INNER`/`LEFT JOIN`, JOIN + agregasi) + Mini Case **Where Did the Regulars Go?**; Regular dalam gaya final | Chapter 4 bisa dimainkan lengkap di Kitchen & Cash register, EN/ID |
 | 3.9 | **Skill Check** adaptif (soal Ch0–4) dari Grandma di hari pertama & dari Journal | Pemain yang sudah bisa SQL dasar bisa langsung mulai di chapter yang sesuai |
 | 3.10 | **Storeroom + Back office** (`inventory`, `suppliers`, Supplier NPC, Grandma's computer) + **Chapter 5 Analysis Case** "October sales dropped 18%" | Analysis Case bisa diselesaikan lengkap dengan bukti 📌 di Back office |
 | 3.11 | **Kafe yang tumbuh:** upgrade dengan koin (kursi, dekorasi, papan menu, NPC pelanggan berjalan), daily streak 🔥, badge | Koin bisa dibelanjakan dan kafe berubah terlihat di dunia |
@@ -393,7 +395,7 @@ Catatan: isi level tiap chapter (dialog, data, jawaban) ditulis di awal iterasi 
 - [x] Minimap — **tidak**; tab Café map di Journal (perencanaan Fase 3, lihat §3)
 - [x] Mata uang — **$ (USD)**
 - [ ] Nuansa setting kota (generik/internasional, atau ada sentuhan lokal tertentu)
-- [ ] Isi detail tiap level (dialog, data, jawaban) per chapter — Chapter 0 (4 level), Chapter 1 (6 level + Mini Case), Chapter 2 (5 level + Mini Case), dan Chapter 3 (6 level + Mini Case) sudah ditulis, lengkap dengan terjemahan Indonesia
+- [ ] Isi detail tiap level (dialog, data, jawaban) per chapter — Chapter 0 (4 level), Chapter 1 (6 level + Mini Case), Chapter 2 (5 level + Mini Case), Chapter 3 (6 level + Mini Case), dan Chapter 4 (6 level + Mini Case) sudah ditulis, lengkap dengan terjemahan Indonesia
 - [x] **Stasiun untuk Chapter 0–1** — stasiun baru **Menu board** di area depan membaca `menu_items` (cocok dengan cerita "Cleaning Up the Menu"); Kitchen tetap untuk `recipes` di Fase 3
 - [x] Bentuk Skill Check — **adaptif**, 2 soal per chapter, dibuat setelah Chapter 4 ada (perencanaan Fase 3, lihat §2)
 - [ ] Hosting (mis. GitHub Pages / Vercel / Netlify)
