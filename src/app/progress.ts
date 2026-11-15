@@ -12,7 +12,7 @@ export type Progress = {
   completed: Record<string, LevelRecord>;
   /** Game world only: how far the player is with the current level's request (see quest.ts). */
   quest?: QuestState;
-  /** Coin balance (earned from stars and "So what?" answers; spent on upgrades later). */
+  /** Coin balance (earned from stars and "So what?" answers; spent on café upgrades). */
   coins: number;
   /** Levels whose "So what?" was answered right (the bonus is paid once). */
   soWhatRight: string[];

@@ -1,5 +1,5 @@
 import Phaser from 'phaser';
-import { CHAR_H, CHAR_W, FACINGS, FRAMES_PER_FACING, LOOKS, drawPlaceholderCharacter, frameIndex } from './placeholderSprites';
+import { CHAR_H, CHAR_W, FACINGS, FRAMES_PER_FACING, frameIndex } from './sheet';
 import { drawGrandmaSheet } from './art/grandma';
 import { drawBaristaSheet } from './art/barista';
 import { drawRegularSheet } from './art/regular';
@@ -7,10 +7,10 @@ import { drawSupplierSheet } from './art/supplier';
 import { drawPlayerSheet } from './art/player';
 import type { Facing } from './movement';
 
-export type CharacterLook = keyof typeof LOOKS;
+export type CharacterLook = 'player' | 'grandma' | 'barista' | 'regular' | 'supplier';
 
-/** Every character in the final style (GAME_DESIGN.md §3); the placeholder looks remain only as a fallback. */
-const FINAL_SHEETS: Partial<Record<CharacterLook, (canvas: HTMLCanvasElement) => void>> = {
+/** Every character's walking sheet, all in the final style (GAME_DESIGN.md §3). */
+const SHEETS: Record<CharacterLook, (canvas: HTMLCanvasElement) => void> = {
   grandma: drawGrandmaSheet,
   barista: drawBaristaSheet,
   regular: drawRegularSheet,
@@ -23,8 +23,7 @@ const FINAL_SHEETS: Partial<Record<CharacterLook, (canvas: HTMLCanvasElement) =>
  * Animations are named `<key>-walk-<down|up|side>`.
  */
 export function ensureCharacterTexture(scene: Phaser.Scene, key: string, who: CharacterLook): void {
-  const drawFinal = FINAL_SHEETS[who];
-  ensureSheetTexture(scene, key, (canvas) => (drawFinal ? drawFinal(canvas) : drawPlaceholderCharacter(canvas, LOOKS[who])));
+  ensureSheetTexture(scene, key, SHEETS[who]);
 }
 
 /** Same as ensureCharacterTexture, for any sheet-drawing function (e.g. the café's customers). */

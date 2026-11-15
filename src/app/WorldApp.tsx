@@ -22,7 +22,7 @@ import {
   saveProgress,
   type Progress,
 } from './progress';
-import { characterPortrait } from '../game/placeholderPortraits';
+import { characterPortrait } from '../game/art/portraits';
 import { SKILL_CHECK_STATION } from '../sql-core/skillCheck';
 import { SO_WHAT_BONUS, type Reward } from './rewards';
 import {
@@ -219,8 +219,7 @@ export function WorldApp() {
       dialogue = { ...base, lines: [t.npcIdle[id]] };
     }
   } else if (station && !consoleOpen) {
-    const closed = db !== null && stationTables(station, schema).length === 0;
-    const line = station === level.station ? t.stationTalkFirst(giver) : closed ? t.stationClosed : t.stationNothing;
+    const line = station === level.station ? t.stationTalkFirst(giver) : t.stationNothing;
     dialogue = { speaker: t.stations[station], lines: [line], onClose: close };
   }
 

@@ -1,4 +1,4 @@
-import { CHAR_H, CHAR_W, FACINGS, FRAMES_PER_FACING, frameIndex } from '../placeholderSprites';
+import { CHAR_H, CHAR_W, FACINGS, FRAMES_PER_FACING, frameIndex } from '../sheet';
 import { paintGrid, type PaletteKey } from './palette';
 
 /**
@@ -8,7 +8,7 @@ import { paintGrid, type PaletteKey } from './palette';
 
 export type Facing = (typeof FACINGS)[number];
 
-/** Draw every frame of a character into one sheet, in the same order as the placeholder sheets. */
+/** Draw every frame of a character into one sheet (layout: see sheet.ts). */
 export function drawSheet(canvas: HTMLCanvasElement, frame: (facing: Facing, step: number) => string[]): void {
   canvas.width = FACINGS.length * FRAMES_PER_FACING * CHAR_W;
   canvas.height = CHAR_H;

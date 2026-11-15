@@ -6,7 +6,7 @@ import { BARISTA_GRIDS, baristaFrame, baristaPortraitGrid } from './barista';
 import { REGULAR_GRIDS, regularFrame, regularPortraitGrid } from './regular';
 import { SUPPLIER_GRIDS, supplierFrame, supplierPortraitGrid } from './supplier';
 import { playerFrame } from './player';
-import { CHAR_H, CHAR_W, FACINGS, FRAMES_PER_FACING } from '../placeholderSprites';
+import { CHAR_H, CHAR_W, FACINGS, FRAMES_PER_FACING } from '../sheet';
 
 const onlyPalette = (grid: readonly string[]) =>
   grid.flatMap((row) => [...row]).filter((ch) => ch !== TRANSPARENT && !isPaletteKey(ch));

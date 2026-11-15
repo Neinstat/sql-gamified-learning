@@ -1,5 +1,5 @@
 import Phaser from 'phaser';
-import { CHAR_H, frameIndex } from './placeholderSprites';
+import { CHAR_H, frameIndex } from './sheet';
 import { ensureCharacterTexture, facingToward, standFacing, type CharacterLook } from './characters';
 import { TILE_SIZE } from './rooms/cafe';
 import type { Facing } from './movement';

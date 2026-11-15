@@ -1,5 +1,5 @@
 import Phaser from 'phaser';
-import { CHAR_H, frameIndex } from './placeholderSprites';
+import { CHAR_H, frameIndex } from './sheet';
 import { ensureCharacterTexture, facingToward, sheetFacing, standFacing } from './characters';
 import { WALK_SPEED, facingFor, moveVector, steerTowards, type Facing } from './movement';
 

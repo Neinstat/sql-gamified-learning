@@ -1,7 +1,7 @@
 # SQL Valley — Dokumen Desain Game
 
 > Game web 2D *top-down* untuk belajar SQL sambil belajar **berpikir seperti analis Business Intelligence (BI)**: pemain berjalan menjelajahi kafe warisannya, bertemu tokoh, dan menyelesaikan tugas dengan menulis SQL di konsol yang tersebar di berbagai sudut kafe.
-> Status: desain awal (MVP). Dokumen ini adalah sumber kebenaran untuk keputusan desain — perbarui saat ada keputusan baru.
+> Status: MVP (Fase 1–3) sudah dibangun; Fase 3 menunggu uji main pemilik project (lihat §12). Dokumen ini adalah sumber kebenaran untuk keputusan desain — perbarui saat ada keputusan baru.
 >
 > **Bahasa:** dokumen ini ditulis dalam Bahasa Indonesia. Game memakai **English sebagai bahasa utama** dengan **pilihan Bahasa Indonesia** untuk teks cerita & UI; SQL, nama tabel/kolom, dan isi data selalu English (lihat §10). Istilah dan contoh in-game di bawah ditulis dalam English.
 
@@ -96,7 +96,7 @@ Game ditampilkan sebagai **dunia 2D dengan kamera dari atas** (genre seperti gam
 - **Zoom manual** (masukan uji main Fase 2): tombol − / + di pojok kanan bawah dunia game dan scroll mouse, 1×–4×, diingat di browser. Di HP, 1× memperlihatkan seluruh ruangan.
 - **Panah penunjuk:** bila target "!" berada di luar layar, panah emas di tepi layar menunjuk ke arahnya. *Minimap tidak dibuat* — diganti tab Café map di Journal (keputusan Fase 3, lihat di atas).
 - Hanya **kaki** karakter yang bertabrakan (kepala boleh menutupi benda di belakangnya); benda yang lebih bawah di layar digambar di depan.
-- **Sumber aset Fase 2: placeholder.** Tile dari pack **CC0** (kandidat: Kenney, 16×16) dan sprite karakter/potret placeholder sederhana buatan sendiri. Fokus Fase 2 adalah mekanik; aset final diganti di Fase 3 atau nanti. Setiap aset pihak ketiga dicatat sumber + lisensinya di `CREDITS.md`. *(2.1–2.4: tile, sprite pemain & Grandma, dan potret Grandma placeholder digambar lewat kode di `src/game/placeholderTiles.ts`, `placeholderSprites.ts`, dan `placeholderPortraits.ts` — belum ada aset pihak ketiga.)* *(3.1: `placeholderTiles.ts` diganti `src/game/art/tiles.ts`; sprite & potret Grandma diganti aset final.)*
+- **Sumber aset Fase 2: placeholder** *(sudah diganti seluruhnya di Fase 3 — lihat "Arah visual final" di bawah)*. Tile dari pack **CC0** (kandidat: Kenney, 16×16) dan sprite karakter/potret placeholder sederhana buatan sendiri. Fokus Fase 2 adalah mekanik; aset final diganti di Fase 3 atau nanti. Setiap aset pihak ketiga dicatat sumber + lisensinya di `CREDITS.md`. *(2.1–2.4: tile, sprite pemain & Grandma, dan potret Grandma placeholder digambar lewat kode di `src/game/placeholderTiles.ts`, `placeholderSprites.ts`, dan `placeholderPortraits.ts` — belum ada aset pihak ketiga.)* *(3.1: `placeholderTiles.ts` diganti `src/game/art/tiles.ts`; sprite & potret Grandma diganti aset final.)*
 
 #### Arah visual final (diputuskan di awal Fase 3)
 - **Suasana: hangat musim gugur** — kayu, krem, oranye bata, hijau zaitun, cahaya lampu hangat. Cocok dengan cerita lembah di musim gugur dan kasus "October sales dropped".
@@ -266,8 +266,16 @@ Di luar MVP (nanti): subquery, CTE, window function, analisis waktu lanjutan (Mo
 - `src/console/` — UI konsol (React): editor, input blok, isi kosong, tabel hasil, hint.
 - `src/app/` — halaman sederhana: daftar level, alur level, progres (localStorage). *(Halaman ini dihapus setelah Fase 2 — lihat §12.)*
 
+### Struktur kode (tambahan Fase 2)
+- `src/sql-core/stations.ts` — daftar stasiun dan tabel yang boleh diakses tiap stasiun (data murni, tanpa engine). Level mendapat field `station`; tes memastikan jawaban resmi tiap level hanya memakai tabel stasiunnya.
+- Konsol di stasiun hanya **menampilkan** tabel milik stasiun itu. *(Fase 3: query ke tabel lain juga diblokir — lihat di bawah.)*
+- Konsol terbuka hanya di stasiun tempat tugas aktif dikerjakan; stasiun lain menampilkan pesan singkat. Konsol tetap tersimpan selama level yang sama, jadi query yang sedang disusun tidak hilang saat konsol ditutup (Esc atau ✕).
+- `src/game/` — Phaser: scene ruangan, pemain, NPC, stasiun, pathfinding. **Tidak boleh** meng-import React.
+- `src/game/bridge.ts` — penghubung kecil (event) antara Phaser dan React: "bicara dengan NPC", "buka stasiun", "overlay ditutup". Saat overlay terbuka, input keyboard Phaser dimatikan agar mengetik SQL tidak menggerakkan karakter.
+- `src/app/` — React membungkus kanvas game dan menampilkan overlay (dialog, konsol, daftar level).
+
 ### Struktur kode (tambahan Fase 3)
-- `src/game/art/` — aset final: `palette.ts` (32 warna + `paintGrid`), `tiles.ts` (tileset kafe), `grandma.ts` (sprite 16×32 + potret 64×64). Karakter yang belum punya aset final tetap memakai `placeholderSprites.ts` / `placeholderPortraits.ts` (dipilih otomatis di `characters.ts` dan `characterPortrait`).
+- `src/game/art/` — semua aset final: `palette.ts` (32 warna + `paintGrid`), `tiles.ts` (tileset kafe), satu file per tokoh (sprite 16×32 + potret 64×64), `customers.ts` (pelanggan, warna ulang tokoh), `portraits.ts` (`characterPortrait`). Tata letak sheet jalan (`CHAR_W`, `FACINGS`, `frameIndex`) ada di `src/game/sheet.ts`. File placeholder Fase 2 (`placeholderSprites.ts`, `placeholderPortraits.ts`) **dihapus** setelah semua tokoh punya aset final.
 - `src/game/art/characterKit.ts` — alat bersama tokoh gaya final: sheet jalan dari grid (`drawSheet`, sepatu `FEET_FRONT`/`FEET_SIDE`) dan potret 64×64 dari bentuk dasar dengan latar dinding kafe (`finishPortrait`). Tokoh final: `grandma.ts` (3.1), `barista.ts` (3.4), `regular.ts` (3.8), `supplier.ts` (3.10), `player.ts` (3.13 — tubuh seragam kafe Barista dengan warna sendiri: rambut auburn, kemeja biru batu, celemek krem). Tidak ada lagi aset placeholder yang tampil; `placeholderSprites.ts` / `placeholderPortraits.ts` hanya tersisa sebagai cadangan.
 - `src/sql-core/data/recipes.ts` — tabel `recipes` (`recipe_id`, `item_id`, `ingredient`, `amount`, `unit`): satu baris per bahan. Grandma's Secret Cake sengaja **tanpa resep** (rahasia → bahan `LEFT JOIN` di Chapter 4); susu ada di banyak minuman (awal cerita Chapter 5). Stasiun **Recipe book** di Kitchen melihat `recipes` + `menu_items`.
 - `src/app/CafeMap.tsx` — tab **Café map** di Journal: ruangan berderet, yang terkunci bergaris dengan "Opens in Chapter N", posisi pemain (📍) dan ruangan tugas berikutnya (❗).
@@ -276,14 +284,6 @@ Di luar MVP (nanti): subquery, CTE, window function, analisis waktu lanjutan (Mo
 - `src/app/SoWhatCard.tsx` — kartu "So what?" setelah ucapan sukses tokoh, sebelum lanjut ke level berikutnya.
 - `src/app/rewards.ts` — aturan bintang & koin (fungsi murni, dites). `progress.ts` menyimpan `stars`, `mistakes`, `coins`, `soWhatRight` dan mengisi data yang belum ada di simpanan lama (`parseProgress`). `Stars.tsx` menampilkan ★ di layar hasil dan Journal.
 - `resumeNewLevels` (`quest.ts`): pemain yang sudah "selesai semua" otomatis lanjut ke level yang baru ditambahkan (mis. Mini Case Ch1).
-
-### Struktur kode (tambahan Fase 2)
-- `src/sql-core/stations.ts` — daftar stasiun dan tabel yang boleh diakses tiap stasiun (data murni, tanpa engine). Level mendapat field `station`; tes memastikan jawaban resmi tiap level hanya memakai tabel stasiunnya.
-- Konsol di stasiun hanya **menampilkan** tabel milik stasiun itu. *(Fase 3: query ke tabel lain juga diblokir — lihat di bawah.)*
-- Konsol terbuka hanya di stasiun tempat tugas aktif dikerjakan; stasiun lain menampilkan pesan singkat. Konsol tetap tersimpan selama level yang sama, jadi query yang sedang disusun tidak hilang saat konsol ditutup (Esc atau ✕).
-- `src/game/` — Phaser: scene ruangan, pemain, NPC, stasiun, pathfinding. **Tidak boleh** meng-import React.
-- `src/game/bridge.ts` — penghubung kecil (event) antara Phaser dan React: "bicara dengan NPC", "buka stasiun", "overlay ditutup". Saat overlay terbuka, input keyboard Phaser dimatikan agar mengetik SQL tidak menggerakkan karakter.
-- `src/app/` — React membungkus kanvas game dan menampilkan overlay (dialog, konsol, daftar level).
 
 ### Pengecek jawaban
 - Query pemain dan query jawaban resmi dijalankan di database yang sama; **hasilnya** yang dibandingkan.
@@ -327,7 +327,7 @@ Tes otomatis memeriksa semua level: jawaban resmi bisa dijalankan, blok yang dis
 
 Dibangun bertahap — setiap fase menghasilkan sesuatu yang bisa dimainkan.
 
-**Status (13 Nov 2026):** ✅ **Fase 1 selesai.** Chapter 0–1 (10 level) bisa dimainkan dalam EN/ID, dengan pengecek jawaban, hint, progres tersimpan, dan 110 tes otomatis. Pemilik project sudah uji main dan menyetujui rasa belajarnya. ✅ **Fase 2 selesai.** Chapter 0–1 dimainkan di dalam dunia game (ruang depan kafe, Phaser): berjalan dengan keyboard atau klik/tap, menerima permintaan dari Grandma, Barista, dan Regular, menyelesaikannya di konsol Menu board, lalu melapor. Ada Journal, zoom manual, dan panah penunjuk; 162 tes otomatis. Pemilik project sudah uji main (desktop + HP) dan menyetujuinya. 🧪 **Fase 3 dibangun lengkap (15 Nov 2026), menunggu uji main pemilik project.** MVP Chapter 0–5: 34 level (termasuk 4 Mini Case dan Analysis Case), empat ruangan, semua tokoh dan tile dalam gaya final, bintang/koin/upgrade/streak/badge, Skill Check, dan Rush Hour; 477 tes otomatis. Rincian iterasi ada di "Rencana Fase 3" di bawah.
+**Status (13 Nov 2026):** ✅ **Fase 1 selesai.** Chapter 0–1 (10 level) bisa dimainkan dalam EN/ID, dengan pengecek jawaban, hint, progres tersimpan, dan 110 tes otomatis. Pemilik project sudah uji main dan menyetujui rasa belajarnya. ✅ **Fase 2 selesai.** Chapter 0–1 dimainkan di dalam dunia game (ruang depan kafe, Phaser): berjalan dengan keyboard atau klik/tap, menerima permintaan dari Grandma, Barista, dan Regular, menyelesaikannya di konsol Menu board, lalu melapor. Ada Journal, zoom manual, dan panah penunjuk; 162 tes otomatis. Pemilik project sudah uji main (desktop + HP) dan menyetujuinya. 🧪 **Fase 3 dibangun lengkap (15 Nov 2026), menunggu uji main pemilik project.** MVP Chapter 0–5: 34 level (termasuk 4 Mini Case dan Analysis Case), empat ruangan, semua tokoh dan tile dalam gaya final, bintang/koin/upgrade/streak/badge, Skill Check, dan Rush Hour; 477 tes otomatis. Dirapikan sebelum finalisasi: file placeholder dihapus, dokumen disesuaikan dengan kode. Rincian iterasi ada di "Rencana Fase 3" di bawah.
 
 Catatan dari Fase 1 untuk fase berikutnya:
 - Ukuran unduhan pertama PGlite besar (±3,5 MB wasm terkompresi + 6 MB data) — perlu layar loading yang jelas dan dicek saat memilih hosting.
@@ -335,7 +335,7 @@ Catatan dari Fase 1 untuk fase berikutnya:
 - ~~Di layar HP, daftar tabel muncul di atas area input~~ — konsol sudah menjadi overlay yang memenuhi layar HP (Fase 2).
 
 Catatan dari Fase 2 untuk fase berikutnya:
-- Semua aset masih placeholder yang digambar lewat kode (`src/game/placeholder*.ts`); keputusan aset final ada di §13.
+- Semua aset masih placeholder yang digambar lewat kode (`src/game/placeholder*.ts`); keputusan aset final ada di §13. *(Fase 3: semua diganti aset final, file placeholder dihapus.)*
 - Cash register sudah ada di dunia tapi belum dibuka; terbuka otomatis saat tabel `sales`/`customers` dibuat *(3.5: tabelnya sudah ada; stasiun ini dipakai mulai Chapter 3)*. *(Diputuskan di Fase 3: query ke tabel di luar stasiun diblokir — §3, §10.)*
 - Minimap belum dibuat (cukup zoom 1× + panah penunjuk untuk satu ruangan). *(Diputuskan di Fase 3: tanpa minimap, diganti tab Café map di Journal — §3.)*
 - **Mode klasik (`?classic`) dihapus** (keputusan pemilik project setelah Fase 2): mempertahankannya berarti setiap fitur Fase 3 (bintang, koin, Analysis Case, Rush Hour, tabel per stasiun) harus dibuat dua kali. Jalan pintas pengembangan `?level=ch1-3` kini membuka permintaan level itu langsung di dunia game.
@@ -416,7 +416,7 @@ Catatan: isi level tiap chapter (dialog, data, jawaban) ditulis di awal iterasi 
 - [x] Minimap — **tidak**; tab Café map di Journal (perencanaan Fase 3, lihat §3)
 - [x] Mata uang — **$ (USD)**
 - [ ] Nuansa setting kota (generik/internasional, atau ada sentuhan lokal tertentu)
-- [ ] Isi detail tiap level (dialog, data, jawaban) per chapter — Chapter 0 (4 level), Chapter 1 (6 level + Mini Case), Chapter 2 (5 level + Mini Case), Chapter 3 (6 level + Mini Case), Chapter 4 (6 level + Mini Case), dan Chapter 5 (2 level + Analysis Case) sudah ditulis, lengkap dengan terjemahan Indonesia
+- [x] Isi detail tiap level (dialog, data, jawaban) per chapter — Chapter 0 (4 level), Chapter 1 (6 level + Mini Case), Chapter 2 (5 level + Mini Case), Chapter 3 (6 level + Mini Case), Chapter 4 (6 level + Mini Case), dan Chapter 5 (2 level + Analysis Case) sudah ditulis, lengkap dengan terjemahan Indonesia
 - [x] **Stasiun untuk Chapter 0–1** — stasiun baru **Menu board** di area depan membaca `menu_items` (cocok dengan cerita "Cleaning Up the Menu"); Kitchen tetap untuk `recipes` di Fase 3
 - [x] Bentuk Skill Check — **adaptif**, 2 soal per chapter, dibuat setelah Chapter 4 ada (perencanaan Fase 3, lihat §2)
 - [ ] Hosting (mis. GitHub Pages / Vercel / Netlify)

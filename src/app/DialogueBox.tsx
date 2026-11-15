@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { characterPortrait } from '../game/placeholderPortraits';
+import { characterPortrait } from '../game/art/portraits';
 import type { UiText } from '../i18n';
 
 type Props = {
