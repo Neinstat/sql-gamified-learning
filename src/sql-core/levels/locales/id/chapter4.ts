@@ -18,7 +18,7 @@ export const chapter4Id: ChapterTranslation = {
         ],
       },
       dialogue: [
-        'Selamat datang di dapur Nenek, Nak! Hati-hati dengan kompornya. Itu buku resep Nenek di atas penyangga.',
+        'Dapur sudah dibuka, Nak! Buku resep Nenek ada di atas penyangga di sana — hati-hati dengan kompornya.',
         'Kita menghabiskan banyak sekali susu. Menu apa saja yang memakai susu, dan berapa banyak untuk masing-masing?',
       ],
       task: 'Tampilkan name dari setiap menu yang memakai susu, beserta jumlah susunya.',

@@ -24,7 +24,7 @@ export const chapter4: Chapter = {
         example: 'SELECT m.name, r.ingredient FROM recipes r JOIN menu_items m ON m.item_id = r.item_id;',
       },
       dialogue: [
-        "Welcome to my kitchen, dear! Mind the stove. That's Grandma's recipe book on the stand.",
+        'The kitchen is open now, dear! My recipe book is on the stand in there — mind the stove.',
         'We go through so much milk. Which menu items use milk, and how much does each one take?',
       ],
       task: 'Show the name of every menu item that uses milk, with the amount of milk it takes.',
