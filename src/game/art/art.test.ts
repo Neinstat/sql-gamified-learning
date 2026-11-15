@@ -5,6 +5,7 @@ import { GRANDMA_GRIDS, grandmaFrame, grandmaPortraitGrid } from './grandma';
 import { BARISTA_GRIDS, baristaFrame, baristaPortraitGrid } from './barista';
 import { REGULAR_GRIDS, regularFrame, regularPortraitGrid } from './regular';
 import { SUPPLIER_GRIDS, supplierFrame, supplierPortraitGrid } from './supplier';
+import { playerFrame } from './player';
 import { CHAR_H, CHAR_W, FACINGS, FRAMES_PER_FACING } from '../placeholderSprites';
 
 const onlyPalette = (grid: readonly string[]) =>
@@ -63,5 +64,17 @@ describe.each(CHARACTERS)('$name', ({ frame, grids, portrait }) => {
     expect(p).toHaveLength(64);
     for (const row of p) expect(row).toHaveLength(64);
     expect(onlyPalette(p)).toEqual([]);
+  });
+});
+
+describe('the player', () => {
+  it('has a full 16×32 frame in palette colours for every facing and step', () => {
+    for (const facing of FACINGS) {
+      for (let step = 0; step < FRAMES_PER_FACING; step++) {
+        const f = playerFrame(facing, step);
+        expect(f).toHaveLength(CHAR_H);
+        expect(onlyPalette(f)).toEqual([]);
+      }
+    }
   });
 });

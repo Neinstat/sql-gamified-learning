@@ -4,16 +4,18 @@ import { drawGrandmaSheet } from './art/grandma';
 import { drawBaristaSheet } from './art/barista';
 import { drawRegularSheet } from './art/regular';
 import { drawSupplierSheet } from './art/supplier';
+import { drawPlayerSheet } from './art/player';
 import type { Facing } from './movement';
 
 export type CharacterLook = keyof typeof LOOKS;
 
-/** Characters already drawn in the final style; the rest still use placeholders (GAME_DESIGN.md §3). */
+/** Every character in the final style (GAME_DESIGN.md §3); the placeholder looks remain only as a fallback. */
 const FINAL_SHEETS: Partial<Record<CharacterLook, (canvas: HTMLCanvasElement) => void>> = {
   grandma: drawGrandmaSheet,
   barista: drawBaristaSheet,
   regular: drawRegularSheet,
   supplier: drawSupplierSheet,
+  player: drawPlayerSheet,
 };
 
 /**

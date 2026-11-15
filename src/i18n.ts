@@ -21,7 +21,8 @@ const en = {
   showLesson: 'Show the lesson again',
   hideLesson: 'Hide the lesson',
   correct: 'Correct!',
-  allDone: "That's all for now — more chapters are coming soon!",
+  allDone:
+    'The Analysis Case is solved and the café is saved! Replay levels for ★★★, try ⏱ Rush Hour, or spend your coins on the café.',
   language: 'Language',
   hintButton: (used: number, total: number) => (used === 0 ? 'Need a hint?' : `Another hint (${used}/${total})`),
   hintTitle: (n: number) => `Hint ${n}`,
@@ -190,7 +191,8 @@ const id: UiText = {
   showLesson: 'Lihat materi lagi',
   hideLesson: 'Sembunyikan materi',
   correct: 'Benar!',
-  allDone: 'Sudah semua untuk sekarang — chapter berikutnya segera hadir!',
+  allDone:
+    'Kasus Analisis terpecahkan dan kafe terselamatkan! Mainkan ulang level untuk ★★★, coba ⏱ Jam Sibuk, atau belanjakan koinmu untuk kafe.',
   language: 'Bahasa',
   hintButton: (used, total) => (used === 0 ? 'Butuh petunjuk?' : `Petunjuk lagi (${used}/${total})`),
   hintTitle: (n) => `Petunjuk ${n}`,

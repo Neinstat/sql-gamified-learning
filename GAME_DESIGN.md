@@ -268,7 +268,7 @@ Di luar MVP (nanti): subquery, CTE, window function, analisis waktu lanjutan (Mo
 
 ### Struktur kode (tambahan Fase 3)
 - `src/game/art/` — aset final: `palette.ts` (32 warna + `paintGrid`), `tiles.ts` (tileset kafe), `grandma.ts` (sprite 16×32 + potret 64×64). Karakter yang belum punya aset final tetap memakai `placeholderSprites.ts` / `placeholderPortraits.ts` (dipilih otomatis di `characters.ts` dan `characterPortrait`).
-- `src/game/art/characterKit.ts` — alat bersama tokoh gaya final: sheet jalan dari grid (`drawSheet`, sepatu `FEET_FRONT`/`FEET_SIDE`) dan potret 64×64 dari bentuk dasar dengan latar dinding kafe (`finishPortrait`). Tokoh final: `grandma.ts` (3.1), `barista.ts` (3.4), `regular.ts` (3.8), `supplier.ts` (3.10). Tinggal karakter pemain yang masih placeholder.
+- `src/game/art/characterKit.ts` — alat bersama tokoh gaya final: sheet jalan dari grid (`drawSheet`, sepatu `FEET_FRONT`/`FEET_SIDE`) dan potret 64×64 dari bentuk dasar dengan latar dinding kafe (`finishPortrait`). Tokoh final: `grandma.ts` (3.1), `barista.ts` (3.4), `regular.ts` (3.8), `supplier.ts` (3.10), `player.ts` (3.13 — tubuh seragam kafe Barista dengan warna sendiri: rambut auburn, kemeja biru batu, celemek krem). Tidak ada lagi aset placeholder yang tampil; `placeholderSprites.ts` / `placeholderPortraits.ts` hanya tersisa sebagai cadangan.
 - `src/sql-core/data/recipes.ts` — tabel `recipes` (`recipe_id`, `item_id`, `ingredient`, `amount`, `unit`): satu baris per bahan. Grandma's Secret Cake sengaja **tanpa resep** (rahasia → bahan `LEFT JOIN` di Chapter 4); susu ada di banyak minuman (awal cerita Chapter 5). Stasiun **Recipe book** di Kitchen melihat `recipes` + `menu_items`.
 - `src/app/CafeMap.tsx` — tab **Café map** di Journal: ruangan berderet, yang terkunci bergaris dengan "Opens in Chapter N", posisi pemain (📍) dan ruangan tugas berikutnya (❗).
 - `src/sql-core/cases.ts` — cek kesimpulan Mini Case: jawaban dulu (`answer-wrong` dihitung sebagai kesimpulan salah untuk bintang), lalu bukti 📌 (`checkEvidence`). Pesan EN/ID lewat `formatCaseFeedback`.
@@ -327,7 +327,7 @@ Tes otomatis memeriksa semua level: jawaban resmi bisa dijalankan, blok yang dis
 
 Dibangun bertahap — setiap fase menghasilkan sesuatu yang bisa dimainkan.
 
-**Status (13 Nov 2026):** ✅ **Fase 1 selesai.** Chapter 0–1 (10 level) bisa dimainkan dalam EN/ID, dengan pengecek jawaban, hint, progres tersimpan, dan 110 tes otomatis. Pemilik project sudah uji main dan menyetujui rasa belajarnya. ✅ **Fase 2 selesai.** Chapter 0–1 dimainkan di dalam dunia game (ruang depan kafe, Phaser): berjalan dengan keyboard atau klik/tap, menerima permintaan dari Grandma, Barista, dan Regular, menyelesaikannya di konsol Menu board, lalu melapor. Ada Journal, zoom manual, dan panah penunjuk; 162 tes otomatis. Pemilik project sudah uji main (desktop + HP) dan menyetujuinya. 🚧 **Fase 3 dimulai** — keputusan perencanaan dan rencana iterasinya ada di "Rencana Fase 3" di bawah.
+**Status (13 Nov 2026):** ✅ **Fase 1 selesai.** Chapter 0–1 (10 level) bisa dimainkan dalam EN/ID, dengan pengecek jawaban, hint, progres tersimpan, dan 110 tes otomatis. Pemilik project sudah uji main dan menyetujui rasa belajarnya. ✅ **Fase 2 selesai.** Chapter 0–1 dimainkan di dalam dunia game (ruang depan kafe, Phaser): berjalan dengan keyboard atau klik/tap, menerima permintaan dari Grandma, Barista, dan Regular, menyelesaikannya di konsol Menu board, lalu melapor. Ada Journal, zoom manual, dan panah penunjuk; 162 tes otomatis. Pemilik project sudah uji main (desktop + HP) dan menyetujuinya. 🧪 **Fase 3 dibangun lengkap (15 Nov 2026), menunggu uji main pemilik project.** MVP Chapter 0–5: 34 level (termasuk 4 Mini Case dan Analysis Case), empat ruangan, semua tokoh dan tile dalam gaya final, bintang/koin/upgrade/streak/badge, Skill Check, dan Rush Hour; 477 tes otomatis. Rincian iterasi ada di "Rencana Fase 3" di bawah.
 
 Catatan dari Fase 1 untuk fase berikutnya:
 - Ukuran unduhan pertama PGlite besar (±3,5 MB wasm terkompresi + 6 MB data) — perlu layar loading yang jelas dan dicek saat memilih hosting.
@@ -400,7 +400,7 @@ Setiap iterasi bisa dimainkan sendiri: kerjakan → cek di browser → commit & 
 | 3.10 ✅ | **Storeroom + Back office** (`inventory`, `suppliers`, Supplier NPC, Grandma's computer) + **Chapter 5 Analysis Case** "October sales dropped 18%" | Analysis Case bisa diselesaikan lengkap dengan bukti 📌 di Back office |
 | 3.11 ✅ | **Kafe yang tumbuh:** upgrade dengan koin (kursi, dekorasi, papan menu, NPC pelanggan berjalan), daily streak 🔥, badge | Koin bisa dibelanjakan dan kafe berubah terlihat di dunia |
 | 3.12 ✅ | **Rush Hour** ⏱ (terbuka setelah Chapter 2) + skor terbaik pribadi | Satu putaran Rush Hour bisa dimainkan dan skor terbaik tersimpan |
-| 3.13 | Uji main akhir pemilik project, ganti sisa placeholder, perbaikan, README, status | Pemilik project menyetujui → MVP Chapter 0–5 selesai |
+| 3.13 🧪 | Uji main akhir pemilik project, ganti sisa placeholder, perbaikan, README, status | Pemilik project menyetujui → MVP Chapter 0–5 selesai |
 
 Catatan: isi level tiap chapter (dialog, data, jawaban) ditulis di awal iterasi chapter itu dan ditinjau pemilik project sebelum dibangun. Di luar Fase 3: materi lanjutan (subquery, CTE, window function), leaderboard (butuh backend), audio, hosting (masih pertanyaan terbuka §13).
 

@@ -20,16 +20,21 @@ You inherit your grandma's struggling café and become its data analyst. Explore
 
 ## Status
 
-✅ **Phase 1 (SQL core)** — Chapters 0–1 are playable on a simple page:
+✅ **Phase 1 (SQL core)** and ✅ **Phase 2 (the first world)** are done.
 
-- **Chapter 0 · First Day** — tables, `SELECT`, `FROM` (build queries from word blocks)
-- **Chapter 1 · Cleaning Up the Menu** — `WHERE`, `AND`, `IN`, `LIKE`, `IS NULL` (fill in the blanks)
-- Answers are graded on their **result**, not their text, with specific feedback ("Column `price` is missing", "Your result has 12 rows — expected 3")
-- Three-step hints, saved progress, beginner-friendly error messages
+🧪 **Phase 3 (the café grows)** — the full MVP is built and waiting for a final playtest:
 
-✅ **Phase 2 (the first world)** — Chapters 0–1 are played inside the café's front room (Phaser, placeholder pixel art): walk with WASD/arrows or click/tap, take requests from Grandma, the barista and a regular, solve them at the menu board's SQL console, and report back. Zoom with − / + (or the mouse wheel); a golden arrow points the way when your next stop is off screen.
+- **Six chapters, 34 levels**, from `SELECT` to `JOIN`s and aggregation:
+  0 · First Day · 1 · Cleaning Up the Menu · 2 · First Reports · 3 · Numbers Talk · 4 · Connecting the Dots · 5 · The Analysis Case
+- **Mini Cases** at the end of Chapters 1–4: open questions where you run your own queries, pin 📌 the results that prove your answer, and draw conclusions — like a real analyst. Chapter 5 ends with the big **Analysis Case**: *"October sales dropped 18%. What happened?"*
+- **"So what?"** questions after some levels: what does this result actually mean?
+- **Four rooms** that open chapter by chapter — the front room, kitchen, storeroom and back office — each with its own SQL station that only sees its own tables (like real company systems).
+- **A café that grows**: stars, coins, upgrades (plants, a rug, tables, a fancy menu board, strolling customers), a daily streak 🔥 and badges 🏅.
+- **Skill Check** for players who already know some SQL, and **Rush Hour** ⏱, a timed challenge.
+- Warm autumn pixel art: original characters, plus furniture from Kenney's CC0 pack (see [CREDITS.md](CREDITS.md)).
+- Realistic café data made by a seeded generator: about 4,600 orders from August to October, with hidden patterns to discover.
 
-Next: **Phase 3** — more rooms, Chapters 2–5, coins, stars and the Analysis Case. See [GAME_DESIGN.md](GAME_DESIGN.md) for the full design and roadmap (written in Indonesian).
+See [GAME_DESIGN.md](GAME_DESIGN.md) for the full design and roadmap (written in Indonesian).
 
 ## Getting started
 
@@ -43,24 +48,26 @@ npm run build      # typecheck and build for production
 npm run preview    # serve the production build at http://localhost:4173
 ```
 
-While developing, open `http://localhost:5173/?level=ch1-3` to jump straight to a level's request in the game world.
+While developing, open `http://localhost:5173/?level=ch3-7` to jump straight to a level's request in the game world.
 
 ## Project structure
 
 ```
 src/
 ├── sql-core/      # the SQL "brain" — no UI or game-engine code allowed here
-│   ├── db.ts        # PGlite database + safe, read-only query runner
+│   ├── db.ts        # PGlite database, station roles and the safe, read-only query runner
 │   ├── stations.ts  # which tables each station's console can see
 │   ├── checker.ts   # compares the player's result with the solution
+│   ├── cases.ts     # Mini Case / Analysis Case conclusions and evidence
+│   ├── skillCheck.ts, rushHour.ts
 │   ├── feedback.ts  # feedback messages in English and Indonesian
-│   ├── data/        # café schema and seed data
+│   ├── data/        # café data: menu, generated sales, recipes, stock (seeded, always the same)
 │   └── levels/      # chapters, levels and their translations (locales/id)
-├── console/       # SQL console UI (React): blocks, fill-in-the-blank, editor, results
+├── console/       # SQL console UI (React): blocks, fill-in-the-blank, editor, Mini Case notes
 ├── game/          # the 2D world (Phaser) — no React code allowed here
-│   ├── rooms/       # room maps as text (one character = one 16×16 tile)
-│   ├── bridge.ts    # the only link between the game world and the React overlays
-│   └── placeholder*.ts  # temporary tiles, sprites and portraits drawn in code
-├── app/           # the page around the world: overlays, quest flow, journal, saved progress
+│   ├── rooms/       # the café map as text (one character = one 16×16 tile), rooms and upgrades
+│   ├── art/         # pixel art as text grids in one 32-colour palette
+│   └── bridge.ts    # the only link between the game world and the React overlays
+├── app/           # the page around the world: overlays, quests, rewards, growth, the database worker
 └── i18n.ts        # UI text in both languages
 ```
