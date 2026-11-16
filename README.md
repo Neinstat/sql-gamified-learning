@@ -2,7 +2,9 @@
 
 An interactive top-down game for learning SQL — fun to play, with a gentle learning curve, and built around **thinking like a Business Intelligence (BI) analyst**.
 
-![Grandma's café: the front room with the menu board, the counter and the cash register](docs/images/cafe.jpg)
+![Grandma's café after every upgrade: a rug, extra tables and plants, a fancy menu board and strolling customers](docs/images/cafe.jpg)
+
+*The front room with every café upgrade bought. A new game starts with a plainer café: you earn coins from stars and spend them in the upgrade shop (tap 🪙) to add the rug, tables, plants and customers.*
 
 ## Why this project exists
 
