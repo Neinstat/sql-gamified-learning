@@ -1,7 +1,7 @@
 # SQL Valley — Dokumen Desain Game
 
 > Game web 2D *top-down* untuk belajar SQL sambil belajar **berpikir seperti analis Business Intelligence (BI)**: pemain berjalan menjelajahi kafe warisannya, bertemu tokoh, dan menyelesaikan tugas dengan menulis SQL di konsol yang tersebar di berbagai sudut kafe.
-> Status: MVP (Fase 1–3) sudah dibangun; Fase 3 menunggu uji main pemilik project (lihat §12). Dokumen ini adalah sumber kebenaran untuk keputusan desain — perbarui saat ada keputusan baru.
+> Status: ✅ **MVP selesai (Fase 1–3, 16 Nov 2026).** Berikutnya: fase "Nanti" (lihat §12). Dokumen ini adalah sumber kebenaran untuk keputusan desain — perbarui saat ada keputusan baru.
 >
 > **Bahasa:** dokumen ini ditulis dalam Bahasa Indonesia. Game memakai **English sebagai bahasa utama** dengan **pilihan Bahasa Indonesia** untuk teks cerita & UI; SQL, nama tabel/kolom, dan isi data selalu English (lihat §10). Istilah dan contoh in-game di bawah ditulis dalam English.
 
@@ -327,7 +327,7 @@ Tes otomatis memeriksa semua level: jawaban resmi bisa dijalankan, blok yang dis
 
 Dibangun bertahap — setiap fase menghasilkan sesuatu yang bisa dimainkan.
 
-**Status (13 Nov 2026):** ✅ **Fase 1 selesai.** Chapter 0–1 (10 level) bisa dimainkan dalam EN/ID, dengan pengecek jawaban, hint, progres tersimpan, dan 110 tes otomatis. Pemilik project sudah uji main dan menyetujui rasa belajarnya. ✅ **Fase 2 selesai.** Chapter 0–1 dimainkan di dalam dunia game (ruang depan kafe, Phaser): berjalan dengan keyboard atau klik/tap, menerima permintaan dari Grandma, Barista, dan Regular, menyelesaikannya di konsol Menu board, lalu melapor. Ada Journal, zoom manual, dan panah penunjuk; 162 tes otomatis. Pemilik project sudah uji main (desktop + HP) dan menyetujuinya. 🧪 **Fase 3 dibangun lengkap (15 Nov 2026), menunggu uji main pemilik project.** MVP Chapter 0–5: 34 level (termasuk 4 Mini Case dan Analysis Case), empat ruangan, semua tokoh dan tile dalam gaya final, bintang/koin/upgrade/streak/badge, Skill Check, dan Rush Hour; 477 tes otomatis. Dirapikan sebelum finalisasi: file placeholder dihapus, dokumen disesuaikan dengan kode. Rincian iterasi ada di "Rencana Fase 3" di bawah.
+**Status (13 Nov 2026):** ✅ **Fase 1 selesai.** Chapter 0–1 (10 level) bisa dimainkan dalam EN/ID, dengan pengecek jawaban, hint, progres tersimpan, dan 110 tes otomatis. Pemilik project sudah uji main dan menyetujui rasa belajarnya. ✅ **Fase 2 selesai.** Chapter 0–1 dimainkan di dalam dunia game (ruang depan kafe, Phaser): berjalan dengan keyboard atau klik/tap, menerima permintaan dari Grandma, Barista, dan Regular, menyelesaikannya di konsol Menu board, lalu melapor. Ada Journal, zoom manual, dan panah penunjuk; 162 tes otomatis. Pemilik project sudah uji main (desktop + HP) dan menyetujuinya. ✅ **Fase 3 selesai (16 Nov 2026) — MVP lengkap.** Chapter 0–5: 34 level (termasuk 4 Mini Case dan Analysis Case), empat ruangan, semua tokoh dan tile dalam gaya final, bintang/koin/upgrade/streak/badge, Skill Check, dan Rush Hour; 477 tes otomatis. Pemilik project menyetujui penyelesaian **tanpa uji main manual menyeluruh** (waktu terbatas); checklist [`docs/PLAYTEST.md`](docs/PLAYTEST.md) tetap tersedia untuk dipakai kapan saja, dan temuan dari uji main nanti diperbaiki sebagai iterasi kecil. Rincian iterasi ada di "Rencana Fase 3" di bawah.
 
 Catatan dari Fase 1 untuk fase berikutnya:
 - Ukuran unduhan pertama PGlite besar (±3,5 MB wasm terkompresi + 6 MB data) — perlu layar loading yang jelas dan dicek saat memilih hosting.
@@ -342,11 +342,16 @@ Catatan dari Fase 2 untuk fase berikutnya:
 - Belum teruji otomatis: mengubah ukuran jendela/memutar HP saat game berjalan dan tampilan galat database (sudah dicoba manual oleh pemilik project untuk HP).
 - Teks bar tugas English memakai nama tokoh apa adanya ("Talk to Regular") — bisa dirapikan saat menulis teks Chapter 2+.
 
+Catatan dari Fase 3 untuk fase berikutnya:
+- Belum ada uji main manual menyeluruh Chapter 2–5 secara berurutan (pengecekan selama pembangunan memakai jalan pintas `?level=` dan tes otomatis). Saat sempat, pakai `docs/PLAYTEST.md`.
+- Hal yang perlu diperhatikan saat uji main: apakah klik ke stasiun langsung membuka konsol tanpa menekan E; apakah toko 🪙 cukup mudah ditemukan (mungkin perlu petunjuk saat koin pertama cukup untuk membeli upgrade).
+- Hosting belum dipilih (§13) — dibutuhkan agar game bisa dibagikan lewat link.
+
 | Fase | Isi | Selesai jika… |
 |---|---|---|
-| **1. Inti SQL** | PGlite + data kafe, pengecek jawaban, format data level, konsol SQL (input blok → isi kosong → bebas), Chapter 0–1, pilihan bahasa EN/ID | Chapter 0–1 bisa dimainkan lengkap di halaman sederhana, dan rasa belajarnya sudah enak |
-| **2. Dunia pertama** | Game engine, satu ruangan (area depan + front counter), karakter berjalan, Grandma sebagai NPC, dialog, konsol terbuka dari stasiun | Pemain bisa jalan → bicara dengan Grandma → ke menu board → menyelesaikan level Chapter 0–1 di dalam dunia game |
-| **3. Kafe tumbuh** | Arah visual final; Mini Case & So what?; kitchen, storeroom, back office; Chapter 2–5; koin, upgrade, bintang, streak, Skill Check, Rush Hour, Analysis Case | MVP lengkap Chapter 0–5 |
+| **1. Inti SQL** ✅ | PGlite + data kafe, pengecek jawaban, format data level, konsol SQL (input blok → isi kosong → bebas), Chapter 0–1, pilihan bahasa EN/ID | Chapter 0–1 bisa dimainkan lengkap di halaman sederhana, dan rasa belajarnya sudah enak |
+| **2. Dunia pertama** ✅ | Game engine, satu ruangan (area depan + front counter), karakter berjalan, Grandma sebagai NPC, dialog, konsol terbuka dari stasiun | Pemain bisa jalan → bicara dengan Grandma → ke menu board → menyelesaikan level Chapter 0–1 di dalam dunia game |
+| **3. Kafe tumbuh** ✅ | Arah visual final; Mini Case & So what?; kitchen, storeroom, back office; Chapter 2–5; koin, upgrade, bintang, streak, Skill Check, Rush Hour, Analysis Case | MVP lengkap Chapter 0–5 |
 | **Nanti** | Materi lanjutan, leaderboard (butuh backend), audio, polesan | — |
 
 ### Rencana Fase 2 — Dunia pertama
@@ -400,7 +405,7 @@ Setiap iterasi bisa dimainkan sendiri: kerjakan → cek di browser → commit & 
 | 3.10 ✅ | **Storeroom + Back office** (`inventory`, `suppliers`, Supplier NPC, Grandma's computer) + **Chapter 5 Analysis Case** "October sales dropped 18%" | Analysis Case bisa diselesaikan lengkap dengan bukti 📌 di Back office |
 | 3.11 ✅ | **Kafe yang tumbuh:** upgrade dengan koin (kursi, dekorasi, papan menu, NPC pelanggan berjalan), daily streak 🔥, badge | Koin bisa dibelanjakan dan kafe berubah terlihat di dunia |
 | 3.12 ✅ | **Rush Hour** ⏱ (terbuka setelah Chapter 2) + skor terbaik pribadi | Satu putaran Rush Hour bisa dimainkan dan skor terbaik tersimpan |
-| 3.13 🧪 | Uji main akhir pemilik project, ganti sisa placeholder, perbaikan, README, status | Pemilik project menyetujui → MVP Chapter 0–5 selesai |
+| 3.13 ✅ | Uji main akhir pemilik project, ganti sisa placeholder, perbaikan, README, status | Pemilik project menyetujui → MVP Chapter 0–5 selesai |
 
 Catatan: isi level tiap chapter (dialog, data, jawaban) ditulis di awal iterasi chapter itu dan ditinjau pemilik project sebelum dibangun. Di luar Fase 3: materi lanjutan (subquery, CTE, window function), leaderboard (butuh backend), audio, hosting (masih pertanyaan terbuka §13).
 

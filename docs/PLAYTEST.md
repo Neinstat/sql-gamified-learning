@@ -1,6 +1,6 @@
-# Checklist uji main — Fase 1–3
+# Checklist uji main — MVP (Fase 1–3)
 
-Checklist untuk uji main akhir sebelum Fase 1–3 dinyatakan selesai (lihat `GAME_DESIGN.md` §12).
+Checklist untuk menguji seluruh game secara manual. Fase 1–3 sudah dinyatakan selesai (16 Nov 2026) tanpa uji main menyeluruh; pakai checklist ini kapan saja, dan temuannya diperbaiki sebagai iterasi kecil (lihat `GAME_DESIGN.md` §12).
 Centang yang sudah aman; catat yang janggal beserta level atau ruangannya (mis. "ch3-4: hint 2 membingungkan").
 
 **Persiapan:** `npm run dev`, lalu buka http://localhost:5173.

@@ -53,8 +53,8 @@ Controls: WASD / arrow keys or click/tap to walk, **E** / Space to talk or use a
 
 ## Status
 
-✅ **Phase 1 (SQL core)** and ✅ **Phase 2 (the first world)** are done.
-🧪 **Phase 3 (the café grows)** — the full MVP is built and in its final playtest ([checklist](docs/PLAYTEST.md)).
+✅ **The MVP is complete**: Phase 1 (SQL core), Phase 2 (the first world) and Phase 3 (the café grows) are done.
+A [playtest checklist](docs/PLAYTEST.md) is kept for checking the whole game by hand.
 
 See [GAME_DESIGN.md](GAME_DESIGN.md) for the full design and roadmap (written in Indonesian).
 
