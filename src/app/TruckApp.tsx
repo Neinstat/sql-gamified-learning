@@ -25,6 +25,9 @@ export function TruckApp() {
   const [tabletOpen, setTabletOpen] = useState(false);
   const [solved, setSolved] = useState(false);
   const [hintsUsed, setHintsUsed] = useState(0);
+  const [scrollX, setScrollX] = useState(0);
+  const [artLabels, setArtLabels] = useState(false);
+  const [toast, setToast] = useState<string | null>(null);
 
   useEffect(() => {
     document.documentElement.lang = lang;
@@ -41,6 +44,15 @@ export function TruckApp() {
   }, []);
 
   useEffect(() => bridge.on('front', setFront), [bridge]);
+  useEffect(() => bridge.on('view', setScrollX), [bridge]);
+  useEffect(() => bridge.emit('artLabels', artLabels), [bridge, artLabels, ready]);
+
+  // A short message that fades on its own.
+  useEffect(() => {
+    if (!toast) return;
+    const timer = window.setTimeout(() => setToast(null), 2600);
+    return () => window.clearTimeout(timer);
+  }, [toast]);
 
   useEffect(() => {
     let cancelled = false;
@@ -70,7 +82,15 @@ export function TruckApp() {
     if (order) setTabletOpen(true);
   }, [order]);
 
-  useEffect(() => bridge.on('tablet', openTablet), [bridge, openTablet]);
+  // The player used something in the truck (E, or a click).
+  useEffect(
+    () =>
+      bridge.on('use', (id) => {
+        if (id === 'tablet') openTablet();
+        else setToast(t.truckSoon(t.truckThings[id]));
+      }),
+    [bridge, openTablet, t],
+  );
 
   // Time stops while the tablet is open.
   useEffect(() => bridge.emit('pause', tabletOpen), [bridge, tabletOpen]);
@@ -85,6 +105,16 @@ export function TruckApp() {
     <div className="truck-app">
       <header className="truck-hud">
         <span className="truck-title">🚚 Rolling Roast</span>
+        <span className="truck-controls">{t.truckControls}</span>
+        <div className="truck-hud-right">
+          <button
+            className={artLabels ? 'hud-button active' : 'hud-button'}
+            title={t.truckArtTitle}
+            aria-pressed={artLabels}
+            onClick={() => setArtLabels((on) => !on)}
+          >
+            🏷 {t.truckArt}
+          </button>
         <div className="lang-switch" role="group" aria-label={t.language}>
           {LANGS.map((code) => (
             <button
@@ -97,6 +127,7 @@ export function TruckApp() {
             </button>
           ))}
         </div>
+        </div>
       </header>
       <div className="truck-view" ref={parentRef}>
         {!ready && (
@@ -106,7 +137,19 @@ export function TruckApp() {
           </div>
         )}
         {front && order && !tabletOpen && (
-          <OrderBubble key={`bubble-${order.id}`} parent={parentRef} front={front} t={t} text={orderLine(order, lang)} onAnswer={openTablet} />
+          <OrderBubble
+            key={`bubble-${order.id}`}
+            parent={parentRef}
+            front={front}
+            scrollX={scrollX}
+            t={t}
+            text={orderLine(order, lang)}
+          />
+        )}
+        {toast && (
+          <div className="truck-toast" role="status">
+            {toast}
+          </div>
         )}
         {/* Kept mounted while the same customer orders, so a half-written query survives closing. */}
         {order && level && (
@@ -146,15 +189,16 @@ function findRequest(levelId: string, lang: 'en' | 'id'): Level | undefined {
 function OrderBubble({
   parent,
   front,
+  scrollX,
   t,
   text,
-  onAnswer,
 }: {
   parent: React.RefObject<HTMLDivElement | null>;
   front: FrontCustomer;
+  /** World x of the screen's left edge (the camera follows the player). */
+  scrollX: number;
   t: UiText;
   text: string;
-  onAnswer: () => void;
 }) {
   const [pos, setPos] = useState<{ left: number; bottom: number } | null>(null);
 
@@ -168,7 +212,7 @@ function OrderBubble({
       const hostBox = host.getBoundingClientRect();
       const scale = box.width / TRUCK_W;
       setPos({
-        left: box.left - hostBox.left + front.x * scale,
+        left: box.left - hostBox.left + (front.x - scrollX) * scale,
         bottom: hostBox.bottom - (box.top + front.y * scale) + 6,
       });
     };
@@ -176,15 +220,13 @@ function OrderBubble({
     const observer = new ResizeObserver(place);
     observer.observe(host);
     return () => observer.disconnect();
-  }, [parent, front]);
+  }, [parent, front, scrollX]);
 
   if (!pos) return null;
   return (
     <div className="order-bubble" role="status" aria-label={t.truckOrder} style={{ left: pos.left, bottom: pos.bottom }}>
       <p className="order-bubble-text">{text}</p>
-      <button className="order-bubble-button" onClick={onAnswer}>
-        📱 {t.truckAnswer}
-      </button>
+      <p className="order-bubble-hint">📱 {t.truckAnswer}</p>
     </div>
   );
 }

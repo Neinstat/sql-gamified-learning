@@ -508,10 +508,15 @@ Setelah Minggu 6: **mode bebas tanpa akhir**. Hari terus berjalan dengan pengula
 
 ### 14.8 Tampilan & gaya visual
 - **Tetap pixel art** (bukan low poly). Alasannya: game 2D, aset dan palet v1 bisa dipakai, dan biaya 3D tidak menambah apa pun pada inti game (menulis SQL).
-- **Tampak samping, satu layar tetap** (tanpa kamera berjalan): resolusi dasar **480×270**, diperbesar dengan skala bulat.
-  - Kiri/tengah: pemandangan jendela truck dan antrean pelanggan (sprite tampak samping/depan **32×48**), gelembung pesanan, jam di dinding truck.
-  - Kanan/bawah: **tablet POS** (konsol React) yang bisa dibuka dan ditutup. Di HP, tablet memenuhi layar.
+- ~~Tampak samping, satu layar tetap~~ — dipakai di 4.1–4.3, lalu **diganti (16 Nov 2026)** setelah pemilik project mencobanya: karakter terlalu kecil, interaksi minim, dan kamera diam.
+- **Keputusan baru: interior truck yang bisa dijelajahi (tampak samping, potongan seperti rumah boneka).**
+  - Resolusi dasar tetap **480×270** dengan zoom bulat, tapi **dunianya 960 px lebar**, dua kali layar. **Kamera mengikuti pemain** dengan gerak halus, dan pemandangan luar bergeser lebih lambat (*parallax*).
+  - **Pemain berjalan dengan WASD/panah**: A/D kiri-kanan, W/S maju-mundur di pita lantai (gaya beat-'em-up 2D). Benda yang lebih bawah di layar digambar di depan.
+  - **Karakter besar**: pemain ±40×96 (⅓ tinggi layar). Pelanggan terlihat **setengah badan** (±64×80) di balik jendela saji di dinding belakang, seperti pelanggan di balik counter.
+  - Benda di sepanjang dinding belakang, dari kiri ke kanan: **kulkas & rak stok** (`inventory`), **jendela saji + tablet kasir** (pesanan), **mesin kopi** (dekorasi), **papan menu** (`menu_items`), **rak buku resep** (`recipes`), **pintu belakang** (The Manager). Dekat benda → muncul tanda **E**; tekan E untuk memakainya.
+  - Gelembung pesanan tetap di atas kepala pelanggan (React). Tablet dan konsol tetap overlay React; di HP memenuhi layar.
   - Latar luar berganti mengikuti lokasi dan waktu (pagi → sore).
+- **Gambar sementara ditandai.** Semua gambar v2 masih dibuat lewat kode dan berstatus *placeholder*. Daftar dan statusnya ada di [`docs/ASSETS.md`](docs/ASSETS.md); di game, tombol **🏷 Art** menampilkan label "PLACEHOLDER" di atas setiap gambar yang belum final. Sumber gambar final dipilih nanti (CC0 untuk benda; karakter besar dari pack berlisensi, seniman, atau gambar pemilik project) — keputusan di Fase 7.
 - Referensi pemilik project (game kafe pixel art dengan pelanggan di kiri dan panel kerja di kanan) dipakai hanya sebagai **inspirasi tata letak**. Karakter, gaya gambar, dan UI tetap orisinal.
 - Palet 32 warna v1 tetap dipakai. Warna tambahan untuk suasana luar ruangan boleh ditambahkan lewat keputusan baru (tes palet diperbarui).
 - Engine tetap **Phaser 3** untuk adegan truck (antrean, animasi pelanggan, ketukan pintu) dan **React** untuk overlay. Bridge v1 dipakai ulang.
@@ -534,10 +539,12 @@ Setiap fase menghasilkan sesuatu yang bisa dimainkan; setiap iterasi: kerjakan �
 | 4.1 ✅ | Tag `v1-cafe-mvp`; adegan truck statis 480×270 (truck, jendela, latar, jam) di scene Phaser baru, dibuka lewat `?truck` agar v1 tetap jalan selama transisi | Adegan truck tampil tajam di browser, v1 masih bisa dimainkan |
 | 4.2 ✅ | Antrean pelanggan: datang, menunggu, maju; gelembung pesanan dari daftar pesanan tertulis manual (4–5 pesanan memakai level Ch1 yang ada) | Pelanggan antre dan pesanannya terbaca (EN/ID) |
 | 4.3 ✅ | Tablet POS: konsol v1 dibuka dari pesanan aktif, jam berhenti saat tablet terbuka, jawaban benar → pelanggan dilayani dan pergi | Satu pesanan bisa diselesaikan dari antre sampai dilayani |
-| 4.4 | Penjualan masuk database (`INSERT` oleh game, `channel = 'truck'`) + log hari di progres + putar ulang saat dimuat | Setelah melayani, query `sales` pemain menampilkan penjualan hari ini, juga setelah halaman dimuat ulang |
-| 4.5 | Jam 10.00–17.00, kesabaran → tip, layar tutup + ringkasan hari | Satu hari bisa dimainkan dari buka sampai ringkasan |
-| 4.6 | Ketukan manajer: The Manager (berjas) di pintu belakang, satu kasus kecil memakai mesin Mini Case dengan data hari ini | Kasus manajer bisa diselesaikan dengan bukti 📌 |
-| 4.7 | Uji main pemilik project + perbaikan | Keputusan: lanjut ke Fase 5 atau ubah konsep |
+| 4.4 ✅ | **Truck bisa dijelajahi:** interior 960 px, pemain besar berjalan WASD, kamera mengikuti + parallax, pelanggan setengah badan di jendela, tablet dibuka dengan E saat dekat, tombol 🏷 Art + `docs/ASSETS.md` | Pemain berjalan dari kulkas ke pintu belakang dengan kamera mengikuti, lalu melayani pesanan dari tablet |
+| 4.5 | **Interaksi benda:** papan menu, kulkas, rak resep membuka konsol dengan tabelnya sendiri; pesanan bisa butuh mengecek benda lain dulu | Tiap benda membuka tabelnya; satu pesanan memakai kulkas (`inventory`) |
+| 4.6 | Penjualan masuk database (`INSERT` oleh game, `channel = 'truck'`) + log hari di progres + putar ulang saat dimuat | Setelah melayani, query `sales` pemain menampilkan penjualan hari ini, juga setelah halaman dimuat ulang |
+| 4.7 | Jam 10.00–17.00, kesabaran → tip, layar tutup + ringkasan hari | Satu hari bisa dimainkan dari buka sampai ringkasan |
+| 4.8 | Ketukan manajer: The Manager (berjas) di pintu belakang, satu kasus kecil memakai mesin Mini Case dengan data hari ini | Kasus manajer bisa diselesaikan dengan bukti 📌 |
+| 4.9 | Uji main pemilik project + perbaikan | Keputusan: lanjut ke Fase 5 atau ubah konsep |
 
 **4.1 dibangun (16 Nov 2026):** `src/game/truck/truckArt.ts` menggambar adegan dari dalam truck (jendela saji dengan awning, kota di luar, trotoar tempat antre, counter dengan toples tip dan tablet POS, papan menu, jam dinding, pintu belakang) memakai palet v1; `TRUCK_LAYOUT` menyimpan posisi area untuk iterasi berikutnya. `createTruckGame.ts` memakai zoom bilangan bulat (`truckZoom`; pecahan hanya bila layar < 480×270), `TruckApp.tsx` dibuka lewat `?truck`. Di HP tegak adegan tampil kecil (game landscape) — tablet POS akan memenuhi layar HP di 4.3.
 
@@ -555,6 +562,15 @@ Setiap fase menghasilkan sesuatu yang bisa dimainkan; setiap iterasi: kerjakan �
 - Tablet tetap ter-mount selama pelanggan yang sama, jadi query yang belum selesai tidak hilang saat ditutup. Menutup tablet setelah jawaban benar → event `serve` → pelanggan pergi dan antrean maju.
 - **Waktu berhenti saat tablet terbuka** (event `pause`): pelanggan tidak bergerak dan tidak ada yang datang. Jam yang berjalan baru dibuat di 4.5.
 - Tombol "Serve (test)" dari 4.2 dihapus. Bintang/koin belum diberikan untuk pesanan (menunggu ringkasan hari di 4.5).
+
+**4.4 dibangun (16 Nov 2026):**
+- `truckArt.ts` digambar ulang: interior 960×270 (dinding baja, lampu, lantai kayu), jendela saji 320×114 dengan sill, dan dari kiri ke kanan: kulkas + papan klip stok, jendela + tablet, meja saji + mesin kopi + jam, papan menu, rak resep, pintu belakang. Jalan di luar adalah lapisan sendiri dengan *parallax* 0,6.
+- `truckWorld.ts` (dites): pita lantai tempat kaki pemain (`FLOOR`), daftar benda (`INTERACTABLES`), benda terdekat dalam jangkauan (`nearestInteractable`), arah dari tombol, dan klik untuk berjalan (`stepTowards`, `standingSpot`).
+- Pemain 40×96 tampak samping (3 frame, dibalik untuk arah kiri) berjalan dengan WASD/panah atau klik lantai. Mengklik benda → berjalan ke depannya lalu memakainya. Kamera mengikuti (deadzone 80 px, gerak halus).
+- Pelanggan setengah badan 64×80 di balik sill; antrean di tempat x 466/396/326/256 (tes memastikan semuanya di dalam jendela, sedangkan muncul/pergi tersembunyi di balik dinding).
+- Tanda **E** melayang di atas benda terdekat. Tablet → konsol pesanan seperti 4.3; benda lain menampilkan pesan "bisa dipakai di pembaruan berikutnya" (4.5). Gelembung pesanan ikut bergeser bersama kamera (event `view`).
+- Tombol **🏷 Art** (event `artLabels`) menampilkan label PLACEHOLDER; daftar status ada di `docs/ASSETS.md`.
+- Catatan: di layar kecil (zoom 1×) semuanya tampak kecil; di layar laptop/desktop penuh zoom 2–4×.
 
 Prinsip transisi: **v1 tidak dihapus sebelum Fase 4 terbukti seru.** Selama Fase 4–7, v2 dibuka lewat `?truck`; setelah Fase 6 v2 menjadi tampilan utama, dan kode v1 dibersihkan di Fase 8.
 

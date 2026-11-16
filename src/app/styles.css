@@ -1620,3 +1620,41 @@ body {
 .order-bubble-button:hover {
   background: #eda552;
 }
+
+.order-bubble-hint {
+  margin: 0.35rem 0 0;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: #93603d;
+}
+
+.truck-controls {
+  flex: 1;
+  font-size: 0.8rem;
+  color: #d7a571;
+}
+
+.hud-button.active {
+  background: #a5494f;
+  color: #fff6e3;
+}
+
+.truck-toast {
+  position: absolute;
+  left: 50%;
+  bottom: 1rem;
+  transform: translateX(-50%);
+  max-width: 90%;
+  padding: 0.5rem 0.9rem;
+  border-radius: 6px;
+  background: rgba(43, 29, 25, 0.9);
+  color: #fff6e3;
+  font-size: 0.9rem;
+  pointer-events: none;
+}
+
+@media (max-width: 640px) {
+  .truck-controls {
+    display: none;
+  }
+}

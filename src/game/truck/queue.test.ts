@@ -1,5 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { QUEUE, spotX, TruckQueue } from './queue';
+import { TRUCK_LAYOUT } from './truckArt';
+import { CUSTOMER_W } from './customerArt';
 
 const settle = (q: TruckQueue, seconds = 20) => {
   for (let i = 0; i < seconds * 10; i++) q.update(0.1);
@@ -77,10 +79,14 @@ describe('TruckQueue', () => {
     expect(q.serveFront()).toBeNull();
   });
 
-  it('keeps every spot inside the serving window', () => {
+  it('keeps every spot inside the serving window, and hides arrivals and exits behind the wall', () => {
+    const { x, w } = TRUCK_LAYOUT.window;
+    const half = CUSTOMER_W / 2;
     for (let s = 0; s < QUEUE.maxWaiting; s++) {
-      expect(spotX(s)).toBeGreaterThan(20 + 16);
-      expect(spotX(s)).toBeLessThan(320 - 16);
+      expect(spotX(s) - half).toBeGreaterThanOrEqual(x);
+      expect(spotX(s) + half).toBeLessThanOrEqual(x + w);
     }
+    expect(QUEUE.enterX + half).toBeLessThanOrEqual(x);
+    expect(QUEUE.exitX - half).toBeGreaterThanOrEqual(x + w);
   });
 });

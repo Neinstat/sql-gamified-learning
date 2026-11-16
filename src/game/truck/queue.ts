@@ -7,16 +7,16 @@
  */
 export const QUEUE = {
   /** Where customers appear (hidden behind the truck wall, left of the window). */
-  enterX: -20,
-  /** Where served customers walk off to (right side of the window, behind the frame). */
-  exitX: 360,
-  /** Spot 0 (the window) and the gap between spots. */
-  frontX: 214,
-  gap: 46,
+  enterX: 150,
+  /** Where served customers walk off to (hidden behind the wall, right of the window). */
+  exitX: 580,
+  /** Spot 0 (the window, by the tablet) and the gap between spots. */
+  frontX: 466,
+  gap: 70,
   /** At most this many people wait at once. */
   maxWaiting: 4,
   /** Walking speed in pixels per second. */
-  speed: 48,
+  speed: 60,
 } as const;
 
 export type QueueCustomer = {
