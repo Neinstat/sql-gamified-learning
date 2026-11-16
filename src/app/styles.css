@@ -1520,3 +1520,20 @@ body {
   cursor: pointer;
   touch-action: manipulation;
 }
+
+/* Food truck v2 (GAME_DESIGN.md §14): the fixed 480×270 scene fills the screen. */
+.truck-app {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  background: #2b1d19;
+}
+
+.truck-view {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+  touch-action: none;
+  user-select: none;
+}
