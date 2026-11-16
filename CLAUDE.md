@@ -1,6 +1,6 @@
 # CLAUDE.md
 
-Project: **SQL Valley** — game web 2D untuk belajar SQL dengan fokus cara berpikir analis BI. **v1 (Fase 1–3, selesai):** kafe top-down, pemain berjalan ke stasiun konsol. **v2 (Fase 4+, sedang berjalan):** food truck tampak samping — pelanggan antre membawa pesanan yang dijawab dengan SQL di tablet POS, dan Grandma (manajer) sesekali mengetuk pintu dengan pertanyaan BI. Lihat `GAME_DESIGN.md` §14.
+Project: **SQL Valley** — game web 2D untuk belajar SQL dengan fokus cara berpikir analis BI. **v1 (Fase 1–3, selesai):** kafe top-down, pemain berjalan ke stasiun konsol. **v2 (Fase 4+, sedang berjalan):** food truck tampak samping — pelanggan antre membawa pesanan yang dijawab dengan SQL di tablet POS, dan The Manager (berjas, bossy) sesekali mengetuk pintu dengan pertanyaan BI. Tokoh v1 (Grandma dkk.) tidak dipakai di v2. Lihat `GAME_DESIGN.md` §14.
 
 - Semua keputusan desain ada di `GAME_DESIGN.md`. Baca dulu sebelum merancang atau membangun fitur, dan perbarui file itu bila ada keputusan desain baru.
 - Pemilik project sedang belajar Claude Code dan git: jelaskan langkah dalam Bahasa Indonesia, dengan singkat dan jelas.

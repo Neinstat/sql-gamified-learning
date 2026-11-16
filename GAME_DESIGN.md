@@ -447,16 +447,18 @@ Arsitektur v1 sengaja memisahkan inti SQL dari dunia game, jadi sebagian besar k
 | Isi 34 level Chapter 0–5 (kartu materi, solusi, hint, terjemahan) | Dipecah menjadi **template pesanan** dan **kasus manajer** (§14.5) |
 | Konsol React (blok → isi kosong → ketik bebas, CodeMirror, tabel hasil) | Tampil sebagai **tablet kasir / POS** di truck |
 | Bahasa EN + ID, bintang/koin, streak, badge, Skill Check | Aturannya disesuaikan ke sistem hari |
-| Palet 32 warna, Grandma, Regular, Supplier, Barista | Digambar ulang dalam tampak samping (§14.8) |
+| Palet 32 warna + alat gambar (`paintGrid`, format grid teks) | Tokoh v1 **tidak** dipakai: semua tokoh v2 baru (§14.3) |
 
 Yang **tidak** dipakai lagi: peta top-down, berjalan dan pathfinding, pintu dan ruangan, Café map. Kode itu dihapus di Fase 8; versi v1 tetap tersimpan di git (tag `v1-cafe-mvp`).
 
 ### 14.3 Konsep & cerita
-- Grandma pensiun dari kafe dan mewariskan **food truck lamanya** kepada pemain. Truck berkeliling lembah dan buka **10.00–17.00**.
-- **Grandma = pemilik/manajer.** Sesekali ia mengetuk pintu belakang truck dan bertanya soal bisnis.
-- **Pelanggan** antre di jendela depan: Regular dan wajah-wajah baru, masing-masing dengan gaya bicara sendiri.
-- **Supplier** datang pagi hari mengantar stok, membuka tugas tentang `inventory`.
-- Menu tetap kopi + camilan (data `menu_items` v1), jadi isi level lama tetap cocok.
+**Awal yang benar-benar baru** (keputusan pemilik project, 16 Nov 2026): cerita kafe Grandma dan semua tokoh v1 (Grandma, Barista, Regular, Supplier) **tidak dipakai** di v2.
+
+- Pemain adalah **karyawan baru** di food truck **Rolling Roast**, milik perusahaan kecil **Valley Eats Co.** Truck berkeliling kota dan buka **10.00–17.00**.
+- **The Manager** — tokoh atasan berjas rapi, dasi, dan tablet laporan. Ia sesekali mengetuk pintu belakang truck dan menanyakan angka: sales, revenue, stok yang sering habis, target bulan ini. Gaya bicaranya **bossy**: singkat, menuntut angka, tidak suka basa-basi ("Numbers. Now.", "I don't want feelings, I want revenue by day."). Bila jawabannya tepat, ia memberi pujian kecil yang kaku.
+- **Pelanggan** antre di jendela depan: wajah-wajah baru dengan gaya bicara sendiri. Sebagian menjadi pelanggan tetap yang muncul lagi di hari lain.
+- **Kurir pemasok** datang pagi hari mengantar stok, membuka tugas tentang `inventory`.
+- Menu tetap kopi + camilan (struktur data `menu_items` v1), jadi isi SQL level lama tetap cocok. Teks cerita yang menyebut Grandma/kafe ditulis ulang saat dipindah di Fase 6.
 
 ### 14.4 Core loop: satu hari kerja
 1. **Pagi (sebelum buka):** ringkasan hari ini, cek stok (kadang tugas dari Supplier), kartu materi bila ada konsep baru.
@@ -534,13 +536,13 @@ Setiap fase menghasilkan sesuatu yang bisa dimainkan; setiap iterasi: kerjakan �
 | 4.3 | Tablet POS: konsol v1 dibuka dari pesanan aktif, jam berhenti saat tablet terbuka, jawaban benar → pelanggan dilayani dan pergi | Satu pesanan bisa diselesaikan dari antre sampai dilayani |
 | 4.4 | Penjualan masuk database (`INSERT` oleh game, `channel = 'truck'`) + log hari di progres + putar ulang saat dimuat | Setelah melayani, query `sales` pemain menampilkan penjualan hari ini, juga setelah halaman dimuat ulang |
 | 4.5 | Jam 10.00–17.00, kesabaran → tip, layar tutup + ringkasan hari | Satu hari bisa dimainkan dari buka sampai ringkasan |
-| 4.6 | Ketukan manajer: Grandma di pintu belakang, satu kasus kecil memakai mesin Mini Case dengan data hari ini | Kasus manajer bisa diselesaikan dengan bukti 📌 |
+| 4.6 | Ketukan manajer: The Manager (berjas) di pintu belakang, satu kasus kecil memakai mesin Mini Case dengan data hari ini | Kasus manajer bisa diselesaikan dengan bukti 📌 |
 | 4.7 | Uji main pemilik project + perbaikan | Keputusan: lanjut ke Fase 5 atau ubah konsep |
 
 Prinsip transisi: **v1 tidak dihapus sebelum Fase 4 terbukti seru.** Selama Fase 4–7, v2 dibuka lewat `?truck`; setelah Fase 6 v2 menjadi tampilan utama, dan kode v1 dibersihkan di Fase 8.
 
 ### 14.10 Pertanyaan terbuka v2
-- [ ] Nama truck dan judul game (tetap "SQL Valley"?) — sementara tetap **SQL Valley**, truck bernama *Grandma's Brew Truck*
+- [ ] Nama truck dan judul game (tetap "SQL Valley"?) — sementara tetap **SQL Valley**, truck bernama *Rolling Roast*
 - [ ] Apakah `INSERT`/`UPDATE` diajarkan di minggu lanjutan (pemain mencatat sendiri pesanan atau restock)
 - [ ] Panjang hari yang pas (8–12 menit) — ditentukan dari uji main 4.7
 - [ ] Lokasi berkeliling: hanya visual, atau setiap lokasi punya pelanggan/data berbeda
