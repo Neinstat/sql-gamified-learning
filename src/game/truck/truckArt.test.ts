@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { PALETTE } from '../art/palette';
-import { paintClock, paintTruckScene, TRUCK_H, TRUCK_LAYOUT, TRUCK_W, truckZoom } from './truckArt';
+import { paintClock, paintInterior, paintOutside, TRUCK_H, TRUCK_LAYOUT, TRUCK_W, truckZoom } from './truckArt';
 
 /** A fake canvas that records every rectangle drawn. */
 function recorder() {
@@ -10,6 +10,7 @@ function recorder() {
     fillRect(x: number, y: number, w: number, h: number) {
       rects.push({ colour: this.fillStyle, x, y, w, h });
     },
+    clearRect() {},
   };
   return { ctx: ctx as unknown as CanvasRenderingContext2D, rects };
 }
@@ -19,7 +20,8 @@ const palette = new Set<string>(Object.values(PALETTE));
 describe('truck scene art', () => {
   it('uses palette colours only and stays inside the 480×270 canvas', () => {
     const { ctx, rects } = recorder();
-    paintTruckScene(ctx);
+    paintOutside(ctx);
+    paintInterior(ctx);
     paintClock(ctx, 10, 0);
     expect(rects.length).toBeGreaterThan(100);
     for (const r of rects) {

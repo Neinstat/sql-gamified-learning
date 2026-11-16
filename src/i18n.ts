@@ -48,6 +48,8 @@ const en = {
   journal: 'Journal',
   journalHint: 'Pick a finished level to play it again.',
   gotIt: 'Got it',
+  truckServeTest: 'Serve (test)',
+  truckOrder: 'Order',
   npcIdle: {
     grandma: "Take your time, dear. I'll be right here when you're ready.",
     barista: 'One sec — the milk is about to boil over!',
@@ -217,6 +219,8 @@ const id: UiText = {
   journal: 'Jurnal',
   journalHint: 'Pilih level yang sudah selesai untuk memainkannya lagi.',
   gotIt: 'Mengerti',
+  truckServeTest: 'Layani (uji)',
+  truckOrder: 'Pesanan',
   npcIdle: {
     grandma: 'Santai saja, Nak. Nenek ada di sini kalau kamu sudah siap.',
     barista: 'Sebentar — susunya hampir meluap!',

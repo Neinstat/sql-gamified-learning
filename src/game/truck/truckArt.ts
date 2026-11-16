@@ -214,14 +214,20 @@ export function paintClock(ctx: Ctx, hour: number, minute: number): void {
   fill(ctx, 'k', cx, cy, 1, 1);
 }
 
-/** Everything that does not change during a day. */
-export function paintTruckScene(ctx: Ctx): void {
-  wall(ctx);
+/** The street seen through the window (customers are drawn on top of this layer). */
+export function paintOutside(ctx: Ctx): void {
   outside(ctx);
   awning(ctx);
+}
+
+/** The inside of the truck, with the window left see-through so customers show behind it. */
+export function paintInterior(ctx: Ctx): void {
+  const { x, y, w, h } = TRUCK_LAYOUT.window;
+  wall(ctx);
   windowFrame(ctx);
   menuBoard(ctx);
   backDoor(ctx);
   counter(ctx);
+  ctx.clearRect(x, y, w, h);
   counterItems(ctx);
 }

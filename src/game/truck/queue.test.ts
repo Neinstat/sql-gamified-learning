@@ -1,0 +1,86 @@
+import { describe, expect, it } from 'vitest';
+import { QUEUE, spotX, TruckQueue } from './queue';
+
+const settle = (q: TruckQueue, seconds = 20) => {
+  for (let i = 0; i < seconds * 10; i++) q.update(0.1);
+};
+
+/** Lets each customer in as soon as there is room, like the scene does. */
+const joinAll = (q: TruckQueue, ids: string[]) => {
+  for (const id of ids) {
+    while (!q.canJoin()) q.update(0.1);
+    q.join(id);
+  }
+};
+
+describe('TruckQueue', () => {
+  it('walks a new customer to the window, where they can order', () => {
+    const q = new TruckQueue();
+    q.join('a');
+    expect(q.front()).toBeNull();
+    settle(q);
+    expect(q.front()?.orderId).toBe('a');
+    expect(q.front()?.x).toBe(spotX(0));
+  });
+
+  it('lines people up behind each other without overlapping', () => {
+    const q = new TruckQueue();
+    joinAll(q, ['a', 'b', 'c']);
+    for (let i = 0; i < 200; i++) {
+      q.update(0.1);
+      for (let s = 1; s < q.line.length; s++) {
+        expect(q.line[s - 1].x - q.line[s].x).toBeGreaterThanOrEqual(QUEUE.gap - 0.001);
+      }
+    }
+    expect(q.line.map((c) => c.x)).toEqual([spotX(0), spotX(1), spotX(2)]);
+    expect(q.line.every((c) => c.state === 'waiting')).toBe(true);
+  });
+
+  it('lets everyone step forward after the front customer is served', () => {
+    const q = new TruckQueue();
+    joinAll(q, ['a', 'b', 'c']);
+    settle(q);
+    expect(q.serveFront()?.orderId).toBe('a');
+    expect(q.front()).toBeNull();
+    settle(q);
+    expect(q.front()?.orderId).toBe('b');
+    expect(q.line.map((c) => c.x)).toEqual([spotX(0), spotX(1)]);
+  });
+
+  it('walks served customers out of sight and reports them once', () => {
+    const q = new TruckQueue();
+    q.join('a');
+    settle(q);
+    q.serveFront();
+    const gone: string[] = [];
+    for (let i = 0; i < 200; i++) gone.push(...q.update(0.1).map((c) => c.orderId));
+    expect(gone).toEqual(['a']);
+    expect(q.leaving).toEqual([]);
+  });
+
+  it('keeps the line short', () => {
+    const q = new TruckQueue();
+    joinAll(q, Array.from({ length: QUEUE.maxWaiting }, (_, i) => `c${i}`));
+    settle(q);
+    expect(q.join('extra')).toBeNull();
+  });
+
+  it('does not let two people appear on top of each other', () => {
+    const q = new TruckQueue();
+    q.join('a');
+    expect(q.join('b')).toBeNull();
+  });
+
+  it('cannot serve someone who has not reached the window', () => {
+    const q = new TruckQueue();
+    q.join('a');
+    expect(q.serveFront()).toBeNull();
+  });
+
+  it('keeps every spot inside the serving window', () => {
+    for (let s = 0; s < QUEUE.maxWaiting; s++) {
+      expect(spotX(s)).toBeGreaterThan(20 + 16);
+      expect(spotX(s)).toBeLessThan(320 - 16);
+    }
+  });
+});

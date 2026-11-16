@@ -1537,3 +1537,64 @@ body {
   touch-action: none;
   user-select: none;
 }
+
+.truck-app {
+  flex-direction: column;
+}
+
+.truck-hud {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  padding: 0.4rem 0.75rem;
+  background: #1f1512;
+  color: #f6e7c8;
+}
+
+.truck-title {
+  font-weight: 700;
+}
+
+.truck-hud-right {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+/* The front customer's order, above their head; the tail points down at them. */
+.order-bubble {
+  position: absolute;
+  transform: translateX(-50%);
+  max-width: min(18rem, 80vw);
+  padding: 0.5rem 0.75rem;
+  border: 2px solid #2b1d19;
+  border-radius: 6px;
+  background: #fff6e3;
+  color: #2b1d19;
+  font-size: 0.95rem;
+  line-height: 1.35;
+  box-shadow: 0 3px 0 rgba(43, 29, 25, 0.35);
+  animation: bubble-pop 0.18s ease-out;
+  pointer-events: none;
+}
+
+.order-bubble::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  bottom: -9px;
+  width: 12px;
+  height: 12px;
+  background: #fff6e3;
+  border-right: 2px solid #2b1d19;
+  border-bottom: 2px solid #2b1d19;
+  transform: translateX(-50%) rotate(45deg);
+}
+
+@keyframes bubble-pop {
+  from {
+    opacity: 0;
+    transform: translateX(-50%) scale(0.9);
+  }
+}

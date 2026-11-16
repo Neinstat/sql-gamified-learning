@@ -33,7 +33,8 @@ type Events = {
 
 type Listener<T> = (payload: T) => void;
 
-export class GameBridge {
+/** A tiny typed event emitter; each game (café v1, truck v2) has its own event list. */
+export class Emitter<Events extends Record<string, unknown>> {
   // Typed by on()/emit(); stored loosely inside.
   private listeners = new Map<keyof Events, Set<Listener<never>>>();
 
@@ -48,3 +49,5 @@ export class GameBridge {
     for (const listener of [...(this.listeners.get(event) ?? [])]) (listener as Listener<Events[K]>)(payload);
   }
 }
+
+export class GameBridge extends Emitter<Events> {}

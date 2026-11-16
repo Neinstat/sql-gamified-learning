@@ -1,9 +1,10 @@
 import Phaser from 'phaser';
 import { TruckScene } from './TruckScene';
+import type { TruckBridge } from './truckBridge';
 import { TRUCK_H, TRUCK_W, truckZoom } from './truckArt';
 
 /** Starts the food truck game inside `parent`, keeping the 480×270 scene centred and zoomed. */
-export function createTruckGame(parent: HTMLElement): Phaser.Game {
+export function createTruckGame(parent: HTMLElement, bridge: TruckBridge): Phaser.Game {
   const game = new Phaser.Game({
     type: Phaser.AUTO,
     parent,
@@ -18,6 +19,8 @@ export function createTruckGame(parent: HTMLElement): Phaser.Game {
       autoCenter: Phaser.Scale.CENTER_BOTH,
     },
     banner: false,
+    // The scene reads the bridge from the registry when it starts.
+    callbacks: { preBoot: (g) => g.registry.set('bridge', bridge) },
     scene: [TruckScene],
   });
   const observer = new ResizeObserver(() => {
