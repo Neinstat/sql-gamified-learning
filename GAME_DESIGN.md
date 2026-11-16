@@ -1,7 +1,7 @@
 # SQL Valley — Dokumen Desain Game
 
 > Game web 2D *top-down* untuk belajar SQL sambil belajar **berpikir seperti analis Business Intelligence (BI)**: pemain berjalan menjelajahi kafe warisannya, bertemu tokoh, dan menyelesaikan tugas dengan menulis SQL di konsol yang tersebar di berbagai sudut kafe.
-> Status: ✅ **MVP selesai (Fase 1–3, 16 Nov 2026).** Berikutnya: fase "Nanti" (lihat §12). Dokumen ini adalah sumber kebenaran untuk keputusan desain — perbarui saat ada keputusan baru.
+> Status: ✅ **MVP v1 selesai (Fase 1–3, 16 Nov 2026)** — kafe top-down. 🚚 **Desain v2 diputuskan (16 Nov 2026): game berubah menjadi food truck dengan antrean pelanggan** — lihat **§14**. Bagian §1–§13 mencatat desain v1; yang masih berlaku di v2 disebut di §14.2. Dokumen ini adalah sumber kebenaran untuk keputusan desain — perbarui saat ada keputusan baru.
 >
 > **Bahasa:** dokumen ini ditulis dalam Bahasa Indonesia. Game memakai **English sebagai bahasa utama** dengan **pilihan Bahasa Indonesia** untuk teks cerita & UI; SQL, nama tabel/kolom, dan isi data selalu English (lihat §10). Istilah dan contoh in-game di bawah ditulis dalam English.
 
@@ -352,6 +352,7 @@ Catatan dari Fase 3 untuk fase berikutnya:
 | **1. Inti SQL** ✅ | PGlite + data kafe, pengecek jawaban, format data level, konsol SQL (input blok → isi kosong → bebas), Chapter 0–1, pilihan bahasa EN/ID | Chapter 0–1 bisa dimainkan lengkap di halaman sederhana, dan rasa belajarnya sudah enak |
 | **2. Dunia pertama** ✅ | Game engine, satu ruangan (area depan + front counter), karakter berjalan, Grandma sebagai NPC, dialog, konsol terbuka dari stasiun | Pemain bisa jalan → bicara dengan Grandma → ke menu board → menyelesaikan level Chapter 0–1 di dalam dunia game |
 | **3. Kafe tumbuh** ✅ | Arah visual final; Mini Case & So what?; kitchen, storeroom, back office; Chapter 2–5; koin, upgrade, bintang, streak, Skill Check, Rush Hour, Analysis Case | MVP lengkap Chapter 0–5 |
+| **4–8. Desain v2 (food truck)** | Prototipe satu hari → generator pesanan & pengulangan → kurikulum per minggu → truck tumbuh & visual final → pembersihan & rilis | Lihat §14.9 |
 | **Nanti** | Materi lanjutan, leaderboard (butuh backend), audio, polesan | — |
 
 ### Rencana Fase 2 — Dunia pertama
@@ -425,3 +426,121 @@ Catatan: isi level tiap chapter (dialog, data, jawaban) ditulis di awal iterasi 
 - [x] **Stasiun untuk Chapter 0–1** — stasiun baru **Menu board** di area depan membaca `menu_items` (cocok dengan cerita "Cleaning Up the Menu"); Kitchen tetap untuk `recipes` di Fase 3
 - [x] Bentuk Skill Check — **adaptif**, 2 soal per chapter, dibuat setelah Chapter 4 ada (perencanaan Fase 3, lihat §2)
 - [ ] Hosting (mis. GitHub Pages / Vercel / Netlify)
+
+---
+
+## 14. Desain v2 — Food Truck 🚚 (diputuskan 16 Nov 2026)
+
+Setelah MVP v1 selesai, pemilik project memutuskan mengganti dunia game: dari **kafe top-down yang dijelajahi** menjadi **food truck dengan antrean pelanggan**. Tujuan belajarnya tetap sama (SQL + berpikir seperti analis BI); yang berubah adalah **cara tugas datang ke pemain**.
+
+### 14.1 Alasan perubahan
+- **Fokus ke SQL, bukan berjalan.** Di v1 pemain harus berjalan ke stasiun dulu. Di v2 tugas datang sendiri lewat pelanggan di jendela truck.
+- **Pengulangan alami.** Pesanan sejenis muncul lagi di hari-hari berikutnya dengan detail berbeda, jadi query dilatih berulang tanpa terasa mengulang soal yang sama.
+- **Rasa analis lebih kuat.** Penjualan pemain sendiri masuk ke database, lalu manajer bertanya tentang data itu. Pertanyaan BI terasa "milik sendiri".
+
+### 14.2 Yang dipakai ulang dari v1
+Arsitektur v1 sengaja memisahkan inti SQL dari dunia game, jadi sebagian besar kode tetap dipakai:
+
+| Dipakai ulang | Catatan |
+|---|---|
+| `src/sql-core/` (PGlite di Web Worker, pengecek jawaban, role per stasiun, Mini Case/bukti 📌) | Ditambah: data yang bisa berubah per hari (§14.6) |
+| Isi 34 level Chapter 0–5 (kartu materi, solusi, hint, terjemahan) | Dipecah menjadi **template pesanan** dan **kasus manajer** (§14.5) |
+| Konsol React (blok → isi kosong → ketik bebas, CodeMirror, tabel hasil) | Tampil sebagai **tablet kasir / POS** di truck |
+| Bahasa EN + ID, bintang/koin, streak, badge, Skill Check | Aturannya disesuaikan ke sistem hari |
+| Palet 32 warna, Grandma, Regular, Supplier, Barista | Digambar ulang dalam tampak samping (§14.8) |
+
+Yang **tidak** dipakai lagi: peta top-down, berjalan dan pathfinding, pintu dan ruangan, Café map. Kode itu dihapus di Fase 8; versi v1 tetap tersimpan di git (tag `v1-cafe-mvp`).
+
+### 14.3 Konsep & cerita
+- Grandma pensiun dari kafe dan mewariskan **food truck lamanya** kepada pemain. Truck berkeliling lembah dan buka **10.00–17.00**.
+- **Grandma = pemilik/manajer.** Sesekali ia mengetuk pintu belakang truck dan bertanya soal bisnis.
+- **Pelanggan** antre di jendela depan: Regular dan wajah-wajah baru, masing-masing dengan gaya bicara sendiri.
+- **Supplier** datang pagi hari mengantar stok, membuka tugas tentang `inventory`.
+- Menu tetap kopi + camilan (data `menu_items` v1), jadi isi level lama tetap cocok.
+
+### 14.4 Core loop: satu hari kerja
+1. **Pagi (sebelum buka):** ringkasan hari ini, cek stok (kadang tugas dari Supplier), kartu materi bila ada konsep baru.
+2. **Buka 10.00:** pelanggan datang satu per satu dan antre (2–3 orang terlihat).
+3. **Pesanan = tugas SQL.** Pelanggan terdepan menyampaikan permintaan lewat gelembung dialog. Pemain membuka tablet POS dan menjawab dengan SQL. Contoh:
+   - "Anything under $4?" → `SELECT … WHERE price < 4;`
+   - "Do you still have oat milk?" → cek `inventory`
+   - "Which drinks have no milk? I'm lactose intolerant." → `JOIN recipes`
+   - "What's my usual?" → `sales` + `customers`
+4. **Jawaban benar → pesanan dilayani.** Game sendiri yang mencatat penjualan ke database (`INSERT` ke `sales`, stok berkurang); pemain tidak menulis `INSERT` (materi itu baru diajarkan nanti).
+5. **Ketukan manajer 🚪** (1× per hari, di jam acak): pertanyaan BI tentang penjualan hari/minggu ini, stok yang sering habis, dan sebagainya. Ini pengganti **So what?** dan **Mini Case**.
+6. **Tutup 17.00 → ringkasan hari:** pendapatan, tip, pelanggan puas, konsep yang dilatih, bintang hari itu.
+
+**Waktu & tekanan (keputusan):**
+- **Jam berhenti selama tablet POS terbuka.** Menulis SQL tidak pernah dikejar waktu.
+- Kesabaran pelanggan hanya berkurang saat ia menunggu di antrean dan **hanya memengaruhi tip**. Tidak ada kondisi kalah. Pelanggan yang menunggu terlalu lama pergi tanpa tip, tapi tugasnya muncul lagi di hari lain.
+- Satu hari ±8–12 menit waktu nyata (±8–12 pesanan + 1 kasus manajer).
+- Rush Hour v1 berubah menjadi **"Lunch Rush"**: event opsional 12.00–13.00 dengan pesanan cepat dan jam yang tetap berjalan, mulai Minggu 3.
+
+### 14.5 Tugas: template pesanan & pengulangan
+- **Template pesanan** = satu jenis permintaan dengan parameter yang diacak (seed per hari), mis. `price_under(max)`, `items_in_category(category)`, `stock_of(ingredient)`. Setiap template punya `concept` (mis. `where-compare`, `group-by`), dialog EN/ID dengan slot `{max}`, query solusi berparameter, dan 3 hint.
+- **Jawaban dinilai seperti v1:** hasil query pemain dibandingkan dengan hasil query solusi **di atas data saat itu** (termasuk penjualan hari ini).
+- **Pengulangan berjeda (spaced repetition) sederhana:** setiap konsep punya tingkat penguasaan 0–5. Benar tanpa hint → naik dan muncul lagi lebih jarang (1 → 2 → 4 → 7 hari). Salah atau pakai hint → turun dan muncul lagi besok. Pesanan harian dipilih dari: konsep baru minggu ini + konsep yang "jatuh tempo" + sedikit acak.
+- **Kesulitan naik per minggu** (§14.7). Pelanggan tidak pernah meminta konsep yang belum diajarkan.
+- **Kasus manajer** memakai mesin Mini Case v1 (📌 bukti + pertanyaan kesimpulan). Kasus harian kecil (1–2 query); kasus akhir minggu lebih besar; Analysis Case "October sales dropped 18%" menjadi kasus penutup Minggu 6.
+
+### 14.6 Data
+- Data historis v1 (Agustus–Oktober, seed tetap) tetap menjadi **masa lalu truck**, sehingga pola tersembunyi (Selasa sepi, Secret Cake, susu Oktober) tetap bisa dipakai kasus manajer.
+- **Hari-hari permainan** dimulai 1 November 2026. Penjualan pemain ditambahkan ke `sales` dengan `channel = 'truck'`, dan stok harian ke `inventory`.
+- **Penyimpanan:** progres menyimpan *log hari* (pesanan yang dilayani). Saat game dimuat, data dibuat ulang dari seed lalu log diputar ulang, sehingga hasilnya sama persis dan tetap bisa dites.
+- Query pemain **tetap READ ONLY** dan di-rollback. Hanya game yang menulis ke database.
+- Tabel per stasiun v1 menjadi **aplikasi di tablet POS**: Menu, Orders, Stock, Recipes, Back office. Satu aplikasi terbuka bersama satu pelanggan, jadi pelajaran "data tersebar di banyak sistem" tetap ada.
+
+### 14.7 Kurikulum per minggu (pengganti chapter)
+1 minggu = 5 hari kerja. Isi materi v1 dipetakan ulang:
+
+| Minggu | Materi SQL (dari) | Pesanan contoh | Kasus manajer akhir minggu | Input |
+|---|---|---|---|---|
+| 1. Opening Week | `SELECT`, `FROM` (Ch0) | "What's on the menu?" | — (tutorial) | Blok |
+| 2. Picky Customers | `WHERE`, `AND`/`OR`, `IN`, `LIKE`, `IS NULL` (Ch1) | "Vegan and under $5?" | The Menu Audit | Isi kosong |
+| 3. Daily Specials | `ORDER BY`, `LIMIT`, `DISTINCT`, alias, kolom hitungan (Ch2) | "Your 3 cheapest snacks?" | What Should We Promote? | Bebas |
+| 4. Counting the Till | Agregasi, `GROUP BY`, `HAVING`, tanggal (Ch3) | "How many lattes sold today?" | The Quiet Day | Bebas |
+| 5. Regulars & Recipes | `JOIN`, `LEFT JOIN` (Ch4) | "Which drinks have no milk?" | Where Did the Regulars Go? | Bebas |
+| 6. The Big Question | Gabungan | Campuran semua konsep | Analysis Case: October Sales Dropped | Bebas |
+
+Setelah Minggu 6: **mode bebas tanpa akhir**. Hari terus berjalan dengan pengulangan berjeda; tempat baru dan materi lanjutan (subquery, CTE, window function) bisa ditambahkan nanti. Skill Check tetap ada dan menentukan minggu awal.
+
+### 14.8 Tampilan & gaya visual
+- **Tetap pixel art** (bukan low poly). Alasannya: game 2D, aset dan palet v1 bisa dipakai, dan biaya 3D tidak menambah apa pun pada inti game (menulis SQL).
+- **Tampak samping, satu layar tetap** (tanpa kamera berjalan): resolusi dasar **480×270**, diperbesar dengan skala bulat.
+  - Kiri/tengah: pemandangan jendela truck dan antrean pelanggan (sprite tampak samping/depan **32×48**), gelembung pesanan, jam di dinding truck.
+  - Kanan/bawah: **tablet POS** (konsol React) yang bisa dibuka dan ditutup. Di HP, tablet memenuhi layar.
+  - Latar luar berganti mengikuti lokasi dan waktu (pagi → sore).
+- Referensi pemilik project (game kafe pixel art dengan pelanggan di kiri dan panel kerja di kanan) dipakai hanya sebagai **inspirasi tata letak**. Karakter, gaya gambar, dan UI tetap orisinal.
+- Palet 32 warna v1 tetap dipakai. Warna tambahan untuk suasana luar ruangan boleh ditambahkan lewat keputusan baru (tes palet diperbarui).
+- Engine tetap **Phaser 3** untuk adegan truck (antrean, animasi pelanggan, ketukan pintu) dan **React** untuk overlay. Bridge v1 dipakai ulang.
+
+### 14.9 Roadmap v2
+Setiap fase menghasilkan sesuatu yang bisa dimainkan; setiap iterasi: kerjakan → cek di browser → commit & push.
+
+| Fase | Isi | Selesai jika… |
+|---|---|---|
+| **4. Prototipe satu hari** | Adegan truck, antrean pelanggan dengan pesanan tertulis manual (Minggu 2), tablet POS, penjualan masuk database, jam & ringkasan hari, 1 ketukan manajer | Pemilik project memainkan satu hari penuh dan menilai konsepnya seru → lanjut. Bila tidak seru → evaluasi sebelum membongkar v1 |
+| **5. Generator pesanan & pengulangan** | Template pesanan berparameter, penguasaan konsep + pengulangan berjeda, kesabaran & tip, log hari tersimpan dan diputar ulang | Hari ke-2, ke-3, dst. terasa berbeda tapi tetap melatih konsep yang perlu diulang |
+| **6. Kurikulum 6 minggu** | Memindahkan Ch0–5 menjadi template + kasus manajer, kartu materi per minggu, Skill Check → minggu awal, Analysis Case di Minggu 6 | Pemain baru bisa bermain dari Minggu 1 sampai Analysis Case, EN/ID |
+| **7. Truck tumbuh & visual final** | Upgrade truck (dekorasi, kulkas lebih besar, menu baru), lokasi baru (taman, pasar, festival), Lunch Rush, streak & badge versi hari, semua aset final | Koin bisa dibelanjakan dan truck/lokasi berubah terlihat |
+| **8. Pembersihan & rilis** | Hapus kode top-down v1, README & screenshot baru, uji main menyeluruh, pilih hosting | Pemilik project menyetujui → v2 selesai |
+
+#### Rencana Fase 4 — Prototipe satu hari
+
+| # | Iterasi | Selesai jika… |
+|---|---|---|
+| 4.1 | Tag `v1-cafe-mvp`; adegan truck statis 480×270 (truck, jendela, latar, jam) di scene Phaser baru, dibuka lewat `?truck` agar v1 tetap jalan selama transisi | Adegan truck tampil tajam di browser, v1 masih bisa dimainkan |
+| 4.2 | Antrean pelanggan: datang, menunggu, maju; gelembung pesanan dari daftar pesanan tertulis manual (4–5 pesanan memakai level Ch1 yang ada) | Pelanggan antre dan pesanannya terbaca (EN/ID) |
+| 4.3 | Tablet POS: konsol v1 dibuka dari pesanan aktif, jam berhenti saat tablet terbuka, jawaban benar → pelanggan dilayani dan pergi | Satu pesanan bisa diselesaikan dari antre sampai dilayani |
+| 4.4 | Penjualan masuk database (`INSERT` oleh game, `channel = 'truck'`) + log hari di progres + putar ulang saat dimuat | Setelah melayani, query `sales` pemain menampilkan penjualan hari ini, juga setelah halaman dimuat ulang |
+| 4.5 | Jam 10.00–17.00, kesabaran → tip, layar tutup + ringkasan hari | Satu hari bisa dimainkan dari buka sampai ringkasan |
+| 4.6 | Ketukan manajer: Grandma di pintu belakang, satu kasus kecil memakai mesin Mini Case dengan data hari ini | Kasus manajer bisa diselesaikan dengan bukti 📌 |
+| 4.7 | Uji main pemilik project + perbaikan | Keputusan: lanjut ke Fase 5 atau ubah konsep |
+
+Prinsip transisi: **v1 tidak dihapus sebelum Fase 4 terbukti seru.** Selama Fase 4–7, v2 dibuka lewat `?truck`; setelah Fase 6 v2 menjadi tampilan utama, dan kode v1 dibersihkan di Fase 8.
+
+### 14.10 Pertanyaan terbuka v2
+- [ ] Nama truck dan judul game (tetap "SQL Valley"?) — sementara tetap **SQL Valley**, truck bernama *Grandma's Brew Truck*
+- [ ] Apakah `INSERT`/`UPDATE` diajarkan di minggu lanjutan (pemain mencatat sendiri pesanan atau restock)
+- [ ] Panjang hari yang pas (8–12 menit) — ditentukan dari uji main 4.7
+- [ ] Lokasi berkeliling: hanya visual, atau setiap lokasi punya pelanggan/data berbeda
