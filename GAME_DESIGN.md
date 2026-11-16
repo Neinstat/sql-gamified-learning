@@ -533,7 +533,7 @@ Setiap fase menghasilkan sesuatu yang bisa dimainkan; setiap iterasi: kerjakan �
 |---|---|---|
 | 4.1 ✅ | Tag `v1-cafe-mvp`; adegan truck statis 480×270 (truck, jendela, latar, jam) di scene Phaser baru, dibuka lewat `?truck` agar v1 tetap jalan selama transisi | Adegan truck tampil tajam di browser, v1 masih bisa dimainkan |
 | 4.2 ✅ | Antrean pelanggan: datang, menunggu, maju; gelembung pesanan dari daftar pesanan tertulis manual (4–5 pesanan memakai level Ch1 yang ada) | Pelanggan antre dan pesanannya terbaca (EN/ID) |
-| 4.3 | Tablet POS: konsol v1 dibuka dari pesanan aktif, jam berhenti saat tablet terbuka, jawaban benar → pelanggan dilayani dan pergi | Satu pesanan bisa diselesaikan dari antre sampai dilayani |
+| 4.3 ✅ | Tablet POS: konsol v1 dibuka dari pesanan aktif, jam berhenti saat tablet terbuka, jawaban benar → pelanggan dilayani dan pergi | Satu pesanan bisa diselesaikan dari antre sampai dilayani |
 | 4.4 | Penjualan masuk database (`INSERT` oleh game, `channel = 'truck'`) + log hari di progres + putar ulang saat dimuat | Setelah melayani, query `sales` pemain menampilkan penjualan hari ini, juga setelah halaman dimuat ulang |
 | 4.5 | Jam 10.00–17.00, kesabaran → tip, layar tutup + ringkasan hari | Satu hari bisa dimainkan dari buka sampai ringkasan |
 | 4.6 | Ketukan manajer: The Manager (berjas) di pintu belakang, satu kasus kecil memakai mesin Mini Case dengan data hari ini | Kasus manajer bisa diselesaikan dengan bukti 📌 |
@@ -548,6 +548,13 @@ Setiap fase menghasilkan sesuatu yang bisa dimainkan; setiap iterasi: kerjakan �
 - Adegan dipecah dua lapis: `paintOutside` (jalan) dan `paintInterior` (dalam truck dengan jendela tembus pandang), pelanggan digambar di antaranya.
 - `truckBridge.ts` (event `front` dan `serve`; `Emitter` umum di `bridge.ts`). Gelembung pesanan React mengikuti kepala pelanggan terdepan dan zoom kanvas. Tombol **Serve (test)** hanya ada di mode pengembangan sampai tablet POS dibuat di 4.3.
 - Catatan untuk uji main: pelanggan 32×48 terlihat kecil dibanding jendela; bila terasa kurang dekat, pertimbangkan sprite lebih besar (mis. 48×72, setengah badan) di Fase 7.
+
+**4.3 dibangun (16 Nov 2026):**
+- Gelembung pesanan punya tombol **📱 Answer on the tablet**; tablet di counter juga bisa diklik (zona interaktif Phaser → event `tablet`).
+- Tablet = `ConsoleOverlay` v1 apa adanya (judul "Tablet · <stasiun>", tugas, hint, kartu materi, input sesuai level), dengan role stasiun level itu. Label tombol setelah benar bisa diganti (`doneLabel`): **Hand over the order**.
+- Tablet tetap ter-mount selama pelanggan yang sama, jadi query yang belum selesai tidak hilang saat ditutup. Menutup tablet setelah jawaban benar → event `serve` → pelanggan pergi dan antrean maju.
+- **Waktu berhenti saat tablet terbuka** (event `pause`): pelanggan tidak bergerak dan tidak ada yang datang. Jam yang berjalan baru dibuat di 4.5.
+- Tombol "Serve (test)" dari 4.2 dihapus. Bintang/koin belum diberikan untuk pesanan (menunggu ringkasan hari di 4.5).
 
 Prinsip transisi: **v1 tidak dihapus sebelum Fase 4 terbukti seru.** Selama Fase 4–7, v2 dibuka lewat `?truck`; setelah Fase 6 v2 menjadi tampilan utama, dan kode v1 dibersihkan di Fase 8.
 

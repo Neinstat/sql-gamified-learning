@@ -24,6 +24,7 @@ export class TruckScene extends Phaser.Scene {
   private sinceArrival = ARRIVAL_GAP;
   private frontOrderId: string | null = null;
   private walkClock = 0;
+  private paused = false;
 
   constructor() {
     super('truck');
@@ -35,6 +36,7 @@ export class TruckScene extends Phaser.Scene {
     this.sprites.clear();
     this.nextOrder = 0;
     this.frontOrderId = null;
+    this.paused = false;
 
     this.layer('truck-outside', paintOutside).setDepth(0);
     this.layer('truck-interior', (ctx) => {
@@ -43,8 +45,20 @@ export class TruckScene extends Phaser.Scene {
     }).setDepth(2);
     for (const look of Object.keys(LOOKS) as CustomerLook[]) this.makeCustomerTexture(look);
 
-    const off = this.bridge.on('serve', () => this.queue.serveFront());
-    this.events.once(Phaser.Scenes.Events.SHUTDOWN, off);
+    // Clicking the tablet on the counter opens it (when someone is ordering).
+    const { tablet } = TRUCK_LAYOUT;
+    this.add
+      .zone(tablet.x, tablet.y, tablet.w, tablet.h)
+      .setOrigin(0, 0)
+      .setDepth(3)
+      .setInteractive({ useHandCursor: true })
+      .on('pointerdown', () => this.bridge.emit('tablet', true));
+
+    const offs = [
+      this.bridge.on('serve', () => this.queue.serveFront()),
+      this.bridge.on('pause', (paused) => (this.paused = paused)),
+    ];
+    this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => offs.forEach((off) => off()));
   }
 
   private layer(key: string, paint: (ctx: CanvasRenderingContext2D) => void): Phaser.GameObjects.Image {
@@ -67,12 +81,13 @@ export class TruckScene extends Phaser.Scene {
   }
 
   update(_time: number, deltaMs: number): void {
-    const seconds = Math.min(deltaMs / 1000, 0.1);
+    // While the tablet is open, time stops (GAME_DESIGN.md §14.4).
+    const seconds = this.paused ? 0 : Math.min(deltaMs / 1000, 0.1);
     this.walkClock += seconds;
 
     // New customers arrive while there are orders left.
     this.sinceArrival += seconds;
-    if (this.nextOrder < PROTOTYPE_ORDERS.length && this.sinceArrival >= ARRIVAL_GAP && this.queue.canJoin()) {
+    if (!this.paused && this.nextOrder < PROTOTYPE_ORDERS.length && this.sinceArrival >= ARRIVAL_GAP && this.queue.canJoin()) {
       const order = PROTOTYPE_ORDERS[this.nextOrder++];
       const customer = this.queue.join(order.id);
       if (customer) {

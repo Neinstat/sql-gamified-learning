@@ -31,6 +31,8 @@ type Props = {
   /** Stars and coins from the last correct answer. */
   reward: Reward | null;
   onClose: () => void;
+  /** Text on the button after solving (default: back to the café). */
+  doneLabel?: string;
 };
 
 /** The SQL console opened at a station, over the game world. */
@@ -50,6 +52,7 @@ export function ConsoleOverlay(props: Props) {
     solvedMessage,
     reward,
     onClose,
+    doneLabel,
   } = props;
   const [solved, setSolved] = useState(false);
   const [lessonOpen, setLessonOpen] = useState(false);
@@ -69,7 +72,7 @@ export function ConsoleOverlay(props: Props) {
       {reward && <RewardLine reward={reward} isCase={isCase(level)} t={t} />}
       <p className="solved-message">{solvedMessage}</p>
       <button className="primary-button" onClick={onClose}>
-        {t.backToCafe}
+        {doneLabel ?? t.backToCafe}
       </button>
     </div>
   );
