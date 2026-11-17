@@ -11,7 +11,7 @@ import { OBJECT_STATION, objectForStation, TRUCK_OBJECTS } from './objects';
 let db: CafeDatabase;
 beforeAll(async () => {
   db = await createCafeDatabase();
-}, 60_000);
+});
 
 describe.each(TRUCK_LEVELS.map((l) => [l.id, l] as const))('truck level %s', (_id, level) => {
   it('has a solution that its own station can run, returning rows', async () => {

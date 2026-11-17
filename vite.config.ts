@@ -7,7 +7,7 @@ export default defineConfig({
   optimizeDeps: {
     exclude: ['@electric-sql/pglite'],
   },
-  // The café database runs in a module Web Worker (src/app/db.worker.ts).
+  // The database runs in a module Web Worker (src/app/db.worker.ts).
   worker: {
     format: 'es',
   },
@@ -15,5 +15,8 @@ export default defineConfig({
     environment: 'node',
     include: ['src/**/*.test.ts'],
     passWithNoTests: true,
+    // Most test files build their own PGlite database in beforeAll. They run in parallel, and on a
+    // busy machine (e.g. with the 3D game open) that can take longer than the default 10 s.
+    hookTimeout: 60_000,
   },
 });
