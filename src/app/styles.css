@@ -1743,3 +1743,73 @@ body {
 .truck-view {
   background: #25304f;
 }
+
+/* 3D prototype (4.6): crosshair, aim label, "click to look around". */
+.truck3d-canvas {
+  display: block;
+  image-rendering: pixelated;
+}
+
+.crosshair {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 6px;
+  height: 6px;
+  margin: -3px 0 0 -3px;
+  border: 2px solid #25304f;
+  border-radius: 50%;
+  background: #fffaf0;
+  pointer-events: none;
+}
+
+.crosshair-on {
+  width: 14px;
+  height: 14px;
+  margin: -7px 0 0 -7px;
+  background: #f2b234;
+  box-shadow: 2px 2px 0 #e4573d;
+}
+
+.aim-label {
+  position: absolute;
+  left: 50%;
+  top: calc(50% + 16px);
+  transform: translateX(-50%);
+  margin: 0;
+  padding: 0.15rem 0.55rem;
+  border: 2px solid #25304f;
+  border-radius: 4px;
+  background: #f4ead5;
+  color: #25304f;
+  font-size: 0.85rem;
+  font-weight: 700;
+  box-shadow: 2px 2px 0 #e4573d;
+  pointer-events: none;
+  white-space: nowrap;
+}
+
+.truck3d-start {
+  position: absolute;
+  left: 50%;
+  bottom: 12%;
+  transform: translateX(-50%);
+  padding: 0.6rem 1rem;
+  border: 2px solid #25304f;
+  border-radius: 8px;
+  background: rgba(244, 234, 213, 0.94);
+  color: #25304f;
+  text-align: center;
+  box-shadow: 3px 3px 0 #e4573d;
+  pointer-events: none;
+}
+
+.truck3d-start-title {
+  margin: 0;
+  font-weight: 700;
+}
+
+.truck3d-start-hint {
+  margin: 0.25rem 0 0;
+  font-size: 0.85rem;
+}

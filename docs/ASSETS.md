@@ -21,4 +21,17 @@ drawings. Every third-party asset goes in `CREDITS.md` with its source and licen
 | Park outside (sky, far city, trees, lawn, path, benches, picnic tables, lamps, string lights) | 1100×270 | 🟥 Placeholder | Seats fill with visitors when business is good (Phase 7); changes with time of day |
 | Hover outline (mustard + red) | — | 🟥 Placeholder | |
 
+## 3D prototype (`?truck3d`)
+
+All 3D models are built in code from boxes, cylinders and spheres (`src/game/truck3d/build.ts`)
+and drawn through the riso shader (`risoPass.ts`). Final models would come from CC0 3D packs
+(e.g. Kenney, Quaternius, Poly Pizza), recorded in `CREDITS.md`.
+
+| Model | Status | Notes for the final version |
+|---|---|---|
+| Truck interior (walls, window, counters, fridge, shelves, espresso machine, menu board, binders, clock, door) | 🟥 Placeholder | A CC0 kitchen/food-truck kit, recoloured to riso inks |
+| Park (lawn, path, benches, picnic tables, lamps, string lights, trees, skyline, sun) | 🟥 Placeholder | CC0 nature/park kit |
+| Customers (blocky people, swinging limbs) | 🟥 Placeholder | CC0 animated low-poly characters (walk, idle) |
+| Riso shader (inks, Bayer dither, ink outlines, red misprint) | 🟨 Style chosen | Tune line thickness and dither once final models are in |
+
 Legend: 🟥 placeholder · 🟨 final art chosen, not added yet · 🟩 final · ⬜ not drawn yet

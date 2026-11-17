@@ -11,6 +11,11 @@
  *   app → game   'serve'      the front customer has been served and walks away
  *   app → game   'pause'      an overlay is open (true): time stops and the player can't move
  *   app → game   'artLabels'  show "PLACEHOLDER" labels on art that is not final (docs/ASSETS.md)
+ *
+ * 3D prototype only (game/truck3d):
+ *   game → app   'anchor'     where the front customer's head is on screen (0–1 from the top
+ *                             left), or null when it is behind the player or off screen
+ *   game → app   'locked'     the mouse is captured for looking around (pointer lock)
  */
 import { Emitter } from '../bridge';
 import type { InteractableId } from './truckWorld';
@@ -27,6 +32,8 @@ type TruckEvents = {
   serve: true;
   pause: boolean;
   artLabels: boolean;
+  anchor: { x: number; y: number } | null;
+  locked: boolean;
 };
 
 export class TruckBridge extends Emitter<TruckEvents> {}

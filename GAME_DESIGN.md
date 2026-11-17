@@ -507,7 +507,7 @@ Yang **tidak** dipakai lagi: peta top-down, berjalan dan pathfinding, pintu dan 
 Setelah Minggu 6: **mode bebas tanpa akhir**. Hari terus berjalan dengan pengulangan berjeda; tempat baru dan materi lanjutan (subquery, CTE, window function) bisa ditambahkan nanti. Skill Check tetap ada dan menentukan minggu awal.
 
 ### 14.8 Tampilan & gaya visual
-- **Tetap pixel art** (bukan low poly). Alasannya: game 2D, aset dan palet v1 bisa dipakai, dan biaya 3D tidak menambah apa pun pada inti game (menulis SQL).
+- ~~**Tetap pixel art** (bukan low poly)~~ — ditinjau ulang 17 Nov 2026: prototipe 3D low-poly dengan shader risograf sedang diuji (lihat "Prototipe 3D" di bawah).
 - ~~Tampak samping, satu layar tetap~~ — dipakai di 4.1–4.3, lalu **diganti (16 Nov 2026)** setelah pemilik project mencobanya: karakter terlalu kecil, interaksi minim, dan kamera diam.
 - ~~Interior truck yang dijelajahi dengan berjalan (tampak samping)~~ — dibangun di 4.4, lalu **diganti (17 Nov 2026)**: pemilik project menginginkan sudut pandang orang pertama.
 - **Keputusan baru: orang pertama di dalam truck, kamera menoleh (panorama).** Pemain "berdiri" di dalam truck dan tidak terlihat. Pandangan adalah satu panorama 4 sisi, masing-masing selebar layar (480 px; dunia 1920 px):
@@ -523,6 +523,14 @@ Setelah Minggu 6: **mode bebas tanpa akhir**. Hari terus berjalan dengan pengula
   - Bayangan dan gradasi memakai **pola titik (dither)**, bukan warna tambahan.
   - **Garis "meleset cetak"**: sebagian garis punya bayangan merah 1 px yang bergeser, seperti tinta riso yang tidak pas.
 - **Ciri khas (USP) yang direncanakan: "Data Lens".** Satu tombol mengubah pandangan menjadi "tampilan data": setiap benda menampilkan tabelnya (kulkas → baris `inventory`, pelanggan → `customers`). Dunia game dan database terasa satu. Dibangun setelah interaksi benda (lihat 4.7).
+- **Prototipe 3D (keputusan 17 Nov 2026, sedang diuji di 4.6).** Pemilik project menginginkan 3D dengan WASD. Dicoba lewat `?truck3d` tanpa membuang versi 2D (`?truck`):
+  - **Three.js** (bukan Phaser) untuk dunia; React (konsol, gelembung, HUD) dan seluruh inti SQL tetap sama. Kode 3D di `src/game/truck3d/` dan tidak meng-import React.
+  - **Orang pertama di dalam truck**: WASD berjalan, mouse melihat (*pointer lock*), arahkan titik bidik ke benda lalu tekan **E** atau klik. Ruang gerak hanya di dalam truck agar fokus tetap pada SQL.
+  - **Low-poly sederhana**: dunia kecil (satu truck + taman), tanpa bayangan realistis atau tekstur besar. Ukuran Three.js ±150 KB terkompresi, lebih kecil dari PGlite (±10 MB) yang sudah ada.
+  - **Shader risograf** agar tetap khas: adegan dirender pada resolusi rendah (piksel besar), warnanya dipetakan ke tinta `riso.ts` dengan dither Bayer 4×4, garis tepi tinta dari kedalaman (*depth*), dan garis merah "meleset" 1 piksel.
+  - **Aset final 3D** kelak dari pack CC0 (Kenney, Quaternius, Poly Pizza: truck, dapur, bangku, pohon, karakter beranimasi) — lebih mudah didapat daripada karakter 2D besar. Prototipe memakai bentuk dasar (kotak, silinder, bola).
+  - Kekurangan yang diterima untuk prototipe: belum ada kontrol HP (perlu joystick virtual).
+  - Bila prototipe terasa seru → v2 dilanjutkan dalam 3D; bila tidak → lanjut versi 2D (4.5).
 - **Gambar sementara ditandai.** Semua gambar v2 masih dibuat lewat kode dan berstatus *placeholder*. Daftar dan statusnya ada di [`docs/ASSETS.md`](docs/ASSETS.md); di game, tombol **🏷 Art** menampilkan label "PLACEHOLDER" di atas setiap gambar yang belum final. Sumber gambar final dipilih nanti (CC0 untuk benda; karakter besar dari pack berlisensi, seniman, atau gambar pemilik project) — keputusan di Fase 7.
 - Referensi pemilik project (game kafe pixel art dengan pelanggan di kiri dan panel kerja di kanan) dipakai hanya sebagai **inspirasi tata letak**. Karakter, gaya gambar, dan UI tetap orisinal.
 - Palet 32 warna v1 tetap dipakai. Warna tambahan untuk suasana luar ruangan boleh ditambahkan lewat keputusan baru (tes palet diperbarui).
@@ -548,7 +556,8 @@ Setiap fase menghasilkan sesuatu yang bisa dimainkan; setiap iterasi: kerjakan �
 | 4.3 ✅ | Tablet POS: konsol v1 dibuka dari pesanan aktif, jam berhenti saat tablet terbuka, jawaban benar → pelanggan dilayani dan pergi | Satu pesanan bisa diselesaikan dari antre sampai dilayani |
 | 4.4 ✅ (diganti di 4.5) | **Truck bisa dijelajahi:** interior 960 px, pemain besar berjalan WASD, kamera mengikuti + parallax, pelanggan setengah badan di jendela, tablet dibuka dengan E saat dekat, tombol 🏷 Art + `docs/ASSETS.md` | Pemain berjalan dari kulkas ke pintu belakang dengan kamera mengikuti, lalu melayani pesanan dari tablet |
 | 4.5 ✅ | **Orang pertama + taman + gaya risograf:** panorama 4 sisi, menoleh A/D/‹ ›, sorot & klik benda, E = benda di tengah, pelanggan berperspektif, taman berlapis dengan bangku, palet & dither risograf | Pemain menoleh dari kulkas ke pintu dan melayani pesanan dari tablet; pemilik project menyetujui arah gayanya |
-| 4.6 | **Interaksi benda:** papan menu, kulkas, binder resep membuka konsol dengan tabelnya sendiri; pesanan bisa butuh mengecek benda lain dulu | Tiap benda membuka tabelnya; satu pesanan memakai kulkas (`inventory`) |
+| 4.6 ✅ | **Prototipe 3D** (`?truck3d`): interior truck & taman low-poly, WASD + mouse, E/klik benda, pelanggan 3D antre, tablet pesanan, shader risograf | Pemilik project mencobanya dan memutuskan: lanjut 3D atau tetap 2D |
+| 4.6b | **Interaksi benda:** papan menu, kulkas, binder resep membuka konsol dengan tabelnya sendiri; pesanan bisa butuh mengecek benda lain dulu | Tiap benda membuka tabelnya; satu pesanan memakai kulkas (`inventory`) |
 | 4.7 | **Data Lens** (USP): tombol yang menampilkan tabel di atas setiap benda | Data Lens bisa dinyalakan di semua sisi truck |
 | 4.8 | Penjualan masuk database (`INSERT` oleh game, `channel = 'truck'`) + log hari di progres + putar ulang saat dimuat | Setelah melayani, query `sales` pemain menampilkan penjualan hari ini, juga setelah halaman dimuat ulang |
 | 4.9 | Jam 10.00–17.00, kesabaran → tip, layar tutup + ringkasan hari | Satu hari bisa dimainkan dari buka sampai ringkasan |
@@ -589,6 +598,15 @@ Setiap fase menghasilkan sesuatu yang bisa dimainkan; setiap iterasi: kerjakan �
 - Scene: A/D/←/→ menoleh (tween 380 ms), sorot benda + kursor tangan, klik untuk memakai, E untuk benda di tengah. Keyboard Phaser dimatikan saat tablet terbuka (huruf A/D bisa diketik di SQL).
 - React: nama sisi/benda di atas tengah, tombol ‹ › dengan nama sisi sebelah, dan tanda **!** di tombol yang mengarah ke jendela bila ada pelanggan menunggu.
 - `docs/ASSETS.md` diperbarui untuk semua gambar baru.
+
+**4.6 dibangun (17 Nov 2026) — prototipe 3D:**
+- `src/game/truck3d/world3d.ts` (dites, tanpa Three.js): ukuran truck dalam meter (6 × 2,4 × 2,4 m), letak benda (`LAYOUT`), batas berjalan (`WALK`), `walkStep` (WASD relatif arah pandang, diagonal tidak lebih cepat), `rayBox`/`aimedInteractable` (benda di titik bidik dalam jangkauan 1,7 m), dan `queuePosition` (jalur antrean di taman; tanah taman 0,35 m lebih rendah agar kepala pelanggan terlihat di jendela).
+- `build.ts`: truck (dinding dengan lubang jendela, counter, tablet miring, kulkas berisi botol, rak stok, mesin espresso merah, papan menu, binder resep, jam, pintu belakang), taman (rumput bergaris, jalan setapak, bangku, meja piknik berpayung, lampu taman + lampu gantung, pohon, siluet kota, matahari, awning truck), dan pelanggan kotak-kotak 1,75 m dengan kaki/lengan berayun.
+- `risoPass.ts`: adegan dirender ±300 baris (piksel besar), lalu shader memetakan setiap piksel ke tinta riso dengan dither Bayer 4×4, menggambar garis tepi tinta dari lompatan kedalaman, dan garis merah "meleset" 1 piksel. `colour.ts` memastikan warna tinta dipakai persis (tanpa konversi sRGB→linear) dan lampu diberi intensitas × π (satuan fisik Three.js) — tanpa itu semua warna menjadi gelap kehijauan.
+- `Truck3DGame.ts`: WASD/panah, mouse melihat (*pointer lock*; menyeret juga bisa), klik/E memakai benda di titik bidik, ayunan kepala saat berjalan, pelanggan berbalik ke arah jalan lalu menghadap truck saat menunggu, posisi kepala pelanggan terdepan dikirim ke React (event `anchor`) untuk gelembung pesanan. Waktu berhenti saat tablet terbuka (keyboard dan pointer lock dilepas).
+- `src/app/useTruckShift.tsx`: logika bersama 2D/3D (database, pesanan, tablet, pesan singkat); `TruckApp` (2D) memakainya juga. `Truck3DApp.tsx`: titik bidik, label "E · <benda>", ajakan "Klik untuk melihat sekeliling", gelembung pesanan.
+- Ukuran: kode 3D (Three.js + game) **127 KB** terkompresi, dimuat hanya saat membuka `?truck3d`.
+- Belum: kontrol HP, kulkas/papan menu/binder resep/pintu masih menampilkan pesan "pembaruan berikutnya".
 
 Prinsip transisi: **v1 tidak dihapus sebelum Fase 4 terbukti seru.** Selama Fase 4–7, v2 dibuka lewat `?truck`; setelah Fase 6 v2 menjadi tampilan utama, dan kode v1 dibersihkan di Fase 8.
 
