@@ -12,7 +12,7 @@ import { STATION_IDS, STATIONS, homeStation, type StationId } from './stations';
 export type TableInfo = { table: string; columns: { name: string; type: string }[] };
 
 /**
- * Grandma's café database, wherever it runs: in this thread (tests, and inside the Web Worker)
+ * The game's database, wherever it runs: in this thread (tests, and inside the Web Worker)
  * or in a Web Worker (the browser, so a runaway query can be stopped).
  */
 export interface CafeDatabase {
@@ -21,6 +21,11 @@ export interface CafeDatabase {
   schema(): Promise<TableInfo[]>;
   /** Stop a running query (only possible when the database runs in a worker). */
   stop?(): void;
+  /**
+   * Write to the database as the game (e.g. a served order becomes `sales` rows: truck/day.ts).
+   * Only ever called with SQL the game builds from its own data — never with player SQL.
+   */
+  write(sql: string): Promise<void>;
 }
 
 /** A single cell value as it comes back from the database. */
@@ -73,7 +78,19 @@ const SESSION_CONTROL = /^\s*(set|reset|do)\b/i;
 
 /** The database in this thread. `raw` is the PGlite instance, for tests. */
 export class LocalCafeDatabase implements CafeDatabase {
+  /**
+   * Requests run one at a time: `run` is several steps (BEGIN READ ONLY → SET ROLE → query →
+   * ROLLBACK), and a write or another query must never land in the middle of them.
+   */
+  private queue: Promise<unknown> = Promise.resolve();
+
   constructor(readonly raw: PGlite) {}
+
+  private inTurn<T>(task: () => Promise<T>): Promise<T> {
+    const next = this.queue.then(task, task);
+    this.queue = next.catch(() => {});
+    return next;
+  }
 
   /**
    * Run a player's SQL safely.
@@ -88,7 +105,11 @@ export class LocalCafeDatabase implements CafeDatabase {
    * PGlite runs on a single thread, so `statement_timeout` can't interrupt a slow query:
    * in the browser the database runs in a Web Worker, which can be stopped instead.
    */
-  async run(sql: string, station?: StationId): Promise<QueryResult> {
+  run(sql: string, station?: StationId): Promise<QueryResult> {
+    return this.inTurn(() => this.runNow(sql, station));
+  }
+
+  private async runNow(sql: string, station?: StationId): Promise<QueryResult> {
     const statements = splitStatements(sql);
     if (statements.length === 0) {
       return { ok: false, error: { kind: 'empty-query' } };
@@ -120,7 +141,17 @@ export class LocalCafeDatabase implements CafeDatabase {
     }
   }
 
-  async schema(): Promise<TableInfo[]> {
+  write(sql: string): Promise<void> {
+    return this.inTurn(async () => {
+      await this.raw.exec(sql);
+    });
+  }
+
+  schema(): Promise<TableInfo[]> {
+    return this.inTurn(() => this.schemaNow());
+  }
+
+  private async schemaNow(): Promise<TableInfo[]> {
     const res = await this.raw.query<{ table_name: string; column_name: string; data_type: string }>(`
       SELECT table_name, column_name, data_type
       FROM information_schema.columns

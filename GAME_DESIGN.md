@@ -228,7 +228,7 @@ Built in phases; every phase produces something playable. Every iteration: build
 | 4.6 ✅ | **3D prototype** (Three.js): low-poly truck and park, WASD + mouse, E/click to use, 3D customers queueing, the order tablet, the riso shader → **locked in**; v1 and 2D code removed, `/` opens the 3D truck | The owner tried it and chose 3D ✅ |
 | 4.7 ✅ | **Using the truck's objects:** the menu board, fridge and recipe binders open the console with their own tables; an order may need checking another object first | Each object opens its tables; one order uses the fridge (`inventory`) |
 | 4.8 ✅ | **Data Lens** (signature feature): a button that shows tables over every object | The Data Lens works on every side of the truck |
-| 4.9 | **Sales into the database** (`INSERT` by the game, `channel = 'truck'`) + the day log in progress, replayed on load | After serving, a `sales` query shows today's sales, also after reloading the page |
+| 4.9 ✅ | **Sales into the database** (`INSERT` by the game, `channel = 'truck'`) + the day log in progress, replayed on load | After serving, a `sales` query shows today's sales, also after reloading the page |
 | 4.10 | **The clock** 10:00–17:00, patience → tips, closing time + end-of-day summary | A day can be played from opening to the summary |
 | 4.11 | **The manager's knock:** The Manager (suit) at the back door, one small case using the case engine on today's data | The manager's case can be solved with 📌 evidence |
 | 4.12 | Owner playtest + fixes | Decision: on to Phase 5, or change the concept |
@@ -253,6 +253,15 @@ Built in phases; every phase produces something playable. Every iteration: build
 - `risoPass.ts`: a `lens` uniform (0–1). Pixels switch to the blueprint when their Bayer value is below it, so the lens dissolves in over 0.45 s; edges turn teal and the misprint turns mustard. It keeps animating while time is stopped.
 - `TruckGame.ts`: **L** sends `lensKey`; React owns the on/off state and sends `lens`; the game projects each card's point to the screen (`lensCards`, hidden beyond 6 m or off screen).
 - `src/app/DataLens.tsx`: loads each table's row count and first two rows once (read-only, as the database owner), and draws the cards; nearer cards are larger. Cards hide while a console is open.
+
+**4.9 as built (17 Nov 2026):**
+- Every order says what the customer **buys** (`buys` in `orders.ts`: item ids and quantities; tested to be items on sale).
+- `src/sql-core/truck/day.ts`: the **day log** (`{ date, served: [{ orderId, at }] }`, first play day 2026-11-01), `serveOrder`, `parseDayLog` (broken or unknown entries are dropped), and `saleSql`: one `sales` row per item at the menu price, with the next `sale_id`s and one new `order_id`, `channel = 'truck'`, built only from the game's own data (dates and times are checked). Until the clock (4.10), orders are served 12 minutes apart from 10:00.
+- `CafeDatabase.write(sql)`: game-only writes, never player SQL; players stay read-only (tested). `LocalCafeDatabase` now runs requests **one at a time**, so a write or a second query can never land between `BEGIN READ ONLY` and `ROLLBACK` (tested with concurrent requests).
+- The worker database remembers every write and replays it after **■ Stop** restarts the worker.
+- The day log is saved in the browser (`sql-valley.truck-day`). On load, `getDayDatabase` replays it **before** anyone can query; the game skips customers already served. The HUD shows "📅 Nov 1 · 3/7 served"; after the last order a card suggests `SELECT * FROM sales WHERE channel = 'truck';` and offers to start the day again. Data Lens cards reload after each sale.
+- Checked in the browser: one sale takes `sales` from 7,694 to 7,695 rows, a reload keeps it (and the next customer is the second one), and a full day gives 7,703 rows.
+- ⚠ For Phase 6: v1 questions over *all* sales now include the truck's sales. Answers are still graded fairly (same data), but teaching traps can break — e.g. Chapter 3's "item 6 sold exactly 400 portions" (`>` vs `>=`) becomes 401 after the *How Much Milk?* customer buys a Flat White. Moved questions should be limited to the history (August–October) or rewritten.
 
 **Cleanup (17 Nov 2026):** v1's code (Phaser, the top-down café, Journal, shop, quests, `progress.ts`), the 2D truck prototypes, 72 unused UI strings, 112 unused CSS rules and the Phaser dependency were removed. `src/sql-core/` stays whole because its content is reused in Phase 6. Documents were moved to English for a global audience.
 

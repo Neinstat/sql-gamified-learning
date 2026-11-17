@@ -16,6 +16,8 @@ export type TruckOrder = {
   look: CustomerLook;
   /** What the customer says at the window. */
   line: string;
+  /** What they buy once served: menu item ids and quantities (recorded in `sales`). */
+  buys: readonly { itemId: number; quantity: number }[];
 };
 
 export const PROTOTYPE_ORDERS: readonly TruckOrder[] = [
@@ -24,42 +26,49 @@ export const PROTOTYPE_ORDERS: readonly TruckOrder[] = [
     levelId: 'ch1-1',
     look: 'student',
     line: "I've only got three bucks left this week. What can I get for under $3?",
+    buys: [{ itemId: 10, quantity: 1 }],
   },
   {
     id: 'proto-coffee',
     levelId: 'ch1-2',
     look: 'office',
     line: 'Coffee. I need coffee. What do you have, and how much?',
+    buys: [{ itemId: 2, quantity: 2 }],
   },
   {
     id: 'proto-available',
     levelId: 'ch1-3',
     look: 'runner',
     line: "Which coffees can I actually order today? Not the ones you're out of.",
+    buys: [{ itemId: 3, quantity: 1 }],
   },
   {
     id: 'proto-milk-supplier',
     levelId: 'truck-milk-supplier',
     look: 'grandpa',
     line: 'Your milk tastes different lately. Who brings it now, and when?',
+    buys: [{ itemId: 11, quantity: 1 }],
   },
   {
     id: 'proto-milk-recipes',
     levelId: 'truck-milk-recipes',
     look: 'painter',
     line: 'My doctor says less milk. How much milk is in each of your drinks?',
+    buys: [{ itemId: 6, quantity: 1 }],
   },
   {
     id: 'proto-tea-dessert',
     levelId: 'ch1-4',
     look: 'student',
     line: 'Coffee keeps me up at night. Show me your teas and desserts, please.',
+    buys: [{ itemId: 10, quantity: 1 }, { itemId: 27, quantity: 1 }],
   },
   {
     id: 'proto-chocolate',
     levelId: 'ch1-5',
     look: 'office',
     line: 'Anything with chocolate in it? I mean anything at all.',
+    buys: [{ itemId: 5, quantity: 1 }, { itemId: 26, quantity: 2 }],
   },
 ];
 

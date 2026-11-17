@@ -1,14 +1,15 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { ui, useLang } from '../i18n';
 import { LANGS } from '../sql-core/feedback';
-import { orderLine } from '../sql-core/truck/orders';
+import { orderLine, PROTOTYPE_ORDERS } from '../sql-core/truck/orders';
 import { TruckBridge, type LensCard } from '../game/truck/bridge';
 import { STATIONS } from '../sql-core/stations';
 import { DataLens, useTableSummaries } from './DataLens';
-import { useTruckShift } from './useTruckShift';
+import { restartDay, useTruckShift } from './useTruckShift';
 
 /** Every table in the truck, for the Data Lens cards. */
 const ALL_TABLES = [...new Set(Object.values(STATIONS).flatMap((s) => s.tables))];
+const TOTAL_ORDERS = PROTOTYPE_ORDERS.length;
 
 /** SQL Valley: the food truck, first person in 3D (GAME_DESIGN.md §14). */
 export function TruckApp() {
@@ -20,10 +21,12 @@ export function TruckApp() {
   const [locked, setLocked] = useState(false);
   const [aimed, setAimed] = useState<string | null>(null);
   const [anchor, setAnchor] = useState<{ x: number; y: number } | null>(null);
-  const { front, order, answerWhere, orderTables, db, consoleOpen, overlays } = useTruckShift(bridge, lang, t);
+  const { front, order, answerWhere, orderTables, db, day, dayDone, consoleOpen, overlays } = useTruckShift(bridge, lang, t);
+  // The orders served before this page load: the game skips those customers.
+  const servedOnLoad = useRef(day.served.map((s) => s.orderId));
   const [lens, setLens] = useState(false);
   const [lensCards, setLensCards] = useState<LensCard[]>([]);
-  const summaries = useTableSummaries(lens ? db : null, ALL_TABLES);
+  const summaries = useTableSummaries(lens ? db : null, ALL_TABLES, day.served.length);
 
   useEffect(() => {
     document.documentElement.lang = lang;
@@ -41,7 +44,7 @@ export function TruckApp() {
     let game: { destroy: () => void } | null = null;
     import('../game/truck/TruckGame').then(({ TruckGame }) => {
       if (cancelled || !parentRef.current) return;
-      game = new TruckGame(parentRef.current, bridge);
+      game = new TruckGame(parentRef.current, bridge, servedOnLoad.current);
       if (import.meta.env.DEV) (window as unknown as { __truck?: unknown }).__truck = game;
       setReady(true);
     });
@@ -55,6 +58,9 @@ export function TruckApp() {
     <div className="truck-app">
       <header className="truck-hud">
         <span className="truck-title">🚚 Rolling Roast</span>
+        <span className="truck-day" title={t.dayTitle}>
+          📅 {t.dayLabel(day.date, day.served.length, TOTAL_ORDERS)}
+        </span>
         <span className="truck-controls">{t.truckControls}</span>
         <button
           className={lens ? 'lens-button lens-button-on' : 'lens-button'}
@@ -83,6 +89,15 @@ export function TruckApp() {
           <div className="world-loading" role="status">
             <p className="world-loading-title">SQL Valley</p>
             <div className="loading-bar" aria-hidden="true" />
+          </div>
+        )}
+        {ready && dayDone && !front && !consoleOpen && (
+          <div className="day-done" role="status">
+            <p className="day-done-title">{t.dayDoneTitle}</p>
+            <p className="day-done-text">{t.dayDoneText}</p>
+            <button className="primary-button" onClick={restartDay}>
+              ↺ {t.newDay}
+            </button>
           </div>
         )}
         {ready && !consoleOpen && lens && (

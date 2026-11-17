@@ -65,10 +65,15 @@ export class TruckGame {
   private lensAmount = 0;
   private lastCards = '';
 
+  /** Today's orders still to come (orders already served today are skipped). */
+  private readonly orders: typeof PROTOTYPE_ORDERS;
+
   constructor(
     private readonly parent: HTMLElement,
     private readonly bridge: TruckBridge,
+    served: readonly string[] = [],
   ) {
+    this.orders = PROTOTYPE_ORDERS.filter((o) => !served.includes(o.id));
     // Colours are used exactly as written (colour.ts); no conversion on output either.
     this.renderer = new THREE.WebGLRenderer({ antialias: false, powerPreference: 'high-performance' });
     this.renderer.outputColorSpace = THREE.LinearSRGBColorSpace;
@@ -230,8 +235,8 @@ export class TruckGame {
 
   private updateCustomers(seconds: number): void {
     this.sinceArrival += seconds;
-    if (this.nextOrder < PROTOTYPE_ORDERS.length && this.sinceArrival >= ARRIVAL_GAP && this.queue.canJoin() && seconds > 0) {
-      const order = PROTOTYPE_ORDERS[this.nextOrder++];
+    if (this.nextOrder < this.orders.length && this.sinceArrival >= ARRIVAL_GAP && this.queue.canJoin() && seconds > 0) {
+      const order = this.orders[this.nextOrder++];
       const customer = this.queue.join(order.id);
       if (customer) {
         this.sinceArrival = 0;

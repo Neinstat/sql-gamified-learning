@@ -8,10 +8,11 @@ import { isCase, type RequestLevel } from '../sql-core/levels';
 import { stationTables, tablesInQuery } from '../sql-core/stations';
 import { findOrderLevel } from '../sql-core/truck/levels';
 import { OBJECT_STATION, objectForStation, type TruckObjectId } from '../sql-core/truck/objects';
+import { parseDayLog, saleSql, serveOrder, emptyDay, type DayLog } from '../sql-core/truck/day';
 import { PROTOTYPE_ORDERS, type TruckOrder } from '../sql-core/truck/orders';
 import type { FrontCustomer, TruckBridge } from '../game/truck/bridge';
 import { ConsoleOverlay } from './ConsoleOverlay';
-import { getDatabase } from './database';
+import { getDayDatabase } from './database';
 
 /**
  * A shift in the food truck (GAME_DESIGN.md §4): the database, the customer at the window and
@@ -20,7 +21,32 @@ import { getDatabase } from './database';
  * - any other object with data opens a "look around" console on its own tables, ungraded;
  * - the back door has nothing yet (The Manager comes in 4.11).
  */
+const DAY_KEY = 'sql-valley.truck-day';
+
+function loadDay(): DayLog {
+  try {
+    return parseDayLog(localStorage.getItem(DAY_KEY));
+  } catch {
+    return emptyDay();
+  }
+}
+
+function saveDay(log: DayLog): void {
+  try {
+    localStorage.setItem(DAY_KEY, JSON.stringify(log));
+  } catch {
+    // Private windows may refuse storage: the day just isn't kept after a reload.
+  }
+}
+
+/** Throw away today's progress and start the day again (the page reloads to rebuild the data). */
+export function restartDay(): void {
+  saveDay(emptyDay());
+  window.location.reload();
+}
+
 export function useTruckShift(bridge: TruckBridge, lang: Lang, t: UiText) {
+  const [day, setDay] = useState<DayLog>(loadDay);
   const [db, setDb] = useState<CafeDatabase | null>(null);
   const [dbError, setDbError] = useState<string | null>(null);
   const [schema, setSchema] = useState<Table[]>([]);
@@ -31,15 +57,17 @@ export function useTruckShift(bridge: TruckBridge, lang: Lang, t: UiText) {
   const [hintsUsed, setHintsUsed] = useState(0);
   const [toast, setToast] = useState<string | null>(null);
 
-  // Load the database in the background while the first customers walk up.
+  // Load the database (with today's sales replayed) while the first customers walk up.
+  // Only the day as it was on load is replayed; later sales are written as they happen.
+  const [dayOnLoad] = useState(day);
   useEffect(() => {
-    getDatabase()
+    getDayDatabase(dayOnLoad)
       .then(async (database) => {
         setSchema(await getSchema(database));
         setDb(database);
       })
       .catch((err) => setDbError(String(err)));
-  }, []);
+  }, [dayOnLoad]);
 
   useEffect(() => bridge.on('front', setFront), [bridge]);
 
@@ -81,9 +109,16 @@ export function useTruckShift(bridge: TruckBridge, lang: Lang, t: UiText) {
 
   const closeOrder = useCallback(() => {
     setOrderOpen(false);
-    // A solved order is handed over: the customer leaves and the next one steps up.
-    if (solved) bridge.emit('serve', true);
-  }, [bridge, solved]);
+    if (!solved || !order) return;
+    // A solved order is handed over: it becomes sales rows, the day log is saved, and the
+    // customer leaves so the next one steps up.
+    const next = serveOrder(day, order.id);
+    const served = next.served[next.served.length - 1];
+    setDay(next);
+    saveDay(next);
+    db?.write(saleSql(order, next.date, served.at)).catch((err) => setToast(String(err)));
+    bridge.emit('serve', true);
+  }, [bridge, solved, order, day, db]);
 
   const closeExplore = useCallback(() => setExploring(null), []);
 
@@ -170,6 +205,10 @@ export function useTruckShift(bridge: TruckBridge, lang: Lang, t: UiText) {
     /** The tables the current order needs (highlighted by the Data Lens). */
     orderTables: level ? tablesInQuery(level.solution) : [],
     db,
+    /** Today so far: the date, and the orders served (each one is in `sales`). */
+    day,
+    /** Every order of the day has been served. */
+    dayDone: day.served.length >= PROTOTYPE_ORDERS.length,
     consoleOpen: open,
     overlays: (
       <>

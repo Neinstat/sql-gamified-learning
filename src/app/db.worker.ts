@@ -1,6 +1,6 @@
 /// <reference lib="webworker" />
 /**
- * The café database in a Web Worker (GAME_DESIGN.md §10): a slow query only blocks this
+ * The database in a Web Worker (GAME_DESIGN.md §9): a slow query only blocks this
  * worker, never the game, and the page can stop it by ending the worker.
  * Messages: see WorkerRequest / WorkerReply in workerDatabase.ts.
  */
@@ -19,6 +19,11 @@ self.onmessage = async (event: MessageEvent<WorkerRequest>) => {
   const request = event.data;
   try {
     const db = await ready;
+    if (request.type === 'write') {
+      await db.write(request.sql);
+      reply({ type: 'result', id: request.id, result: [] });
+      return;
+    }
     const result = request.type === 'run' ? await db.run(request.sql, request.station) : await db.schema();
     reply({ type: 'result', id: request.id, result });
   } catch (err) {

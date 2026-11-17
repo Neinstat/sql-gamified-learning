@@ -12,10 +12,15 @@ const SAMPLE_ROWS = 2;
 const MAX_CELL = 14;
 
 /**
- * Loads a short summary of each table for the Data Lens (once): its row count and first rows.
+ * Loads a short summary of each table for the Data Lens: its row count and first rows.
  * Runs as the database owner, read-only, like the checker's own reference queries.
  */
-export function useTableSummaries(db: CafeDatabase | null, tables: string[]): Record<string, TableSummary> {
+export function useTableSummaries(
+  db: CafeDatabase | null,
+  tables: string[],
+  /** Bump to reload (e.g. after a sale changed `sales`). */
+  version = 0,
+): Record<string, TableSummary> {
   const [summaries, setSummaries] = useState<Record<string, TableSummary>>({});
   const key = tables.join(',');
   useEffect(() => {
@@ -35,7 +40,7 @@ export function useTableSummaries(db: CafeDatabase | null, tables: string[]): Re
     return () => {
       cancelled = true;
     };
-  }, [db, key]);
+  }, [db, key, version]);
   return summaries;
 }
 

@@ -147,3 +147,16 @@ describe('getSchema', () => {
     ]);
   });
 });
+
+describe('requests at the same time', () => {
+  it('run one after another, so a write never lands inside a read-only query', async () => {
+    const db = await createCafeDatabase();
+    const [a, , b] = await Promise.all([
+      db.run('SELECT COUNT(*) FROM customers;', 'cash-register'),
+      db.write("INSERT INTO customers (customer_id, name, joined_on) VALUES (9001, 'Test Person', '2026-11-01');"),
+      db.run('SELECT COUNT(*) FROM customers;', 'cash-register'),
+    ]);
+    expect(a.ok && b.ok).toBe(true);
+    if (a.ok && b.ok) expect(Number(b.rows[0][0])).toBe(Number(a.rows[0][0]) + 1);
+  }, 60_000);
+});

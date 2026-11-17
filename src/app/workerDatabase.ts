@@ -3,7 +3,8 @@ import type { StationId } from '../sql-core/stations';
 
 export type WorkerRequest =
   | { type: 'run'; id: number; sql: string; station?: StationId }
-  | { type: 'schema'; id: number };
+  | { type: 'schema'; id: number }
+  | { type: 'write'; id: number; sql: string };
 
 export type WorkerReply =
   | { type: 'ready' }
@@ -14,15 +15,18 @@ export type WorkerReply =
 type Pending = { kind: WorkerRequest['type']; resolve: (value: never) => void; reject: (err: Error) => void };
 
 /**
- * The café database running in a Web Worker (see db.worker.ts).
+ * The database running in a Web Worker (see db.worker.ts).
  * `stop()` ends the worker, answers the running query with "stopped", and starts a fresh
- * worker: the data is generated the same way every time, so nothing is lost.
+ * worker: the data is generated the same way every time, and the game's writes (today's sales)
+ * are replayed in order, so nothing is lost.
  */
 export class WorkerCafeDatabase implements CafeDatabase {
   private worker!: Worker;
   private ready!: Promise<void>;
   private readonly pending = new Map<number, Pending>();
   private nextId = 1;
+  /** Every write so far, replayed into a fresh worker after `stop()`. */
+  private readonly writes: string[] = [];
 
   constructor() {
     this.start();
@@ -41,6 +45,11 @@ export class WorkerCafeDatabase implements CafeDatabase {
     return this.request({ type: 'schema', id: 0 });
   }
 
+  async write(sql: string): Promise<void> {
+    this.writes.push(sql);
+    await this.request({ type: 'write', id: 0, sql });
+  }
+
   stop(): void {
     this.worker.terminate();
     for (const p of this.pending.values()) {
@@ -49,6 +58,8 @@ export class WorkerCafeDatabase implements CafeDatabase {
     }
     this.pending.clear();
     this.start();
+    // Queued now, so they reach the fresh worker before any new query.
+    for (const sql of this.writes) void this.request({ type: 'write', id: 0, sql }).catch(() => {});
   }
 
   private start(): void {
