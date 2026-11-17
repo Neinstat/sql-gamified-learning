@@ -1,52 +1,82 @@
 import { describe, expect, it } from 'vitest';
-import { TRUCK_LAYOUT, WORLD_W } from './truckArt';
+import { CUSTOMER_SIZES } from './customerArt';
+import { QUEUE, spotX } from './queue';
+import { PANEL_W, PANELS, TRUCK_LAYOUT } from './truckArt';
 import {
-  clampToFloor,
-  FLOOR,
+  centreInteractable,
+  clampPanel,
+  facingPanel,
   INTERACTABLES,
-  moveVector,
-  nearestInteractable,
-  standingSpot,
-  stepTowards,
-  USE_RANGE_X,
+  interactableAt,
+  panelScroll,
+  queueSpot,
 } from './truckWorld';
 
-describe('the truck floor', () => {
-  it('keeps the player inside the truck and in front of the back wall', () => {
-    expect(clampToFloor({ x: -50, y: 0 })).toEqual({ x: FLOOR.minX, y: FLOOR.minY });
-    expect(clampToFloor({ x: 5000, y: 999 })).toEqual({ x: FLOOR.maxX, y: FLOOR.maxY });
-    expect(FLOOR.minY).toBeGreaterThan(TRUCK_LAYOUT.floorTop);
-    expect(FLOOR.maxX).toBeLessThan(WORLD_W);
-  });
-
-  it('walks diagonally no faster than straight', () => {
-    const d = moveVector({ up: true, down: false, left: false, right: true });
-    expect(Math.hypot(d.x, d.y)).toBeCloseTo(1);
-    expect(moveVector({ up: true, down: true, left: true, right: true })).toEqual({ x: 0, y: 0 });
-  });
-
-  it('click-walks towards a target and arrives exactly', () => {
-    let at = { x: 100, y: 200 };
-    let arrived = false;
-    for (let i = 0; i < 100 && !arrived; i++) ({ at, arrived } = stepTowards(at, { x: 160, y: 230 }, 0.05));
-    expect(arrived).toBe(true);
-    expect(at).toEqual({ x: 160, y: 230 });
+describe('turning around the truck', () => {
+  it('faces one side at a time and stops at the ends', () => {
+    expect(clampPanel(-1)).toBe(0);
+    expect(clampPanel(PANELS.length)).toBe(PANELS.length - 1);
+    expect(panelScroll(2)).toBe(2 * PANEL_W);
+    expect(facingPanel(PANEL_W * 1.4)).toBe(1);
+    expect(facingPanel(PANEL_W * 1.6)).toBe(2);
   });
 });
 
 describe('things in the truck', () => {
-  it('can each be reached and used from their standing spot', () => {
-    for (const item of INTERACTABLES) expect(nearestInteractable(standingSpot(item))?.id).toBe(item.id);
+  it('can be found under the cursor', () => {
+    for (const item of INTERACTABLES) {
+      const { x, y, w, h } = item.area;
+      expect(interactableAt(x + w / 2, y + h / 2)?.id).toBe(item.id);
+    }
+    expect(interactableAt(-10, -10)).toBeNull();
   });
 
-  it('are far enough apart that only one is in reach at a time', () => {
-    const xs = INTERACTABLES.map((i) => i.x).sort((a, b) => a - b);
-    for (let i = 1; i < xs.length; i++) expect(xs[i] - xs[i - 1]).toBeGreaterThan(USE_RANGE_X * 2);
+  it('do not overlap', () => {
+    for (const a of INTERACTABLES) {
+      for (const b of INTERACTABLES) {
+        if (a === b) continue;
+        const apart =
+          a.area.x + a.area.w <= b.area.x || b.area.x + b.area.w <= a.area.x ||
+          a.area.y + a.area.h <= b.area.y || b.area.y + b.area.h <= a.area.y;
+        expect(apart, `${a.id} / ${b.id}`).toBe(true);
+      }
+    }
   });
 
-  it('cannot be used from the front of the floor or from far away', () => {
-    const tablet = INTERACTABLES.find((i) => i.id === 'tablet')!;
-    expect(nearestInteractable({ x: tablet.x, y: FLOOR.maxY })).toBeNull();
-    expect(nearestInteractable({ x: tablet.x + USE_RANGE_X + 1, y: FLOOR.minY })).toBeNull();
+  it('E uses something on every side, and the tablet when facing the window', () => {
+    PANELS.forEach((_, i) => expect(centreInteractable(i)).not.toBeNull());
+    expect(centreInteractable(1)?.id).toBe('tablet');
+  });
+});
+
+describe('the queue in the park', () => {
+  it('puts the front customer at the window, big, with the counter hiding their waist', () => {
+    const front = queueSpot(spotX(0));
+    const { window: w, counterTop } = TRUCK_LAYOUT;
+    expect(front.distance).toBe('near');
+    expect(front.x - CUSTOMER_SIZES.near.w / 2).toBeGreaterThanOrEqual(w.x);
+    expect(front.x + CUSTOMER_SIZES.near.w / 2).toBeLessThanOrEqual(w.x + w.w);
+    expect(front.baseY).toBeGreaterThan(counterTop);
+  });
+
+  it('shows people further back smaller, inside the window', () => {
+    const { window: w, counterTop } = TRUCK_LAYOUT;
+    for (let s = 1; s < QUEUE.maxWaiting; s++) {
+      const spot = queueSpot(spotX(s));
+      const { w: sw, h: sh } = CUSTOMER_SIZES[spot.distance];
+      expect(spot.distance).not.toBe('near');
+      expect(spot.x - sw / 2).toBeGreaterThanOrEqual(w.x);
+      // Their whole body is above the counter (their feet are on the path).
+      expect(spot.baseY).toBeLessThanOrEqual(counterTop);
+      expect(spot.baseY - sh).toBeGreaterThanOrEqual(w.y);
+    }
+  });
+
+  it('hides people arriving and leaving behind the walls', () => {
+    const { window: w } = TRUCK_LAYOUT;
+    const start = queueSpot(QUEUE.enterX);
+    const end = queueSpot(QUEUE.exitX);
+    expect(start.x + CUSTOMER_SIZES[start.distance].w / 2).toBeLessThanOrEqual(w.x);
+    expect(end.x - CUSTOMER_SIZES[end.distance].w / 2).toBeGreaterThanOrEqual(w.x + w.w);
   });
 });

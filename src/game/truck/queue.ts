@@ -1,22 +1,22 @@
 /**
- * The line of customers outside the serving window (GAME_DESIGN.md §14.4). Pure logic in scene
- * pixels, so it can be tested without Phaser.
+ * The line of customers outside the serving window (GAME_DESIGN.md §14.4). Pure logic in
+ * "progress" units along the park path (truckWorld.ts turns them into screen positions).
  *
- * Customers walk in from the left, take the next free spot and shuffle forward when the person in
+ * Customers walk up the path, take the next free spot and shuffle forward when the person in
  * front is served. Spot 0 is at the window; it is the only customer who orders.
  */
 export const QUEUE = {
-  /** Where customers appear (hidden behind the truck wall, left of the window). */
-  enterX: 150,
-  /** Where served customers walk off to (hidden behind the wall, right of the window). */
-  exitX: 580,
-  /** Spot 0 (the window, by the tablet) and the gap between spots. */
-  frontX: 466,
-  gap: 70,
-  /** At most this many people wait at once. */
-  maxWaiting: 4,
-  /** Walking speed in pixels per second. */
-  speed: 60,
+  /** Progress units along the park path (truckWorld.ts maps them to the screen). */
+  enterX: 0,
+  /** Past the window: the served customer walks off to the side. */
+  exitX: 420,
+  /** Spot 0 (at the window) and the gap between spots. */
+  frontX: 300,
+  gap: 100,
+  /** At most this many people wait at once (the window, then two on the path). */
+  maxWaiting: 3,
+  /** Walking speed in progress units per second. */
+  speed: 70,
 } as const;
 
 export type QueueCustomer = {

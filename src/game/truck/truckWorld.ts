@@ -1,76 +1,95 @@
 /**
- * Walking around the truck (GAME_DESIGN.md §14.8): the floor the player may stand on, the things
- * they can use, and movement. Pure logic in world pixels, tested without Phaser.
+ * Looking around the truck in first person (GAME_DESIGN.md §14.8): which side you face, the
+ * things you can use on each side, and where queueing customers stand in the park. Pure logic in
+ * world pixels, tested without Phaser.
  */
-import { TRUCK_LAYOUT, WORLD_W } from './truckArt';
-
-/** The floor band the player's feet stay inside (A/D: x, W/S: y). */
-export const FLOOR = { minX: 36, maxX: WORLD_W - 36, minY: 184, maxY: 256 } as const;
-/** Walking speed in pixels per second. */
-export const PLAYER_SPEED = 96;
-/** The player can use something when their feet are this close (horizontally)… */
-export const USE_RANGE_X = 34;
-/** …and no further from the back wall than this. */
-export const USE_MAX_Y = 214;
+import type { Distance } from './customerArt';
+import { QUEUE } from './queue';
+import { PANEL_W, PANELS, TRUCK_LAYOUT, type PanelId } from './truckArt';
 
 export type InteractableId = 'fridge' | 'tablet' | 'menu-board' | 'recipe-shelf' | 'back-door';
 
 export type Interactable = {
   id: InteractableId;
-  /** Where the player stands to use it (world x), and where the "E" prompt floats (y). */
-  x: number;
-  promptY: number;
+  panel: PanelId;
+  /** Clickable area in world pixels. */
+  area: { x: number; y: number; w: number; h: number };
 };
 
-const centre = (r: { x: number; w: number }) => Math.round(r.x + r.w / 2);
+const L = TRUCK_LAYOUT;
 
 export const INTERACTABLES: readonly Interactable[] = [
-  { id: 'fridge', x: centre(TRUCK_LAYOUT.fridge), promptY: TRUCK_LAYOUT.fridge.y - 10 },
-  { id: 'tablet', x: centre(TRUCK_LAYOUT.tablet), promptY: TRUCK_LAYOUT.tablet.y - 12 },
-  { id: 'menu-board', x: centre(TRUCK_LAYOUT.menuBoard), promptY: TRUCK_LAYOUT.menuBoard.y + TRUCK_LAYOUT.menuBoard.h + 14 },
-  { id: 'recipe-shelf', x: centre(TRUCK_LAYOUT.recipeShelf), promptY: TRUCK_LAYOUT.recipeShelf.y - 10 },
-  { id: 'back-door', x: centre(TRUCK_LAYOUT.door), promptY: TRUCK_LAYOUT.door.y - 12 },
+  { id: 'fridge', panel: 'fridge', area: { x: L.fridge.x, y: L.fridge.y, w: L.stockShelves.x + L.stockShelves.w - L.fridge.x, h: L.fridge.h } },
+  { id: 'tablet', panel: 'window', area: L.tablet },
+  { id: 'menu-board', panel: 'kitchen', area: L.menuBoard },
+  { id: 'recipe-shelf', panel: 'kitchen', area: L.recipeShelf },
+  { id: 'back-door', panel: 'door', area: L.door },
 ];
 
-export type Point = { x: number; y: number };
-
-export function clampToFloor(p: Point): Point {
-  return {
-    x: Math.min(FLOOR.maxX, Math.max(FLOOR.minX, p.x)),
-    y: Math.min(FLOOR.maxY, Math.max(FLOOR.minY, p.y)),
-  };
+/** Camera scroll that faces a side. */
+export function panelScroll(index: number): number {
+  return clampPanel(index) * PANEL_W;
 }
 
-/** The closest thing the player can use from where they stand, if any. */
-export function nearestInteractable(feet: Point): Interactable | null {
-  if (feet.y > USE_MAX_Y) return null;
+export function clampPanel(index: number): number {
+  return Math.min(PANELS.length - 1, Math.max(0, index));
+}
+
+/** The side whose middle is closest to the screen's middle. */
+export function facingPanel(scrollX: number): number {
+  return clampPanel(Math.round(scrollX / PANEL_W));
+}
+
+export function interactableAt(x: number, y: number): Interactable | null {
+  return (
+    INTERACTABLES.find(({ area: a }) => x >= a.x && x < a.x + a.w && y >= a.y && y < a.y + a.h) ?? null
+  );
+}
+
+/** What E uses: the thing on the side you face that is closest to the middle of the screen. */
+export function centreInteractable(panelIndex: number): Interactable | null {
+  const panel = PANELS[clampPanel(panelIndex)];
+  const middle = panelScroll(panelIndex) + PANEL_W / 2;
   let best: Interactable | null = null;
   for (const item of INTERACTABLES) {
-    const d = Math.abs(item.x - feet.x);
-    if (d <= USE_RANGE_X && (!best || d < Math.abs(best.x - feet.x))) best = item;
+    if (item.panel !== panel) continue;
+    const d = Math.abs(item.area.x + item.area.w / 2 - middle);
+    if (!best || d < Math.abs(best.area.x + best.area.w / 2 - middle)) best = item;
   }
   return best;
 }
 
-/** Keys held this frame → a direction (diagonals are not faster). */
-export function moveVector(keys: { up: boolean; down: boolean; left: boolean; right: boolean }): Point {
-  const x = (keys.right ? 1 : 0) - (keys.left ? 1 : 0);
-  const y = (keys.down ? 1 : 0) - (keys.up ? 1 : 0);
-  const length = Math.hypot(x, y);
-  return length === 0 ? { x: 0, y: 0 } : { x: x / length, y: y / length };
-}
+// ── Where customers stand ────────────────────────────────────────────────────────────
 
-/** One step towards `target` (click/tap to walk); returns the new position and whether it arrived. */
-export function stepTowards(from: Point, target: Point, seconds: number): { at: Point; arrived: boolean } {
-  const dx = target.x - from.x;
-  const dy = target.y - from.y;
-  const distance = Math.hypot(dx, dy);
-  const step = PLAYER_SPEED * seconds;
-  if (distance <= step) return { at: { ...target }, arrived: true };
-  return { at: { x: from.x + (dx / distance) * step, y: from.y + (dy / distance) * step }, arrived: false };
-}
+export type QueueSpot = { x: number; baseY: number; distance: Distance };
 
-/** Where to stand to use something: right in front of it, close to the wall. */
-export function standingSpot(item: Interactable): Point {
-  return clampToFloor({ x: item.x, y: FLOOR.minY + 6 });
+/**
+ * Waypoints from the far end of the park path to the window and off to the side, in queue
+ * progress units (queue.ts). In between, people walk in a straight line; their sprite switches
+ * size halfway between two waypoints of different distances.
+ */
+export const QUEUE_PATH: readonly (QueueSpot & { at: number })[] = [
+  { at: QUEUE.enterX, x: 470, baseY: 150, distance: 'far' },
+  { at: QUEUE.frontX - 2 * QUEUE.gap, x: 572, baseY: 154, distance: 'far' },
+  { at: QUEUE.frontX - QUEUE.gap, x: 636, baseY: 176, distance: 'mid' },
+  { at: QUEUE.frontX, x: 724, baseY: 226, distance: 'near' },
+  { at: QUEUE.exitX, x: 1000, baseY: 226, distance: 'near' },
+];
+
+export function queueSpot(progress: number): QueueSpot {
+  const path = QUEUE_PATH;
+  if (progress <= path[0].at) return path[0];
+  for (let i = 1; i < path.length; i++) {
+    const a = path[i - 1];
+    const b = path[i];
+    if (progress <= b.at) {
+      const t = (progress - a.at) / (b.at - a.at);
+      return {
+        x: a.x + (b.x - a.x) * t,
+        baseY: a.baseY + (b.baseY - a.baseY) * t,
+        distance: t < 0.5 ? a.distance : b.distance,
+      };
+    }
+  }
+  return path[path.length - 1];
 }

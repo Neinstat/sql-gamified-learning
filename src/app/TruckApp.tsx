@@ -6,7 +6,7 @@ import { getChapters, isCase, type Level } from '../sql-core/levels';
 import { stationTables } from '../sql-core/stations';
 import { orderLine, PROTOTYPE_ORDERS } from '../sql-core/truck/orders';
 import type { Table } from '../console/SchemaPanel';
-import { TRUCK_W } from '../game/truck/truckArt';
+import { PANELS, START_PANEL, TRUCK_W } from '../game/truck/truckArt';
 import { TruckBridge, type FrontCustomer } from '../game/truck/truckBridge';
 import { ConsoleOverlay } from './ConsoleOverlay';
 import { getDatabase } from './database';
@@ -28,6 +28,8 @@ export function TruckApp() {
   const [scrollX, setScrollX] = useState(0);
   const [artLabels, setArtLabels] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
+  const [panel, setPanel] = useState(START_PANEL);
+  const [hovered, setHovered] = useState<string | null>(null);
 
   useEffect(() => {
     document.documentElement.lang = lang;
@@ -45,6 +47,8 @@ export function TruckApp() {
 
   useEffect(() => bridge.on('front', setFront), [bridge]);
   useEffect(() => bridge.on('view', setScrollX), [bridge]);
+  useEffect(() => bridge.on('panel', setPanel), [bridge]);
+  useEffect(() => bridge.on('hover', setHovered), [bridge]);
   useEffect(() => bridge.emit('artLabels', artLabels), [bridge, artLabels, ready]);
 
   // A short message that fades on its own.
@@ -146,6 +150,27 @@ export function TruckApp() {
             text={orderLine(order, lang)}
           />
         )}
+        {ready && !tabletOpen && (
+          <>
+            <p className="truck-side-name" aria-live="polite">
+              {hovered ? `👆 ${t.truckThings[hovered]}` : t.truckSides[PANELS[panel]]}
+            </p>
+            <TurnButton
+              dir={-1}
+              label={t.truckTurnLeft}
+              next={panel > 0 ? t.truckSides[PANELS[panel - 1]] : null}
+              alert={!!front && panel > 1 ? t.truckWaiting : null}
+              onClick={() => bridge.emit('look', -1)}
+            />
+            <TurnButton
+              dir={1}
+              label={t.truckTurnRight}
+              next={panel < PANELS.length - 1 ? t.truckSides[PANELS[panel + 1]] : null}
+              alert={!!front && panel < 1 ? t.truckWaiting : null}
+              onClick={() => bridge.emit('look', 1)}
+            />
+          </>
+        )}
         {toast && (
           <div className="truck-toast" role="status">
             {toast}
@@ -228,5 +253,41 @@ function OrderBubble({
       <p className="order-bubble-text">{text}</p>
       <p className="order-bubble-hint">📱 {t.truckAnswer}</p>
     </div>
+  );
+}
+
+/** ‹ / › at the edge of the screen: turn to the next side (with a "!" when a customer waits that way). */
+function TurnButton({
+  dir,
+  label,
+  next,
+  alert,
+  onClick,
+}: {
+  dir: -1 | 1;
+  label: string;
+  /** The side you would turn to (null at the end of the truck). */
+  next: string | null;
+  alert: string | null;
+  onClick: () => void;
+}) {
+  if (!next) return null;
+  return (
+    <button
+      className={`truck-turn ${dir < 0 ? 'truck-turn-left' : 'truck-turn-right'}`}
+      onClick={onClick}
+      aria-label={`${label}: ${next}${alert ? `. ${alert}` : ''}`}
+      title={alert ?? next}
+    >
+      <span aria-hidden="true">{dir < 0 ? '‹' : '›'}</span>
+      <span className="truck-turn-name" aria-hidden="true">
+        {next}
+      </span>
+      {alert && (
+        <span className="truck-turn-alert" aria-hidden="true">
+          !
+        </span>
+      )}
+    </button>
   );
 }

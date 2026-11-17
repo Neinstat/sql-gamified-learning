@@ -10,7 +10,7 @@ export function createTruckGame(parent: HTMLElement, bridge: TruckBridge): Phase
     parent,
     pixelArt: true,
     roundPixels: true,
-    backgroundColor: '#2b1d19',
+    backgroundColor: '#25304f',
     scale: {
       mode: Phaser.Scale.NONE,
       width: TRUCK_W,

@@ -1,7 +1,23 @@
 import { describe, expect, it } from 'vitest';
-import { PALETTE } from '../art/palette';
-import { LOOKS, paintCustomerSheet, paintPlayerSheet, CUSTOMER_FRAMES, CUSTOMER_H, CUSTOMER_W, PLAYER_FRAMES, PLAYER_H, PLAYER_W } from './customerArt';
-import { CLOCK, OUTSIDE_W, paintClock, paintInterior, paintOutside, TRUCK_H, TRUCK_LAYOUT, truckZoom, WORLD_W } from './truckArt';
+import { RISO } from '../art/riso';
+import { CUSTOMER_FRAMES, CUSTOMER_SIZES, LOOKS, paintCustomerSheet, type Distance } from './customerArt';
+import {
+  CLOCK,
+  OUTSIDE_PARALLAX,
+  OUTSIDE_W,
+  OUTSIDE_X,
+  paintClock,
+  paintInterior,
+  paintPark,
+  PANEL_W,
+  PANELS,
+  START_PANEL,
+  TRUCK_H,
+  TRUCK_LAYOUT,
+  TRUCK_W,
+  truckZoom,
+  WORLD_W,
+} from './truckArt';
 import type { CustomerLook } from '../../sql-core/truck/orders';
 
 /** A fake canvas that records every rectangle drawn. */
@@ -17,63 +33,82 @@ function recorder() {
   return { ctx: ctx as unknown as CanvasRenderingContext2D, rects };
 }
 
-const palette = new Set<string>(Object.values(PALETTE));
+const inks = new Set<string>(Object.values(RISO));
 
+/** Checks every rectangle at once (dithered art draws tens of thousands of dots). */
 function expectInside(rects: ReturnType<typeof recorder>['rects'], w: number, h: number) {
   expect(rects.length).toBeGreaterThan(20);
-  for (const r of rects) {
-    expect(palette.has(r.colour), r.colour).toBe(true);
-    expect(r.x).toBeGreaterThanOrEqual(0);
-    expect(r.y).toBeGreaterThanOrEqual(0);
-    expect(r.x + r.w).toBeLessThanOrEqual(w);
-    expect(r.y + r.h).toBeLessThanOrEqual(h);
-  }
+  const wrongInk = rects.filter((r) => !inks.has(r.colour)).map((r) => r.colour);
+  const outside = rects.filter((r) => r.x < 0 || r.y < 0 || r.x + r.w > w || r.y + r.h > h);
+  expect(wrongInk).toEqual([]);
+  expect(outside).toEqual([]);
 }
 
+describe('riso palette', () => {
+  it('is a small set of distinct inks', () => {
+    const colours = Object.values(RISO);
+    expect(colours.length).toBeLessThanOrEqual(26);
+    expect(new Set(colours).size).toBe(colours.length);
+  });
+});
+
 describe('truck art', () => {
-  it('draws the interior and clock in palette colours inside the world', () => {
+  it('draws all four sides and the clock in riso inks, inside the world', () => {
     const { ctx, rects } = recorder();
     paintInterior(ctx);
     paintClock(ctx, 10, 0);
     expectInside(rects, WORLD_W, TRUCK_H);
   });
 
-  it('draws the street in palette colours inside its layer', () => {
+  it('draws the park in riso inks, inside its layer', () => {
     const { ctx, rects } = recorder();
-    paintOutside(ctx);
+    paintPark(ctx);
     expectInside(rects, OUTSIDE_W, TRUCK_H);
   });
 
-  it('lines things up along the back wall without overlaps, from fridge to door', () => {
+  it('keeps every thing on its own side of the truck', () => {
     const L = TRUCK_LAYOUT;
-    const order = [L.fridge, L.window, L.prepCounter, L.recipeShelf, L.door];
-    for (let i = 1; i < order.length; i++) expect(order[i - 1].x + order[i - 1].w).toBeLessThan(order[i].x);
-    expect(L.door.x + L.door.w).toBeLessThan(WORLD_W - 16);
-    expect(L.menuBoard.x + L.menuBoard.w).toBeLessThan(L.recipeShelf.x);
-    expect(CLOCK.cy + CLOCK.r).toBeLessThan(L.coffeeMachine.y);
-    // The tablet sits on the window sill.
-    expect(L.tablet.y + L.tablet.h).toBe(L.window.y + L.window.h);
+    const sides: [keyof typeof L, number][] = [
+      ['fridge', 0], ['stockShelves', 0], ['window', 1], ['tablet', 1],
+      ['coffeeMachine', 2], ['menuBoard', 2], ['recipeShelf', 2], ['door', 3],
+    ];
+    for (const [name, side] of sides) {
+      const b = L[name] as { x: number; w: number };
+      expect(b.x, name).toBeGreaterThanOrEqual(side * PANEL_W);
+      expect(b.x + b.w, name).toBeLessThanOrEqual((side + 1) * PANEL_W);
+    }
+    expect(CLOCK.cx).toBeGreaterThan(2 * PANEL_W);
+    expect(WORLD_W).toBe(PANELS.length * PANEL_W);
+  });
+
+  it('keeps the park covering the window while turning to the next side', () => {
+    const { window: w } = TRUCK_LAYOUT;
+    // Halfway through a turn either way, the visible part of the window still shows park.
+    for (const scroll of [START_PANEL * PANEL_W, (START_PANEL - 0.5) * PANEL_W, (START_PANEL + 0.5) * PANEL_W]) {
+      const parkLeft = OUTSIDE_X - scroll * OUTSIDE_PARALLAX;
+      const winLeft = Math.max(0, w.x - scroll);
+      const winRight = Math.min(TRUCK_W, w.x + w.w - scroll);
+      if (winRight <= winLeft) continue;
+      expect(parkLeft).toBeLessThanOrEqual(winLeft);
+      expect(parkLeft + OUTSIDE_W).toBeGreaterThanOrEqual(winRight);
+    }
   });
 });
 
-describe('characters', () => {
-  it.each(Object.keys(LOOKS) as CustomerLook[])('customer %s fits its frames in palette colours', (look) => {
+describe('customers', () => {
+  const looks = Object.keys(LOOKS) as CustomerLook[];
+  const distances: Distance[] = ['near', 'mid', 'far'];
+  it.each(looks.flatMap((l) => distances.map((d) => [l, d] as const)))('%s at %s fits its frames in riso inks', (look, distance) => {
+    const { w, h } = CUSTOMER_SIZES[distance];
     const { ctx, rects } = recorder();
-    paintCustomerSheet(ctx, look);
-    expectInside(rects, CUSTOMER_W * CUSTOMER_FRAMES, CUSTOMER_H);
-    // No frame spills into the next one.
-    for (const r of rects) expect(Math.floor(r.x / CUSTOMER_W)).toBe(Math.floor((r.x + r.w - 1) / CUSTOMER_W));
+    paintCustomerSheet(ctx, look, distance);
+    expectInside(rects, w * CUSTOMER_FRAMES, h);
+    expect(rects.filter((r) => Math.floor(r.x / w) !== Math.floor((r.x + r.w - 1) / w))).toEqual([]);
   });
 
-  it('the player fits its frames in palette colours', () => {
-    const { ctx, rects } = recorder();
-    paintPlayerSheet(ctx);
-    expectInside(rects, PLAYER_W * PLAYER_FRAMES, PLAYER_H);
-    for (const r of rects) expect(Math.floor(r.x / PLAYER_W)).toBe(Math.floor((r.x + r.w - 1) / PLAYER_W));
-  });
-
-  it('is big: the player is about a third of the screen tall', () => {
-    expect(PLAYER_H / TRUCK_H).toBeGreaterThan(0.3);
+  it('are bigger the closer they are', () => {
+    expect(CUSTOMER_SIZES.near.h).toBeGreaterThan(CUSTOMER_SIZES.mid.h);
+    expect(CUSTOMER_SIZES.mid.h).toBeGreaterThan(CUSTOMER_SIZES.far.h);
   });
 });
 

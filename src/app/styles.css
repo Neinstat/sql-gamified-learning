@@ -1658,3 +1658,88 @@ body {
     display: none;
   }
 }
+
+/* First person (4.5): side name, turn buttons. Riso inks: ink #25304f, paper #f4ead5, red #e4573d, mustard #f2b234. */
+.truck-side-name {
+  position: absolute;
+  top: 0.6rem;
+  left: 50%;
+  transform: translateX(-50%);
+  margin: 0;
+  padding: 0.2rem 0.7rem;
+  border: 2px solid #25304f;
+  border-radius: 999px;
+  background: #f4ead5;
+  color: #25304f;
+  font-size: 0.85rem;
+  font-weight: 700;
+  box-shadow: 2px 2px 0 #e4573d;
+  pointer-events: none;
+  white-space: nowrap;
+}
+
+.truck-turn {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.15rem;
+  min-width: 3rem;
+  padding: 0.6rem 0.4rem;
+  border: 2px solid #25304f;
+  border-radius: 8px;
+  background: rgba(244, 234, 213, 0.92);
+  color: #25304f;
+  font: inherit;
+  font-size: 1.6rem;
+  line-height: 1;
+  box-shadow: 2px 2px 0 #e4573d;
+  cursor: pointer;
+}
+
+.truck-turn:hover {
+  background: #f2b234;
+}
+
+.truck-turn-left {
+  left: 0.5rem;
+}
+
+.truck-turn-right {
+  right: 0.5rem;
+}
+
+.truck-turn-name {
+  max-width: 5rem;
+  font-size: 0.65rem;
+  font-weight: 700;
+  text-align: center;
+}
+
+.truck-turn-alert {
+  position: absolute;
+  top: -0.5rem;
+  right: -0.5rem;
+  display: grid;
+  place-items: center;
+  width: 1.3rem;
+  height: 1.3rem;
+  border-radius: 50%;
+  background: #e4573d;
+  color: #fffaf0;
+  font-size: 0.85rem;
+  font-weight: 700;
+  animation: alert-bob 0.9s ease-in-out infinite alternate;
+}
+
+@keyframes alert-bob {
+  to {
+    transform: translateY(-3px);
+  }
+}
+
+.truck-view {
+  background: #25304f;
+}
