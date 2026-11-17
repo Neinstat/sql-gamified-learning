@@ -231,7 +231,7 @@ Built in phases; every phase produces something playable. Every iteration: build
 | 4.8 ✅ | **Data Lens** (signature feature): a button that shows tables over every object | The Data Lens works on every side of the truck |
 | 4.9 ✅ | **Sales into the database** (`INSERT` by the game, `channel = 'truck'`) + the day log in progress, replayed on load | After serving, a `sales` query shows today's sales, also after reloading the page |
 | 4.10 ✅ | **The clock** 10:00–17:00, patience → tips, closing time + end-of-day summary | A day can be played from opening to the summary |
-| 4.11 | **The manager's knock:** The Manager (suit) at the back door, one small case using the case engine on today's data | The manager's case can be solved with 📌 evidence |
+| 4.11 ✅ | **The manager's knock:** The Manager (suit) at the back door, one small case using the case engine on today's data | The manager's case can be solved with 📌 evidence |
 | 4.12 | Owner playtest + fixes | Decision: on to Phase 5, or change the concept |
 
 **4.6 as built (17 Nov 2026):**
@@ -272,6 +272,8 @@ Built in phases; every phase produces something playable. Every iteration: build
 - `src/app/DaySummary.tsx`: the **end-of-day summary** — orders served, customers who left, revenue, tips and stars. Revenue comes from running `revenueSql` on the tablet's role, and the query is shown: *"How the revenue was counted — you can run this on the tablet too."*
 - HUD: 🕙 clock (red "closed" after closing) next to the day's date and orders served.
 - Checked in the browser: the clock runs and stops while the tablet is open; an ignored customer turns 😐, then leaves at 11:00 (60 minutes); a served customer at 11:14 gets a $0.50 tip and ⭐⭐⭐; at the end the summary shows revenue $6.00 from the query (2 × Americano); a reload mid-afternoon carries on at the saved time.
+
+**4.11 as built (17 Nov 2026):** The Manager knocks at 13:30 (`KNOCK_TIME`), or as soon as every customer has been handled; the back door rattles and a "Knock knock!" alert shows. Using the door swings it open (the end wall now has a real opening) and shows the Manager (suit, red tie, glasses, report tablet) on a step outside. `src/sql-core/truck/manager.ts` builds the case when the door opens, working out today's answers from the database: today's orders, today's revenue, and October's best channel, each backed by pinned evidence (tested on a played day and on an empty day; Indonesian in `locales/id/manager.ts`). The console shows the Manager's lines above the task. Answering records `manager: { stars }` in the day log; the summary shows it. The day only closes once the Manager has been answered (or at 17:00). Checked in the browser end to end: knock at 13:30, three answers backed by data (2 orders, $8.75, dine-in), the Manager leaves, stars saved.
 
 **Cleanup (17 Nov 2026):** v1's code (Phaser, the top-down café, Journal, shop, quests, `progress.ts`), the 2D truck prototypes, 72 unused UI strings, 112 unused CSS rules and the Phaser dependency were removed. `src/sql-core/` stays whole because its content is reused in Phase 6. Documents were moved to English for a global audience.
 

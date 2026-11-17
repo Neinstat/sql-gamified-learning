@@ -13,7 +13,11 @@
  *   game → app   'clock'   the truck's clock moved on (minutes since midnight, whole minutes)
  *   game → app   'patience' how much patience the customer at the window has left (0–1), or null
  *   game → app   'gaveUp'  a customer waited too long and left without buying (their order id)
- *   game → app   'closed'  the day is over: closing time (or no one left to come) and the line is empty
+ *   game → app   'knock'   The Manager is knocking on the back door (once a day)
+ *   app → game   'door'    open (true) or close the back door: the Manager stands outside
+ *   app → game   'managerDone' the Manager got their answers and leaves
+ *   game → app   'closed'  the day is over: closing time (or no one left to come), the line is empty,
+ *                          and the Manager has been answered (or it is closing time)
  *   game → app   'lensKey' the player pressed L (the app decides whether the Data Lens is on)
  *   app → game   'lens'    turn the Data Lens on or off
  *   game → app   'lensCards' where each table's card is on screen while the lens is on (empty
@@ -38,6 +42,9 @@ type TruckEvents = {
   patience: { orderId: string; left: number } | null;
   gaveUp: string;
   closed: true;
+  knock: true;
+  door: boolean;
+  managerDone: true;
   lensKey: true;
   lens: boolean;
   lensCards: LensCard[];

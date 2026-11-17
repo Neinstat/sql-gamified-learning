@@ -1246,3 +1246,53 @@ body {
   margin: 0 0 0.8rem;
   font-size: 0.85rem;
 }
+
+/* The Manager (4.11): their words above the case, and the knock alert. */
+.console-speech {
+  margin: 0 0 0.9rem;
+  padding: 0.6rem 0.85rem;
+  border-left: 4px solid #e4573d;
+  border-radius: 4px;
+  background: #25304f;
+  color: #f4ead5;
+}
+
+.console-speech p {
+  margin: 0.15rem 0;
+}
+
+.console-speech-who {
+  color: #f2b234;
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+}
+
+.knock-alert {
+  position: absolute;
+  top: 0.7rem;
+  right: 0.8rem;
+  margin: 0;
+  padding: 0.45rem 0.8rem;
+  border: 2px solid #25304f;
+  border-radius: 6px;
+  background: #f2b234;
+  color: #25304f;
+  font-weight: 700;
+  box-shadow: 3px 3px 0 #e4573d;
+  animation: knock 1.6s ease-in-out infinite;
+  pointer-events: none;
+}
+
+@keyframes knock {
+  0%,
+  6%,
+  12% {
+    transform: translateX(0);
+  }
+  3%,
+  9% {
+    transform: translateX(-4px);
+  }
+}

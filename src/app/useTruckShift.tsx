@@ -4,9 +4,10 @@ import { ExploreConsole } from '../console/ExploreConsole';
 import type { Table } from '../console/SchemaPanel';
 import { getSchema, type CafeDatabase } from '../sql-core/db';
 import type { Lang } from '../sql-core/feedback';
-import { isCase, type RequestLevel } from '../sql-core/levels';
+import { isCase, type Level, type RequestLevel } from '../sql-core/levels';
 import { stationTables, tablesInQuery } from '../sql-core/stations';
 import { findOrderLevel } from '../sql-core/truck/levels';
+import { managerCaseFor } from '../sql-core/truck/manager';
 import { OBJECT_STATION, objectForStation, type TruckObjectId } from '../sql-core/truck/objects';
 import { emptyDay, missOrder, moodFor, parseDayLog, saleSql, serveOrder, TIPS, type DayLog } from '../sql-core/truck/day';
 import { starsFor } from './rewards';
@@ -60,6 +61,12 @@ export function useTruckShift(bridge: TruckBridge, lang: Lang, t: UiText) {
   const [patience, setPatience] = useState<{ orderId: string; left: number } | null>(null);
   /** The game says the day is over (closing time, or nobody left to come, and the line is empty). */
   const [closed, setClosed] = useState(false);
+  /** The Manager: knocking on the back door, and their case once the door is opened. */
+  const [knocking, setKnocking] = useState(false);
+  const [managerLevel, setManagerLevel] = useState<Level | null>(null);
+  const [managerOpen, setManagerOpen] = useState(false);
+  const [managerSolved, setManagerSolved] = useState<{ wrong: number } | null>(null);
+  const [managerHints, setManagerHints] = useState(0);
   const [hintsUsed, setHintsUsed] = useState(0);
   const [toast, setToast] = useState<string | null>(null);
 
@@ -106,6 +113,7 @@ export function useTruckShift(bridge: TruckBridge, lang: Lang, t: UiText) {
   );
   useEffect(() => bridge.on('patience', setPatience), [bridge]);
   useEffect(() => bridge.on('closed', () => setClosed(true)), [bridge]);
+  useEffect(() => bridge.on('knock', () => setKnocking(true)), [bridge]);
   useEffect(
     () =>
       bridge.on('gaveUp', (orderId) => {
@@ -128,13 +136,40 @@ export function useTruckShift(bridge: TruckBridge, lang: Lang, t: UiText) {
       bridge.on('use', (id) => {
         if (order && id === orderObject) setOrderOpen(true);
         else if (OBJECT_STATION[id]) setExploring(id);
-        else setToast(t.truckDoor);
+        else if (id === 'back-door' && knocking && db) {
+          // Open the door: the Manager's case is worked out from the data as it is right now.
+          bridge.emit('door', true);
+          managerCaseFor(db, day.date, lang)
+            .then((level) => {
+              setManagerLevel(level);
+              setManagerOpen(true);
+            })
+            .catch((err) => {
+              bridge.emit('door', false);
+              setToast(String(err));
+            });
+        } else setToast(day.manager ? t.managerGone : t.truckDoor);
       }),
-    [bridge, order, orderObject, t],
+    [bridge, order, orderObject, t, knocking, db, day.date, day.manager, lang],
   );
 
+  const closeManager = useCallback(() => {
+    setManagerOpen(false);
+    bridge.emit('door', false);
+    if (!managerSolved) return;
+    // Answered: the Manager leaves, and the day log keeps the stars.
+    const stars = starsFor(managerHints, managerSolved.wrong);
+    updateDay((log) => ({ ...log, manager: { stars } }));
+    setKnocking(false);
+    setManagerLevel(null);
+    setManagerSolved(null);
+    setManagerHints(0);
+    bridge.emit('managerDone', true);
+    setToast(t.managerLeft);
+  }, [bridge, managerSolved, managerHints, updateDay, t]);
+
   // Time stops while a console is open.
-  const open = orderOpen || exploring !== null;
+  const open = orderOpen || exploring !== null || managerOpen;
   useEffect(() => bridge.emit('pause', open), [bridge, open]);
 
   const closeOrder = useCallback(() => {
@@ -186,6 +221,30 @@ export function useTruckShift(bridge: TruckBridge, lang: Lang, t: UiText) {
         solvedMessage={t.truckServed}
         doneLabel={t.truckServe}
         onClose={closeOrder}
+      />
+    ) : null;
+
+  const managerConsole =
+    managerLevel ? (
+      // Kept mounted while the Manager waits, so pinned results survive closing the door.
+      <ConsoleOverlay
+        key="manager"
+        stationName={t.managerTitle}
+        level={managerLevel}
+        db={db}
+        dbError={dbError}
+        schema={stationTables('back-office', schema)}
+        lang={lang}
+        t={t}
+        visible={managerOpen}
+        hintsUsed={managerHints}
+        onRevealHint={() => setManagerHints((n) => n + 1)}
+        onCorrect={(wrong) => setManagerSolved({ wrong })}
+        reward={null}
+        solvedMessage={managerLevel.success}
+        doneLabel={t.managerHandOver}
+        onClose={closeManager}
+        speech={{ speaker: t.managerName, lines: managerLevel.dialogue }}
       />
     ) : null;
 
@@ -243,6 +302,8 @@ export function useTruckShift(bridge: TruckBridge, lang: Lang, t: UiText) {
     day,
     /** Every order of the day has been served. */
     dayDone: closed,
+    /** The Manager is knocking and has not been answered yet. */
+    knocking,
     /** The mood of the customer at the window (null when nobody is there). */
     mood: front && patience?.orderId === front.orderId ? moodFor(patience.left) : null,
     patienceLeft: front && patience?.orderId === front.orderId ? patience.left : null,
@@ -250,6 +311,7 @@ export function useTruckShift(bridge: TruckBridge, lang: Lang, t: UiText) {
     overlays: (
       <>
         {orderConsole}
+        {managerConsole}
         {exploreConsole}
         {toastView}
       </>

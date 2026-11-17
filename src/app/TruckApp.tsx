@@ -23,12 +23,16 @@ export function TruckApp() {
   const [locked, setLocked] = useState(false);
   const [aimed, setAimed] = useState<string | null>(null);
   const [anchor, setAnchor] = useState<{ x: number; y: number } | null>(null);
-  const { front, order, answerWhere, orderTables, db, day, dayDone, mood, patienceLeft, consoleOpen, overlays } =
+  const { front, order, answerWhere, orderTables, db, day, dayDone, knocking, mood, patienceLeft, consoleOpen, overlays } =
     useTruckShift(bridge, lang, t);
   // The orders served before this page load: the game skips those customers.
   /** Closing time, or the day ended early because nobody else is coming. */
   const shut = day.clock >= CLOSING || dayDone;
-  const startOnLoad = useRef({ handled: [...day.served.map((s) => s.orderId), ...day.missed], clock: day.clock });
+  const startOnLoad = useRef({
+    handled: [...day.served.map((s) => s.orderId), ...day.missed],
+    clock: day.clock,
+    managerDone: day.manager !== null,
+  });
   const [lens, setLens] = useState(false);
   const [lensCards, setLensCards] = useState<LensCard[]>([]);
   const summaries = useTableSummaries(lens ? db : null, ALL_TABLES, day.served.length);
@@ -99,6 +103,11 @@ export function TruckApp() {
             <p className="world-loading-title">SQL Valley</p>
             <div className="loading-bar" aria-hidden="true" />
           </div>
+        )}
+        {ready && knocking && !consoleOpen && !dayDone && (
+          <p className="knock-alert" role="status">
+            🚪 {t.knockAlert}
+          </p>
         )}
         {ready && dayDone && !front && !consoleOpen && (
           <DaySummary db={db} day={day} dateLabel={t.dateLabel(day.date)} t={t} onNewDay={restartDay} />

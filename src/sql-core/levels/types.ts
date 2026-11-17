@@ -2,7 +2,7 @@ import type { CheckOptions } from '../checker';
 import type { StationId } from '../stations';
 
 /** People in the café who give the player requests. */
-export type CharacterId = 'grandma' | 'barista' | 'supplier' | 'regular';
+export type CharacterId = 'grandma' | 'barista' | 'supplier' | 'regular' | 'manager';
 
 /**
  * How the player writes the query (see GAME_DESIGN.md §6):

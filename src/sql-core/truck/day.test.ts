@@ -74,7 +74,10 @@ describe('the day log', () => {
   });
 
   it('reads saved days back, dropping anything broken or unknown', () => {
-    const log = missOrder(serveOrder({ ...emptyDay(), clock: 655 }, served('proto-cheap', 610)), 'proto-coffee');
+    const log = {
+      ...missOrder(serveOrder({ ...emptyDay(), clock: 655 }, served('proto-cheap', 610)), 'proto-coffee'),
+      manager: { stars: 2 },
+    };
     expect(parseDayLog(JSON.stringify(log))).toEqual(log);
     expect(parseDayLog(null)).toEqual(emptyDay());
     expect(parseDayLog('not json')).toEqual(emptyDay());

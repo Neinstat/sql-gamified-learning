@@ -52,15 +52,21 @@ export function buildTruck(): THREE.Group {
   block(g, 'ink', [w.min.x - 0.05, w.min.y, -HZ - 0.02, w.min.x, w.max.y, -HZ + 0.02]);
   block(g, 'ink', [w.max.x, w.min.y, -HZ - 0.02, w.max.x + 0.05, w.max.y, -HZ + 0.02]);
 
-  // Back and end walls: paper above, a teal band below.
+  // Back and end walls: paper above, a teal band below. The right end wall has the back door's
+  // opening cut out, so the park shows when the door swings open.
+  const dr = LAYOUT.door;
   for (const [x1, z1, x2, z2] of [
     [-HX, HZ, HX, HZ + T],
     [-HX - T, -HZ, -HX, HZ],
-    [HX, -HZ, HX + T, HZ],
+    [HX, -HZ, HX + T, dr.min.z],
+    [HX, dr.max.z, HX + T, HZ],
   ] as const) {
     block(g, 'paper', [x1, 0.9, z1, x2, H, z2]);
     block(g, 'teal', [x1, 0, z1, x2, 0.9, z2]);
   }
+  block(g, 'paper', [HX, dr.max.y, dr.min.z, HX + T, H, dr.max.z]);
+  // A metal step outside the door, where the Manager stands.
+  block(g, 'inkSoft', [HX + T, -0.08, -0.55, HX + 0.75, 0, 0.55]);
 
   // Front counter (under the window) with a white top.
   const fc = LAYOUT.frontCounter;
@@ -179,12 +185,25 @@ export function buildTruck(): THREE.Group {
   };
   g.userData.setClock(10 * 60);
 
-  // Back door with a little window and a handle.
+  // Back door with a little window and a handle. It hangs on a hinge at its −z edge and swings
+  // outwards; `setDoor(0…1)` opens it, `setDoor(0, t)` with a time gives the knocking rattle.
   const d = LAYOUT.door;
-  block(g, 'inkSoft', [d.min.x - 0.02, d.min.y, d.min.z, d.max.x, d.max.y, d.max.z]);
-  block(g, 'peach', [d.min.x - 0.03, 1.3, -0.25, d.min.x - 0.02, 1.8, 0.25]);
-  block(g, 'mustard', [d.min.x - 0.03, 1.05, -0.3, d.min.x - 0.02, 1.15, 0.3]);
-  block(g, 'mustard', [d.min.x - 0.08, 0.95, 0.32, d.min.x - 0.02, 1.0, 0.42]);
+  const hinge = new THREE.Group();
+  hinge.position.set(d.min.x, 0, d.min.z);
+  const local = (b: [number, number, number, number, number, number]) =>
+    [b[0] - d.min.x, b[1], b[2] - d.min.z, b[3] - d.min.x, b[4], b[5] - d.min.z] as [number, number, number, number, number, number];
+  block(hinge, 'inkSoft', local([d.min.x - 0.02, d.min.y, d.min.z, d.max.x, d.max.y, d.max.z]));
+  block(hinge, 'peach', local([d.min.x - 0.03, 1.3, -0.25, d.min.x - 0.02, 1.8, 0.25]));
+  block(hinge, 'mustard', local([d.min.x - 0.03, 1.05, -0.3, d.min.x - 0.02, 1.15, 0.3]));
+  block(hinge, 'mustard', local([d.min.x - 0.08, 0.95, 0.32, d.min.x - 0.02, 1.0, 0.42]));
+  g.add(hinge);
+  g.userData.setDoor = (open: number, knockTime?: number) => {
+    // Knocking: two quick rattles, then a pause.
+    const rattle =
+      knockTime === undefined ? 0 : (Math.sin(knockTime * 40) * 0.025 * (knockTime % 1.6 < 0.45 ? 1 : 0));
+    // +y rotation swings the free (+z) edge towards +x: outwards, away from the player.
+    hinge.rotation.y = open * 1.35 + rattle;
+  };
 
   // A spare apron on a hook near the door.
   block(g, 'teal', [HX - 0.02, 0.9, -0.95, HX - 0.01, 1.6, -0.65]);
@@ -369,3 +388,37 @@ export function buildCustomer(look: CustomerLook): CustomerModel {
   root.position.y = GROUND_Y;
   return { root, legs, arms };
 }
+
+/**
+ * The Manager (GAME_DESIGN.md §3): a blocky figure in a dark suit, white shirt and red tie, with
+ * glasses and a report tablet, facing −z like the customers. ⚠ Placeholder model.
+ */
+export function buildManager(): THREE.Group {
+  const root = new THREE.Group();
+  // Trousers and shoes.
+  block(root, 'ink', [-0.18, 0, -0.08, -0.03, 0.85, 0.08]);
+  block(root, 'ink', [0.03, 0, -0.08, 0.18, 0.85, 0.08]);
+  block(root, 'inkSoft', [-0.2, 0, -0.13, -0.02, 0.06, 0.06]);
+  block(root, 'inkSoft', [0.02, 0, -0.13, 0.2, 0.06, 0.06]);
+  // Jacket with a shirt, lapels and a tie.
+  block(root, 'ink', [-0.25, 0.82, -0.15, 0.25, 1.45, 0.15]);
+  block(root, 'white', [-0.07, 1.12, -0.152, 0.07, 1.45, -0.15]);
+  block(root, 'red', [-0.025, 1.0, -0.156, 0.025, 1.42, -0.152]);
+  block(root, 'inkSoft', [-0.12, 1.15, -0.155, -0.07, 1.45, -0.151]);
+  block(root, 'inkSoft', [0.07, 1.15, -0.155, 0.12, 1.45, -0.151]);
+  // Arms; the right hand holds a report tablet.
+  block(root, 'ink', [-0.37, 0.88, -0.07, -0.25, 1.43, 0.07]);
+  block(root, 'ink', [0.25, 1.05, -0.3, 0.37, 1.43, 0.0]);
+  block(root, 'tealDark', [0.13, 1.0, -0.42, 0.4, 1.2, -0.38]);
+  // Head: neat short hair, glasses, a flat mouth.
+  block(root, 'skin2', [-0.06, 1.44, -0.06, 0.06, 1.5, 0.06]);
+  block(root, 'skin2', [-0.16, 1.49, -0.16, 0.16, 1.79, 0.16]);
+  block(root, 'inkSoft', [-0.17, 1.74, -0.17, 0.17, 1.83, 0.17]);
+  block(root, 'inkSoft', [-0.17, 1.55, 0.08, 0.17, 1.8, 0.17]);
+  block(root, 'ink', [-0.13, 1.64, -0.168, 0.13, 1.66, -0.163]);
+  block(root, 'ink', [-0.11, 1.6, -0.17, -0.03, 1.68, -0.165]);
+  block(root, 'ink', [0.03, 1.6, -0.17, 0.11, 1.68, -0.165]);
+  block(root, 'ink', [-0.05, 1.54, -0.168, 0.05, 1.555, -0.163]);
+  return root;
+}
+

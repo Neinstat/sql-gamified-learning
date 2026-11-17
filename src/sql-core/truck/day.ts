@@ -13,6 +13,12 @@ export const FIRST_PLAY_DATE = '2026-11-01';
 export const OPENING = 10 * 60;
 export const CLOSING = 17 * 60;
 
+/**
+ * The Manager knocks at this time, or earlier if every customer of the day has already been
+ * handled (they come for the day's numbers). Once a day.
+ */
+export const KNOCK_TIME = 13 * 60 + 30;
+
 /** About ten real minutes for a 7-hour day; the clock stops while a console is open. */
 export const GAME_MINUTES_PER_SECOND = 0.7;
 /** With nobody waiting at the window, time runs this much faster (no idle waiting). */
@@ -58,9 +64,11 @@ export type DayLog = {
   served: ServedOrder[];
   /** Customers who gave up waiting (their order comes back on another day). */
   missed: string[];
+  /** The Manager's case, once answered: the stars earned. Not answered yet: null. */
+  manager: { stars: number } | null;
 };
 
-export const emptyDay = (): DayLog => ({ date: FIRST_PLAY_DATE, clock: OPENING, served: [], missed: [] });
+export const emptyDay = (): DayLog => ({ date: FIRST_PLAY_DATE, clock: OPENING, served: [], missed: [], manager: null });
 
 export function serveOrder(log: DayLog, served: ServedOrder): DayLog {
   if (isHandled(log, served.orderId)) return log;
@@ -107,6 +115,10 @@ export function parseDayLog(raw: string | null): DayLog {
       clock: minutes(data.clock) ? Math.max(OPENING, Math.floor(data.clock as number)) : OPENING,
       served,
       missed: [...new Set(missed)],
+      manager:
+        data.manager && typeof data.manager === 'object' && [1, 2, 3].includes((data.manager as { stars: number }).stars)
+          ? { stars: (data.manager as { stars: number }).stars }
+          : null,
     };
   } catch {
     return emptyDay();

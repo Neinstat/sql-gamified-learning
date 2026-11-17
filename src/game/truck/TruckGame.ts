@@ -8,6 +8,7 @@ import {
   arrivalTime,
   CLOSING,
   GAME_MINUTES_PER_SECOND,
+  KNOCK_TIME,
   OPENING,
   PATIENCE_MINUTES,
   QUIET_SPEEDUP,
@@ -16,7 +17,7 @@ import { PROTOTYPE_ORDERS, type CustomerLook } from '../../sql-core/truck/orders
 import { inkColour } from './colour';
 import type { LensCard, TruckBridge } from './bridge';
 import { TruckQueue, type QueueCustomer } from './queue';
-import { buildCustomer, buildPark, buildTruck, type CustomerModel } from './build';
+import { buildCustomer, buildManager, buildPark, buildTruck, type CustomerModel } from './build';
 import { RisoPass } from './risoPass';
 import {
   aimedInteractable,
@@ -28,6 +29,7 @@ import {
   lookDirection,
   queuePosition,
   START,
+  TRUCK,
   walkStep,
   type InteractableId,
 } from './world';
@@ -70,6 +72,12 @@ export class TruckGame {
   private lastPatience = '';
   private closed = false;
   private setWallClock: (minutes: number) => void = () => {};
+  private setDoor: (open: number, knockTime?: number) => void = () => {};
+  private manager!: THREE.Group;
+  private managerDone = false;
+  private knocking = false;
+  private doorTarget = 0;
+  private doorAmount = 0;
   private lastAnchor = '';
   private walkClock = 0;
   private lensOn = false;
@@ -83,8 +91,9 @@ export class TruckGame {
     private readonly parent: HTMLElement,
     private readonly bridge: TruckBridge,
     /** Where the day stands on load: orders already handled, and the clock. */
-    start: { handled: readonly string[]; clock: number } = { handled: [], clock: OPENING },
+    start: { handled: readonly string[]; clock: number; managerDone?: boolean } = { handled: [], clock: OPENING },
   ) {
+    this.managerDone = start.managerDone ?? false;
     this.orders = PROTOTYPE_ORDERS.filter((o) => !start.handled.includes(o.id));
     this.clock = Math.max(OPENING, start.clock);
     // Colours are used exactly as written (colour.ts); no conversion on output either.
@@ -108,7 +117,13 @@ export class TruckGame {
     const truck = buildTruck();
     this.setWallClock = truck.userData.setClock as (minutes: number) => void;
     this.setWallClock(this.clock);
-    this.scene.add(truck, buildPark());
+    this.setDoor = truck.userData.setDoor as (open: number, knockTime?: number) => void;
+    // The Manager waits on the step outside the back door, facing in (−x); seen when it opens.
+    this.manager = buildManager();
+    this.manager.position.set(TRUCK.length / 2 + 0.42, 0, 0.05);
+    this.manager.rotation.y = Math.PI / 2;
+    this.manager.visible = false;
+    this.scene.add(truck, buildPark(), this.manager);
 
     this.observer = new ResizeObserver(() => this.resize());
     this.observer.observe(parent);
@@ -119,6 +134,11 @@ export class TruckGame {
       bridge.on('serve', () => this.queue.serveFront()),
       bridge.on('pause', (paused) => this.setPaused(paused)),
       bridge.on('lens', (on) => (this.lensOn = on)),
+      bridge.on('door', (open) => (this.doorTarget = open ? 1 : 0)),
+      bridge.on('managerDone', () => {
+        this.managerDone = true;
+        this.knocking = false;
+      }),
     );
     this.loop(performance.now());
   }
@@ -244,6 +264,10 @@ export class TruckGame {
     const lensStep = seconds / LENS_SECONDS;
     this.lensAmount = Math.min(1, Math.max(0, this.lensAmount + (this.lensOn ? lensStep : -lensStep)));
     this.riso.setLens(this.lensAmount);
+    // The back door: opens for the Manager (even while time is stopped), rattles while they knock.
+    this.doorAmount = Math.min(1, Math.max(0, this.doorAmount + (this.doorTarget ? 1 : -1) * seconds * 2.2));
+    this.setDoor(this.doorAmount, this.knocking && this.doorAmount === 0 ? this.walkClock : undefined);
+    this.manager.visible = this.knocking && this.doorAmount > 0.02;
     this.riso.render(this.renderer, this.scene, this.camera);
     this.emitAnchor();
     this.emitLensCards();
@@ -320,9 +344,17 @@ export class TruckGame {
       this.lastPatience = patienceKey;
       this.bridge.emit('patience', patience);
     }
-    // The day is over once nobody else will come (closing time, or no orders left) and the line is empty.
+    // The Manager knocks once a day: at their time, or as soon as every customer has been handled.
     const noneToCome = this.clock >= CLOSING || this.nextOrder >= this.orders.length;
-    if (!this.closed && noneToCome && this.queue.line.length === 0) {
+    const quietForGood = noneToCome && this.queue.line.length === 0;
+    if (!this.managerDone && !this.knocking && this.clock < CLOSING && (this.clock >= KNOCK_TIME || quietForGood)) {
+      this.knocking = true;
+      this.bridge.emit('knock', true);
+    }
+    // At closing time an unanswered Manager gives up too.
+    if (this.clock >= CLOSING && this.knocking && this.doorTarget === 0) this.knocking = false;
+    // The day is over once nobody else will come, the line is empty, and the Manager has been seen to.
+    if (!this.closed && quietForGood && (this.managerDone || this.clock >= CLOSING)) {
       this.closed = true;
       this.bridge.emit('closed', true);
     }

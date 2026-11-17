@@ -33,6 +33,8 @@ type Props = {
   onClose: () => void;
   /** Text on the button after solving (default: back to the truck). */
   doneLabel?: string;
+  /** Who is asking, and what they say, shown above the task (e.g. The Manager). */
+  speech?: { speaker: string; lines: string[] };
 };
 
 /** The SQL console (the truck's tablet), over the game world. */
@@ -53,6 +55,7 @@ export function ConsoleOverlay(props: Props) {
     reward,
     onClose,
     doneLabel,
+    speech,
   } = props;
   const [solved, setSolved] = useState(false);
   const [lessonOpen, setLessonOpen] = useState(false);
@@ -86,6 +89,15 @@ export function ConsoleOverlay(props: Props) {
             ✕
           </button>
         </header>
+
+        {speech && (
+          <blockquote className="console-speech">
+            <p className="console-speech-who">{speech.speaker}</p>
+            {speech.lines.map((line) => (
+              <p key={line}>{line}</p>
+            ))}
+          </blockquote>
+        )}
 
         <div className="task">
           <span className="task-label">{t.task}</span>

@@ -63,6 +63,10 @@ export function DaySummary({
           <dd>{money(tips)}</dd>
         </div>
         <div>
+          <dt>{t.summaryManager}</dt>
+          <dd>{day.manager ? `✓ ${'⭐'.repeat(day.manager.stars)}` : t.summaryManagerMissed}</dd>
+        </div>
+        <div>
           <dt>{t.summaryStars}</dt>
           <dd>
             ⭐ {stars}/{PROTOTYPE_ORDERS.length * 3}
