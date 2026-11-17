@@ -19,5 +19,6 @@ with their source and licence. Earlier 2D art lives only in git history (see `do
 | Customers (blocky people with swinging limbs, 5 looks in `looks.ts`) | 🟥 Placeholder | CC0 animated low-poly characters (walk, idle, happy, annoyed) |
 | The Manager (suit) | ⬜ Not made yet | Comes with the manager's knock |
 | Crosshair, aim label, speech bubble (HTML) | 🟨 Style chosen | |
+| Data Lens: blueprint mode in the shader, table cards (HTML) | 🟨 Style chosen | Cards may need a smarter layout when several overlap |
 
 Legend: 🟥 placeholder · 🟨 style chosen, may be polished · 🟩 final · ⬜ not made yet

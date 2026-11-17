@@ -65,6 +65,25 @@ export const INTERACTABLE_BOXES: readonly { id: InteractableId; box: Box3 }[] = 
   { id: 'back-door', box: LAYOUT.door },
 ];
 
+/**
+ * The Data Lens (GAME_DESIGN.md §7): where the cards float in the truck, and the tables on each.
+ * A card sits above the object that holds its tables (the fridge and its shelves split stock and
+ * suppliers). The tablet's card also lists the menu, because menu orders are answered there.
+ * The `customers` card follows the customer at the window instead (see TruckGame).
+ */
+export const LENS_SPOTS: readonly { id: string; tables: string[]; object: InteractableId; box: Box3 }[] = [
+  { id: 'tablet', tables: ['sales', 'menu_items'], object: 'tablet', box: LAYOUT.tablet },
+  { id: 'fridge', tables: ['inventory'], object: 'fridge', box: LAYOUT.fridge },
+  { id: 'shelves', tables: ['suppliers'], object: 'fridge', box: LAYOUT.stockShelves },
+  { id: 'menu-board', tables: ['menu_items'], object: 'menu-board', box: LAYOUT.menuBoard },
+  { id: 'recipes', tables: ['recipes', 'menu_items'], object: 'recipe-shelf', box: LAYOUT.recipeShelf },
+];
+
+/** Where a card is pinned: just above the middle of its object. */
+export function lensPoint(box: Box3): Vec3 {
+  return { x: (box.min.x + box.max.x) / 2, y: Math.min(box.max.y + 0.15, TRUCK.height - 0.1), z: (box.min.z + box.max.z) / 2 };
+}
+
 export function clampWalk(x: number, z: number): { x: number; z: number } {
   return {
     x: Math.min(WALK.maxX, Math.max(WALK.minX, x)),

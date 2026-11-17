@@ -45,6 +45,10 @@ const en = {
   truckExploreHint: 'Run any query to look around. Nothing is graded here.',
   truckOrderElsewhere: (where: string) => `The customer's order is answered ${where}.`,
   truckDoor: 'The Manager will knock here. Not yet, luckily.',
+  dataLens: 'Data Lens',
+  lensHint: 'See the data behind everything in the truck (L)',
+  lensRows: (n: number) => `${n.toLocaleString('en-US')} ${n === 1 ? 'row' : 'rows'}`,
+  lensNeeded: 'needed for this order',
   truckThings: {
     fridge: 'Fridge & stock',
     tablet: 'Tablet',
@@ -132,6 +136,10 @@ const id: UiText = {
   truckExploreHint: 'Jalankan query apa saja untuk melihat-lihat. Di sini tidak ada penilaian.',
   truckOrderElsewhere: (where: string) => `Pesanan pelanggan dijawab ${where}.`,
   truckDoor: 'The Manager akan mengetuk di sini. Untungnya belum sekarang.',
+  dataLens: 'Data Lens',
+  lensHint: 'Lihat data di balik semua benda di truck (L)',
+  lensRows: (n: number) => `${n.toLocaleString('id-ID')} baris`,
+  lensNeeded: 'dibutuhkan pesanan ini',
   truckThings: {
     fridge: 'Kulkas & stok',
     tablet: 'Tablet',

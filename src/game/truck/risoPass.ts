@@ -3,6 +3,9 @@
  * (big pixels), then every pixel is mapped to the riso inks with a 4×4 Bayer dither between the
  * two closest inks, ink outlines are drawn where depth jumps, and a red copy of the outline is
  * printed one pixel off — like a riso print whose red layer did not line up.
+ *
+ * The Data Lens (GAME_DESIGN.md §7) turns the same picture into a teal blueprint on paper with a
+ * grid; it dissolves in pixel by pixel (in Bayer order) as `lens` goes from 0 to 1.
  */
 import * as THREE from 'three';
 import { RISO } from '../art/riso';
@@ -29,6 +32,11 @@ const fragmentShader = /* glsl */ `
   uniform vec3 inks[INK_COUNT];
   uniform vec3 outlineInk;
   uniform vec3 misprintInk;
+  uniform float lens;
+  uniform vec3 lensPaper;
+  uniform vec3 lensLight;
+  uniform vec3 lensDark;
+  uniform vec3 lensAccent;
   varying vec2 vUv;
 
   float viewDepth(vec2 px) {
@@ -67,12 +75,24 @@ const fragmentShader = /* glsl */ `
     return dot(d, d);
   }
 
+  /** The Data Lens look: a teal blueprint on paper, with a grid in the light parts. */
+  vec3 blueprint(vec2 px, vec3 c) {
+    float l = dot(c, vec3(0.3, 0.59, 0.11));
+    bool grid = mod(px.x, 12.0) < 1.0 || mod(px.y, 12.0) < 1.0;
+    if (l > 0.72) return grid ? lensLight : lensPaper;
+    if (l > 0.42) return bayer(px + vec2(2.0, 1.0)) < (0.72 - l) / 0.3 ? lensLight : (grid ? lensLight : lensPaper);
+    return bayer(px + vec2(1.0, 3.0)) < (0.42 - l) / 0.42 ? lensDark : lensLight;
+  }
+
   void main() {
     vec2 px = floor(vUv * resolution);
-    if (isEdge(px)) { gl_FragColor = vec4(outlineInk, 1.0); return; }
-    if (isEdge(px - vec2(1.0, -1.0))) { gl_FragColor = vec4(misprintInk, 1.0); return; }
+    // Pixels switch to the lens one by one, in Bayer order, so the world dissolves into data.
+    bool data = bayer(px + vec2(3.0, 2.0)) < lens;
+    if (isEdge(px)) { gl_FragColor = vec4(data ? lensDark : outlineInk, 1.0); return; }
+    if (isEdge(px - vec2(1.0, -1.0))) { gl_FragColor = vec4(data ? lensAccent : misprintInk, 1.0); return; }
 
     vec3 c = texture2D(tColor, (px + 0.5) / resolution).rgb;
+    if (data) { gl_FragColor = vec4(blueprint(px, c), 1.0); return; }
     // The two closest inks, then dither between them.
     float best = 1e9; float second = 1e9;
     vec3 a = inks[0]; vec3 b = inks[0];
@@ -111,6 +131,11 @@ export class RisoPass {
         inks: { value: INKS },
         outlineInk: { value: hexColour(RISO.ink) },
         misprintInk: { value: hexColour(RISO.red) },
+        lens: { value: 0 },
+        lensPaper: { value: hexColour(RISO.paper) },
+        lensLight: { value: hexColour(RISO.tealLight) },
+        lensDark: { value: hexColour(RISO.tealDark) },
+        lensAccent: { value: hexColour(RISO.mustard) },
       },
       depthTest: false,
       depthWrite: false,
@@ -123,6 +148,11 @@ export class RisoPass {
   setSize(width: number, height: number): void {
     this.target.setSize(width, height);
     this.material.uniforms.resolution.value.set(width, height);
+  }
+
+  /** How far the Data Lens has dissolved in: 0 = the normal riso picture, 1 = all data view. */
+  setLens(amount: number): void {
+    this.material.uniforms.lens.value = Math.min(1, Math.max(0, amount));
   }
 
   render(renderer: THREE.WebGLRenderer, scene: THREE.Scene, camera: THREE.PerspectiveCamera): void {

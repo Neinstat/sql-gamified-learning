@@ -2,8 +2,13 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { ui, useLang } from '../i18n';
 import { LANGS } from '../sql-core/feedback';
 import { orderLine } from '../sql-core/truck/orders';
-import { TruckBridge } from '../game/truck/bridge';
+import { TruckBridge, type LensCard } from '../game/truck/bridge';
+import { STATIONS } from '../sql-core/stations';
+import { DataLens, useTableSummaries } from './DataLens';
 import { useTruckShift } from './useTruckShift';
+
+/** Every table in the truck, for the Data Lens cards. */
+const ALL_TABLES = [...new Set(Object.values(STATIONS).flatMap((s) => s.tables))];
 
 /** SQL Valley: the food truck, first person in 3D (GAME_DESIGN.md §14). */
 export function TruckApp() {
@@ -15,7 +20,10 @@ export function TruckApp() {
   const [locked, setLocked] = useState(false);
   const [aimed, setAimed] = useState<string | null>(null);
   const [anchor, setAnchor] = useState<{ x: number; y: number } | null>(null);
-  const { front, order, answerWhere, consoleOpen, overlays } = useTruckShift(bridge, lang, t);
+  const { front, order, answerWhere, orderTables, db, consoleOpen, overlays } = useTruckShift(bridge, lang, t);
+  const [lens, setLens] = useState(false);
+  const [lensCards, setLensCards] = useState<LensCard[]>([]);
+  const summaries = useTableSummaries(lens ? db : null, ALL_TABLES);
 
   useEffect(() => {
     document.documentElement.lang = lang;
@@ -23,6 +31,10 @@ export function TruckApp() {
   useEffect(() => bridge.on('locked', setLocked), [bridge]);
   useEffect(() => bridge.on('hover', setAimed), [bridge]);
   useEffect(() => bridge.on('anchor', setAnchor), [bridge]);
+  // The Data Lens: L in the game, or the button; the game dissolves the view and places the cards.
+  useEffect(() => bridge.on('lensKey', () => setLens((on) => !on)), [bridge]);
+  useEffect(() => bridge.on('lensCards', setLensCards), [bridge]);
+  useEffect(() => bridge.emit('lens', lens), [bridge, lens, ready]);
 
   useEffect(() => {
     let cancelled = false;
@@ -44,6 +56,15 @@ export function TruckApp() {
       <header className="truck-hud">
         <span className="truck-title">🚚 Rolling Roast</span>
         <span className="truck-controls">{t.truckControls}</span>
+        <button
+          className={lens ? 'lens-button lens-button-on' : 'lens-button'}
+          aria-pressed={lens}
+          onMouseDown={(e) => e.preventDefault()}
+          onClick={() => setLens((on) => !on)}
+          title={t.lensHint}
+        >
+          🔍 {t.dataLens} <kbd>L</kbd>
+        </button>
         <div className="lang-switch" role="group" aria-label={t.language}>
           {LANGS.map((code) => (
             <button
@@ -63,6 +84,9 @@ export function TruckApp() {
             <p className="world-loading-title">SQL Valley</p>
             <div className="loading-bar" aria-hidden="true" />
           </div>
+        )}
+        {ready && !consoleOpen && lens && (
+          <DataLens cards={lensCards} summaries={summaries} needed={orderTables} t={t} />
         )}
         {ready && !consoleOpen && (
           <>

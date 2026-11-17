@@ -1,4 +1,9 @@
 import { describe, expect, it } from 'vitest';
+import { OBJECT_STATION } from '../../sql-core/truck/objects';
+import { STATIONS, tablesInQuery } from '../../sql-core/stations';
+import { findOrderLevel } from '../../sql-core/truck/levels';
+import { objectForStation } from '../../sql-core/truck/objects';
+import { PROTOTYPE_ORDERS } from '../../sql-core/truck/orders';
 import { QUEUE, spotX } from './queue';
 import {
   aimedInteractable,
@@ -6,6 +11,8 @@ import {
   EYE_Y,
   GROUND_Y,
   INTERACTABLE_BOXES,
+  LENS_SPOTS,
+  lensPoint,
   LAYOUT,
   lookDirection,
   queuePosition,
@@ -105,3 +112,39 @@ describe('the queue in the park', () => {
     expect(headTop).toBeLessThan(LAYOUT.window.max.y);
   });
 });
+
+describe('the Data Lens', () => {
+  it('only lists tables on a card that its object can see, with unique card ids', () => {
+    expect(new Set(LENS_SPOTS.map((s) => s.id)).size).toBe(LENS_SPOTS.length);
+    for (const spot of LENS_SPOTS) {
+      const station = OBJECT_STATION[spot.object];
+      expect(station, spot.id).not.toBeNull();
+      for (const table of spot.tables) expect(STATIONS[station!].tables, `${spot.id}: ${table}`).toContain(table);
+    }
+  });
+
+  it('shows every table the truck can query somewhere, apart from customers (on a customer)', () => {
+    const all = new Set(Object.values(STATIONS).flatMap((s) => s.tables));
+    all.delete('customers');
+    expect(new Set(LENS_SPOTS.flatMap((s) => s.tables))).toEqual(all);
+  });
+
+  it('shows every table an order needs on the card of the object where it is answered', () => {
+    for (const order of PROTOTYPE_ORDERS) {
+      const level = findOrderLevel(order.levelId, 'en');
+      if (!level || !('solution' in level)) throw new Error(order.levelId);
+      const object = objectForStation(level.station);
+      const onCards = LENS_SPOTS.filter((s) => s.object === object).flatMap((s) => s.tables);
+      for (const table of tablesInQuery(level.solution)) expect(onCards, `${order.id}: ${table}`).toContain(table);
+    }
+  });
+
+  it('keeps every card inside the truck', () => {
+    for (const { box, id } of LENS_SPOTS) {
+      const p = lensPoint(box);
+      expect(p.y, id).toBeLessThan(TRUCK.height);
+      expect(Math.abs(p.x), id).toBeLessThanOrEqual(TRUCK.length / 2);
+    }
+  });
+});
+

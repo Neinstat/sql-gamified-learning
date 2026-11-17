@@ -1000,3 +1000,122 @@ body {
   font-size: 0.9rem;
   color: var(--ink);
 }
+
+/* Data Lens (4.8): blueprint cards in the shader's lens inks — paper #f4ead5, teal #1c6b63,
+   light teal #9ad6c8, mustard #f2b234 for the tables the order needs. */
+.lens-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.3rem 0.65rem;
+  border: 2px solid #9ad6c8;
+  border-radius: 6px;
+  background: transparent;
+  color: #f4ead5;
+  font: inherit;
+  font-size: 0.85rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.lens-button:hover {
+  background: rgba(154, 214, 200, 0.18);
+}
+
+.lens-button-on {
+  background: #9ad6c8;
+  color: #1c6b63;
+}
+
+.lens-button kbd {
+  padding: 0 0.3rem;
+  border: 1px solid currentColor;
+  border-radius: 3px;
+  font-size: 0.75rem;
+}
+
+.lens-layer {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.lens-card {
+  position: absolute;
+  min-width: 9rem;
+  max-width: 17rem;
+  padding: 0.35rem 0.5rem 0.45rem;
+  border: 2px solid #1c6b63;
+  border-radius: 4px;
+  background: rgba(244, 234, 213, 0.95);
+  color: #1c6b63;
+  box-shadow: 3px 3px 0 #9ad6c8;
+  transform-origin: 50% 100%;
+  animation: lens-card-in 0.25s ease-out;
+}
+
+.lens-card-needed {
+  border-color: #c58a1f;
+  box-shadow: 3px 3px 0 #f2b234;
+}
+
+.lens-card-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.6rem;
+  margin: 0;
+}
+
+.lens-card-table {
+  font-size: 0.9rem;
+  font-weight: 700;
+}
+
+.lens-card-count {
+  font-size: 0.72rem;
+  white-space: nowrap;
+}
+
+.lens-card-needed-label {
+  margin: 0.1rem 0 0;
+  color: #a8740f;
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+
+.lens-card-rows {
+  width: 100%;
+  margin-top: 0.3rem;
+  border-collapse: collapse;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.62rem;
+}
+
+.lens-card-rows th,
+.lens-card-rows td {
+  padding: 0.1rem 0.25rem;
+  border-top: 1px dashed #9ad6c8;
+  text-align: left;
+  white-space: nowrap;
+}
+
+.lens-card-rows th {
+  border-top: none;
+  font-weight: 700;
+}
+
+@keyframes lens-card-in {
+  from {
+    opacity: 0;
+  }
+}
+
+.lens-card-head + .lens-card-head {
+  margin-top: 0.1rem;
+}
+
+.lens-card-head-needed .lens-card-table {
+  color: #a8740f;
+}

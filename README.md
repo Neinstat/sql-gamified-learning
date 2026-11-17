@@ -25,8 +25,9 @@ You are the new hire at **Rolling Roast**, a coffee food truck parked in a city 
 1. Click the screen to look around (**Esc** frees the mouse).
 2. **WASD** or the arrow keys to walk around the truck, the **mouse** to look.
 3. Aim the crosshair at something and press **E** (or click). Each object sees its own tables: the **tablet** (sales, customers, menu), the **fridge** (stock, suppliers), the **menu board** and the **recipe binders**. The speech bubble tells you where to answer each order; any other object lets you look around its data freely.
-4. Read the customer's request, write SQL, press **Run** (or Ctrl/⌘ + Enter). Your *result* is graded, not your text, with specific feedback when it isn't right yet.
-5. **Hand over the order**, and the next customer steps up. Time stops while the tablet is open.
+4. Press **L** (or 🔍 Data Lens) to see the data behind everything: the truck turns into a blueprint and every object shows its tables, with the ones the current order needs starred.
+5. Read the customer's request, write SQL, press **Run** (or Ctrl/⌘ + Enter). Your *result* is graded, not your text, with specific feedback when it isn't right yet.
+6. **Hand over the order**, and the next customer steps up. Time stops while the tablet is open.
 
 | Inside the truck | The tablet |
 |---|---|
@@ -36,9 +37,13 @@ You are the new hire at **Rolling Roast**, a coffee food truck parked in a city 
 
 Everything is drawn through a **risograph shader**: the 3D scene is rendered at a low resolution, every pixel is mapped to a small set of riso inks with a 4×4 Bayer dither, ink outlines are drawn where depth jumps, and a red copy of each outline is printed one pixel off, like a riso print whose red layer didn't line up. The models are simple low-poly placeholders for now (see [docs/ASSETS.md](docs/ASSETS.md)).
 
+**The Data Lens** turns the same picture into a teal blueprint: the world dissolves pixel by pixel, and a card floats over every object with its tables, row counts and sample rows.
+
+![The Data Lens: the truck as a teal blueprint, with table cards over the customer and the tablet](docs/journey/v2-4-8-data-lens.jpg)
+
 ## Status
 
-🚧 **Phase 4: the one-day prototype.** The 3D truck, the park, the queue, the riso look, and objects that each open their own tables are in. Next: the "Data Lens", sales going into the database, the clock and the end-of-day summary, and The Manager.
+🚧 **Phase 4: the one-day prototype.** The 3D truck, the park, the queue, the riso look, and objects that each open their own tables, and the Data Lens are in. Next: sales going into the database, the clock and the end-of-day summary, and The Manager.
 
 The SQL core is complete from the first version of the game: 34 levels in six chapters (from `SELECT` to an analysis case), Mini Cases, a Skill Check and a timed mode. Phase 6 turns them into customer orders and manager questions over six in-game weeks.
 

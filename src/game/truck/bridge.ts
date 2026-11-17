@@ -10,10 +10,17 @@
  *   game → app   'locked'  the mouse is captured for looking around (pointer lock)
  *   app → game   'serve'   the front customer has been served and walks away
  *   app → game   'pause'   an overlay is open (true): time stops and the player can't move
+ *   game → app   'lensKey' the player pressed L (the app decides whether the Data Lens is on)
+ *   app → game   'lens'    turn the Data Lens on or off
+ *   game → app   'lensCards' where each table's card is on screen while the lens is on (empty
+ *                          when it is off): 0–1 from the top left, and how far away it is (m)
  */
 import type { InteractableId } from './world';
 
 export type FrontCustomer = { orderId: string };
+
+/** A Data Lens card on screen: its tables, where it is (0–1 from the top left), and its distance. */
+export type LensCard = { id: string; tables: string[]; x: number; y: number; distance: number };
 
 type TruckEvents = {
   front: FrontCustomer | null;
@@ -23,6 +30,9 @@ type TruckEvents = {
   locked: boolean;
   serve: true;
   pause: boolean;
+  lensKey: true;
+  lens: boolean;
+  lensCards: LensCard[];
 };
 
 type Listener<T> = (payload: T) => void;

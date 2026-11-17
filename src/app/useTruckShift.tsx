@@ -5,7 +5,7 @@ import type { Table } from '../console/SchemaPanel';
 import { getSchema, type CafeDatabase } from '../sql-core/db';
 import type { Lang } from '../sql-core/feedback';
 import { isCase, type RequestLevel } from '../sql-core/levels';
-import { stationTables } from '../sql-core/stations';
+import { stationTables, tablesInQuery } from '../sql-core/stations';
 import { findOrderLevel } from '../sql-core/truck/levels';
 import { OBJECT_STATION, objectForStation, type TruckObjectId } from '../sql-core/truck/objects';
 import { PROTOTYPE_ORDERS, type TruckOrder } from '../sql-core/truck/orders';
@@ -167,6 +167,9 @@ export function useTruckShift(bridge: TruckBridge, lang: Lang, t: UiText) {
     order: order as TruckOrder | undefined,
     /** Where to answer the current order, as a phrase ("at the fridge"). */
     answerWhere: orderObject ? t.truckWhere[orderObject] : null,
+    /** The tables the current order needs (highlighted by the Data Lens). */
+    orderTables: level ? tablesInQuery(level.solution) : [],
+    db,
     consoleOpen: open,
     overlays: (
       <>

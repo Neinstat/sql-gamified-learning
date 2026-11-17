@@ -6,7 +6,7 @@
 import * as THREE from 'three';
 import { PROTOTYPE_ORDERS, type CustomerLook } from '../../sql-core/truck/orders';
 import { inkColour } from './colour';
-import type { TruckBridge } from './bridge';
+import type { LensCard, TruckBridge } from './bridge';
 import { TruckQueue, type QueueCustomer } from './queue';
 import { buildCustomer, buildPark, buildTruck, type CustomerModel } from './build';
 import { RisoPass } from './risoPass';
@@ -15,6 +15,8 @@ import {
   EYE_Y,
   FACING_TRUCK,
   GROUND_Y,
+  LENS_SPOTS,
+  lensPoint,
   lookDirection,
   queuePosition,
   START,
@@ -28,6 +30,10 @@ const ARRIVAL_GAP = 3;
 const TARGET_LINES = 300;
 const MOUSE_SENSITIVITY = 0.0024;
 const MAX_PITCH = 1.25;
+/** Seconds for the Data Lens to dissolve in or out. */
+const LENS_SECONDS = 0.45;
+/** Cards further away than this (m) are hidden: the truck is small, the park is not. */
+const LENS_MAX_DISTANCE = 6;
 
 export class TruckGame {
   private readonly renderer: THREE.WebGLRenderer;
@@ -55,6 +61,9 @@ export class TruckGame {
   private frontOrderId: string | null = null;
   private lastAnchor = '';
   private walkClock = 0;
+  private lensOn = false;
+  private lensAmount = 0;
+  private lastCards = '';
 
   constructor(
     private readonly parent: HTMLElement,
@@ -88,6 +97,7 @@ export class TruckGame {
     this.offs.push(
       bridge.on('serve', () => this.queue.serveFront()),
       bridge.on('pause', (paused) => this.setPaused(paused)),
+      bridge.on('lens', (on) => (this.lensOn = on)),
     );
     this.loop(performance.now());
   }
@@ -126,6 +136,8 @@ export class TruckGame {
         e.preventDefault();
       } else if (down && e.code === 'KeyE') {
         this.use();
+      } else if (down && e.code === 'KeyL' && !e.repeat) {
+        this.bridge.emit('lensKey', true);
       }
     };
     const keydown = onKey(true);
@@ -207,8 +219,13 @@ export class TruckGame {
     }
 
     this.updateCustomers(dt);
+    // The lens dissolves in and out even while time is stopped (it is part of the interface).
+    const lensStep = seconds / LENS_SECONDS;
+    this.lensAmount = Math.min(1, Math.max(0, this.lensAmount + (this.lensOn ? lensStep : -lensStep)));
+    this.riso.setLens(this.lensAmount);
     this.riso.render(this.renderer, this.scene, this.camera);
     this.emitAnchor();
+    this.emitLensCards();
   }
 
   private updateCustomers(seconds: number): void {
@@ -266,6 +283,34 @@ export class TruckGame {
     if (key !== this.lastAnchor) {
       this.lastAnchor = key;
       this.bridge.emit('anchor', anchor);
+    }
+  }
+
+  /** Where each table's card is on screen while the Data Lens is (mostly) on. */
+  private emitLensCards(): void {
+    const cards: LensCard[] = [];
+    if (this.lensAmount > 0.5) {
+      const place = (id: string, tables: string[], point: THREE.Vector3) => {
+        const distance = point.distanceTo(this.camera.position);
+        const p = point.clone().project(this.camera);
+        if (distance <= LENS_MAX_DISTANCE && p.z < 1 && Math.abs(p.x) < 1 && Math.abs(p.y) < 1) {
+          cards.push({ id, tables, x: (p.x + 1) / 2, y: (1 - p.y) / 2, distance });
+        }
+      };
+      for (const spot of LENS_SPOTS) {
+        const at = lensPoint(spot.box);
+        place(spot.id, spot.tables, new THREE.Vector3(at.x, at.y, at.z));
+      }
+      const front = this.queue.front();
+      if (front) {
+        const p = queuePosition(front.x);
+        place('customer', ['customers'], new THREE.Vector3(p.x - 0.55, GROUND_Y + 1.6, p.z));
+      }
+    }
+    const key = cards.map((c) => `${c.id}:${c.x.toFixed(3)},${c.y.toFixed(3)}`).join('|');
+    if (key !== this.lastCards) {
+      this.lastCards = key;
+      this.bridge.emit('lensCards', cards);
     }
   }
 
