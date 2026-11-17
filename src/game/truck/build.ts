@@ -162,16 +162,22 @@ export function buildTruck(): THREE.Group {
   clock.rotation.x = Math.PI / 2;
   clock.position.set(CLOCK3D.x, CLOCK3D.y, CLOCK3D.z - 0.02);
   g.add(clock);
-  const hand = (len: number, angle: number, ink: Ink) => {
+  const hand = (len: number, ink: Ink) => {
     // Pivots at the centre of the clock.
     const geometry = new THREE.BoxGeometry(0.016, len, 0.01).translate(0, len / 2, 0);
     const h = new THREE.Mesh(geometry, mat(ink));
     h.position.set(CLOCK3D.x, CLOCK3D.y, CLOCK3D.z - 0.045);
-    h.rotation.z = angle;
     g.add(h);
+    return h;
   };
-  hand(0.08, (10 / 12) * Math.PI * 2, 'ink');
-  hand(0.12, 0, 'red');
+  const hourHand = hand(0.08, 'ink');
+  const minuteHand = hand(0.12, 'red');
+  // The clock faces −z: seen from the front, +rotation.z turns clockwise.
+  g.userData.setClock = (minutes: number) => {
+    hourHand.rotation.z = (((minutes / 60) % 12) / 12) * Math.PI * 2;
+    minuteHand.rotation.z = ((minutes % 60) / 60) * Math.PI * 2;
+  };
+  g.userData.setClock(10 * 60);
 
   // Back door with a little window and a handle.
   const d = LAYOUT.door;

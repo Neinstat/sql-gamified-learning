@@ -27,7 +27,8 @@ You are the new hire at **Rolling Roast**, a coffee food truck parked in a city 
 3. Aim the crosshair at something and press **E** (or click). Each object sees its own tables: the **tablet** (sales, customers, menu), the **fridge** (stock, suppliers), the **menu board** and the **recipe binders**. The speech bubble tells you where to answer each order; any other object lets you look around its data freely.
 4. Press **L** (or 🔍 Data Lens) to see the data behind everything: the truck turns into a blueprint and every object shows its tables, with the ones the current order needs starred.
 5. Read the customer's request, write SQL, press **Run** (or Ctrl/⌘ + Enter). Your *result* is graded, not your text, with specific feedback when it isn't right yet.
-6. **Hand over the order**, and the next customer steps up. Time stops while a console is open. Every order you serve becomes real rows in the `sales` table (`channel = 'truck'`), so you can query your own day.
+6. **Hand over the order**, and the next customer steps up. Every order you serve becomes real rows in the `sales` table (`channel = 'truck'`), so you can query your own day.
+7. Watch the clock: the truck opens 10:00–17:00. Time stops while a console is open and speeds up when nobody is waiting. Customers get impatient (😊 → 😐 → 😠) and tip less, or leave. At closing time you get a summary of the day, with the SQL that counted your revenue.
 
 | Inside the truck | The tablet |
 |---|---|
@@ -43,7 +44,7 @@ Everything is drawn through a **risograph shader**: the 3D scene is rendered at 
 
 ## Status
 
-🚧 **Phase 4: the one-day prototype.** The 3D truck, the park, the queue, the riso look, and objects that each open their own tables, the Data Lens, and sales that go into the database (and survive a reload) are in. Next: the clock and the end-of-day summary, and The Manager.
+🚧 **Phase 4: the one-day prototype.** The 3D truck, the park, the queue, the riso look, and objects that each open their own tables, the Data Lens, sales that go into the database (and survive a reload), the clock from 10:00 to 17:00 with customers' patience and tips, and the end-of-day summary are in. Next: The Manager.
 
 The SQL core is complete from the first version of the game: 34 levels in six chapters (from `SELECT` to an analysis case), Mini Cases, a Skill Check and a timed mode. Phase 6 turns them into customer orders and manager questions over six in-game weeks.
 

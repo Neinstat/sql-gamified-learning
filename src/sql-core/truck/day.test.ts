@@ -1,6 +1,21 @@
 import { beforeAll, describe, expect, it } from 'vitest';
 import { createCafeDatabase, runQuery, type LocalCafeDatabase } from '../db';
-import { daySalesSql, emptyDay, nextServeTime, parseDayLog, saleSql, serveOrder } from './day';
+import {
+  arrivalTime,
+  CLOSING,
+  daySalesSql,
+  emptyDay,
+  formatClock,
+  isDayOver,
+  missOrder,
+  moodFor,
+  OPENING,
+  parseDayLog,
+  revenueSql,
+  saleSql,
+  serveOrder,
+  TIPS,
+} from './day';
 import { PROTOTYPE_ORDERS } from './orders';
 
 let db: LocalCafeDatabase;
@@ -17,25 +32,59 @@ const truckSales = async (database: LocalCafeDatabase) => {
   return r.rows;
 };
 
+const served = (orderId: string, at = OPENING) => ({ orderId, at, tip: 1, stars: 3 });
+
+describe('the clock and customers', () => {
+  it('formats the clock and spreads arrivals over opening hours', () => {
+    expect(formatClock(OPENING)).toBe('10:00');
+    expect(formatClock(OPENING + 65.9)).toBe('11:05');
+    for (let i = 0; i < PROTOTYPE_ORDERS.length; i++) {
+      expect(arrivalTime(i)).toBeGreaterThanOrEqual(OPENING);
+      expect(arrivalTime(i)).toBeLessThan(CLOSING - 60);
+      if (i > 0) expect(arrivalTime(i)).toBeGreaterThan(arrivalTime(i - 1));
+    }
+  });
+
+  it('tips more when customers waited less', () => {
+    expect(moodFor(1)).toBe('happy');
+    expect(moodFor(0.5)).toBe('okay');
+    expect(moodFor(0.1)).toBe('annoyed');
+    expect(TIPS.happy).toBeGreaterThan(TIPS.okay);
+    expect(TIPS.okay).toBeGreaterThan(TIPS.annoyed);
+  });
+});
+
 describe('the day log', () => {
-  it('serves orders once, 12 minutes apart from opening time', () => {
+  it('serves or misses each order once', () => {
     let log = emptyDay();
-    expect(nextServeTime(log)).toBe('10:00');
-    log = serveOrder(log, 'proto-cheap');
-    log = serveOrder(log, 'proto-cheap');
-    log = serveOrder(log, 'proto-coffee');
-    expect(log.served).toEqual([
-      { orderId: 'proto-cheap', at: '10:00' },
-      { orderId: 'proto-coffee', at: '10:12' },
-    ]);
+    log = serveOrder(log, served('proto-cheap'));
+    log = serveOrder(log, served('proto-cheap', 700));
+    log = missOrder(log, 'proto-cheap');
+    log = missOrder(log, 'proto-coffee');
+    expect(log.served).toEqual([served('proto-cheap')]);
+    expect(log.missed).toEqual(['proto-coffee']);
+  });
+
+  it('is over at closing time, or once every customer was handled', () => {
+    expect(isDayOver(emptyDay())).toBe(false);
+    expect(isDayOver({ ...emptyDay(), clock: CLOSING })).toBe(true);
+    let log = emptyDay();
+    for (const o of PROTOTYPE_ORDERS) log = o.id === 'proto-coffee' ? missOrder(log, o.id) : serveOrder(log, served(o.id));
+    expect(isDayOver(log)).toBe(true);
   });
 
   it('reads saved days back, dropping anything broken or unknown', () => {
-    const log = serveOrder(emptyDay(), 'proto-cheap');
+    const log = missOrder(serveOrder({ ...emptyDay(), clock: 655 }, served('proto-cheap', 610)), 'proto-coffee');
     expect(parseDayLog(JSON.stringify(log))).toEqual(log);
     expect(parseDayLog(null)).toEqual(emptyDay());
     expect(parseDayLog('not json')).toEqual(emptyDay());
-    expect(parseDayLog(JSON.stringify({ date: '2026-11-01', served: [{ orderId: 'nope', at: '10:00' }, { orderId: 'proto-cheap', at: 'x' }] })).served).toEqual([]);
+    const broken = { date: '2026-11-01', clock: 'noon', served: [{ orderId: 'nope', at: 600 }, { orderId: 'proto-cheap', at: '10:00' }], missed: [42] };
+    expect(parseDayLog(JSON.stringify(broken))).toEqual(emptyDay());
+  });
+
+  it('reads a day saved by 4.9 (times as text, no tips) as a fresh day without crashing', () => {
+    const old = { date: '2026-11-01', served: [{ orderId: 'proto-cheap', at: '10:00' }] };
+    expect(parseDayLog(JSON.stringify(old)).served).toEqual([]);
   });
 });
 
@@ -56,7 +105,7 @@ describe('recording sales', () => {
     if (!before.ok) throw new Error('query failed');
     const [maxSale, maxOrder] = before.rows[0].map(Number);
     const order = PROTOTYPE_ORDERS.find((o) => o.id === 'proto-chocolate')!;
-    await fresh.write(saleSql(order, '2026-11-01', '10:24'));
+    await fresh.write(saleSql(order, '2026-11-01', 10 * 60 + 24));
     const rows = await truckSales(fresh);
     expect(rows).toEqual([
       [maxSale + 1, maxOrder + 1, '2026-11-01 10:24:00', 5, 1, '4.50'],
@@ -66,7 +115,7 @@ describe('recording sales', () => {
 
   it('replays a day exactly the same way every time', async () => {
     let log = emptyDay();
-    for (const o of PROTOTYPE_ORDERS.slice(0, 4)) log = serveOrder(log, o.id);
+    for (const [i, o] of PROTOTYPE_ORDERS.slice(0, 4).entries()) log = serveOrder(log, served(o.id, OPENING + i * 20));
     const a = await createCafeDatabase();
     const b = await createCafeDatabase();
     for (const sql of daySalesSql(log)) {
@@ -84,7 +133,22 @@ describe('recording sales', () => {
   });
 
   it('refuses sale times that are not a date and HH:MM', () => {
-    expect(() => saleSql(PROTOTYPE_ORDERS[0], "2026-11-01'; DROP TABLE sales; --", '10:00')).toThrow();
-    expect(() => saleSql(PROTOTYPE_ORDERS[0], '2026-11-01', '10')).toThrow();
+    expect(() => saleSql(PROTOTYPE_ORDERS[0], "2026-11-01'; DROP TABLE sales; --", OPENING)).toThrow();
+    expect(() => saleSql(PROTOTYPE_ORDERS[0], '2026-11-01', 1.5)).toThrow();
+    expect(() => revenueSql("x'; --")).toThrow();
   });
 });
+
+describe('the end-of-day summary', () => {
+  it("counts today's truck orders and revenue with a query players can read", async () => {
+    const fresh = await createCafeDatabase();
+    let log = emptyDay();
+    for (const [i, o] of PROTOTYPE_ORDERS.slice(0, 2).entries()) log = serveOrder(log, served(o.id, OPENING + i * 30));
+    for (const sql of daySalesSql(log)) await fresh.write(sql);
+    const r = await runQuery(fresh, revenueSql(log.date), 'cash-register');
+    expect(r.ok).toBe(true);
+    // Green Tea 2.75 + 2 × Americano 3.00
+    if (r.ok) expect(r.rows[0].map(String)).toEqual(['2', '8.75']);
+  }, 60_000);
+});
+

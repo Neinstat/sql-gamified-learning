@@ -1120,7 +1120,7 @@ body {
   color: #a8740f;
 }
 
-/* The day (4.9): the date and orders served in the HUD, and the "everyone served" card. */
+/* The day (4.9): the date and orders served in the HUD. */
 .truck-day {
   padding: 0.15rem 0.55rem;
   border: 1px solid rgba(244, 234, 213, 0.4);
@@ -1130,28 +1130,119 @@ body {
   white-space: nowrap;
 }
 
-.day-done {
+
+/* The clock (4.10) in the HUD, the customer's mood in the speech bubble, and the summary. */
+.truck-clock {
+  padding: 0.15rem 0.55rem;
+  border-radius: 999px;
+  background: #f4ead5;
+  color: #25304f;
+  font-size: 0.85rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.truck-clock-closed {
+  background: #e4573d;
+  color: #fffaf0;
+}
+
+.order-mood {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin: 0 0 0.3rem;
+  font-size: 1rem;
+}
+
+.order-patience {
+  flex: 1;
+  height: 6px;
+  border: 1px solid #25304f;
+  border-radius: 3px;
+  background: #fffaf0;
+  overflow: hidden;
+}
+
+.order-patience span {
+  display: block;
+  height: 100%;
+  background: #2b9c8e;
+  transition: width 0.4s linear;
+}
+
+.order-mood-okay .order-patience span {
+  background: #f2b234;
+}
+
+.order-mood-annoyed .order-patience span {
+  background: #e4573d;
+}
+
+.day-summary {
   position: absolute;
   left: 50%;
   top: 50%;
   transform: translate(-50%, -50%);
-  width: min(30rem, calc(100% - 2rem));
+  width: min(34rem, calc(100% - 2rem));
+  max-height: calc(100% - 2rem);
+  overflow-y: auto;
   padding: 1rem 1.25rem;
   border: 2px solid #25304f;
   border-radius: 8px;
   background: #f4ead5;
   color: #25304f;
-  text-align: center;
   box-shadow: 4px 4px 0 #e4573d;
 }
 
-.day-done-title {
-  margin: 0 0 0.4rem;
-  font-size: 1.15rem;
+.day-summary-title {
+  margin: 0 0 0.75rem;
+  font-size: 1.2rem;
   font-weight: 700;
 }
 
-.day-done-text {
+.day-summary-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(6.5rem, 1fr));
+  gap: 0.5rem;
+  margin: 0 0 0.9rem;
+}
+
+.day-summary-stats div {
+  padding: 0.4rem 0.5rem;
+  border: 1px solid #25304f;
+  border-radius: 4px;
+  background: #fffaf0;
+}
+
+.day-summary-stats dt {
+  font-size: 0.72rem;
+}
+
+.day-summary-stats dd {
+  margin: 0.1rem 0 0;
+  font-size: 1.15rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.day-summary-label {
+  margin: 0 0 0.3rem;
+  font-size: 0.85rem;
+}
+
+.day-summary-sql {
   margin: 0 0 0.8rem;
-  font-size: 0.9rem;
+  padding: 0.5rem 0.7rem;
+  border-radius: 4px;
+  background: #25304f;
+  color: #f4ead5;
+  font-size: 0.78rem;
+  white-space: pre-wrap;
+}
+
+.day-summary-next {
+  margin: 0 0 0.8rem;
+  font-size: 0.85rem;
 }

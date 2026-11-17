@@ -80,6 +80,29 @@ describe('TruckQueue', () => {
 
 });
 
+describe('giving up', () => {
+  it('lets anyone in the line leave, walking back, and the others close the gap', () => {
+    const q = new TruckQueue();
+    for (const id of ['a', 'b', 'c']) {
+      while (!q.canJoin()) q.update(0.1);
+      q.join(id);
+    }
+    for (let i = 0; i < 200; i++) q.update(0.1);
+    const middle = q.line[1];
+    q.giveUp(middle);
+    expect(q.line.map((c) => c.orderId)).toEqual(['a', 'c']);
+    const gone: string[] = [];
+    let lowest = middle.x;
+    for (let i = 0; i < 200; i++) {
+      gone.push(...q.update(0.1).map((c) => c.orderId));
+      lowest = Math.min(lowest, middle.x);
+    }
+    expect(gone).toEqual(['b']);
+    expect(lowest).toBe(QUEUE.enterX);
+    expect(q.line.map((c) => c.x)).toEqual([spotX(0), spotX(1)]);
+  });
+});
+
 describe('the prototype day', () => {
   it('never puts two people who look the same in the queue at once', () => {
     for (let i = 0; i + QUEUE.maxWaiting <= PROTOTYPE_ORDERS.length; i++) {

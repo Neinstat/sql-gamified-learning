@@ -6,6 +6,8 @@ import { TruckBridge, type LensCard } from '../game/truck/bridge';
 import { STATIONS } from '../sql-core/stations';
 import { DataLens, useTableSummaries } from './DataLens';
 import { restartDay, useTruckShift } from './useTruckShift';
+import { DaySummary } from './DaySummary';
+import { CLOSING, formatClock } from '../sql-core/truck/day';
 
 /** Every table in the truck, for the Data Lens cards. */
 const ALL_TABLES = [...new Set(Object.values(STATIONS).flatMap((s) => s.tables))];
@@ -21,9 +23,12 @@ export function TruckApp() {
   const [locked, setLocked] = useState(false);
   const [aimed, setAimed] = useState<string | null>(null);
   const [anchor, setAnchor] = useState<{ x: number; y: number } | null>(null);
-  const { front, order, answerWhere, orderTables, db, day, dayDone, consoleOpen, overlays } = useTruckShift(bridge, lang, t);
+  const { front, order, answerWhere, orderTables, db, day, dayDone, mood, patienceLeft, consoleOpen, overlays } =
+    useTruckShift(bridge, lang, t);
   // The orders served before this page load: the game skips those customers.
-  const servedOnLoad = useRef(day.served.map((s) => s.orderId));
+  /** Closing time, or the day ended early because nobody else is coming. */
+  const shut = day.clock >= CLOSING || dayDone;
+  const startOnLoad = useRef({ handled: [...day.served.map((s) => s.orderId), ...day.missed], clock: day.clock });
   const [lens, setLens] = useState(false);
   const [lensCards, setLensCards] = useState<LensCard[]>([]);
   const summaries = useTableSummaries(lens ? db : null, ALL_TABLES, day.served.length);
@@ -44,7 +49,7 @@ export function TruckApp() {
     let game: { destroy: () => void } | null = null;
     import('../game/truck/TruckGame').then(({ TruckGame }) => {
       if (cancelled || !parentRef.current) return;
-      game = new TruckGame(parentRef.current, bridge, servedOnLoad.current);
+      game = new TruckGame(parentRef.current, bridge, startOnLoad.current);
       if (import.meta.env.DEV) (window as unknown as { __truck?: unknown }).__truck = game;
       setReady(true);
     });
@@ -58,6 +63,10 @@ export function TruckApp() {
     <div className="truck-app">
       <header className="truck-hud">
         <span className="truck-title">🚚 Rolling Roast</span>
+        <span className={shut ? 'truck-clock truck-clock-closed' : 'truck-clock'} title={t.clockTitle}>
+          🕙 {formatClock(day.clock)}
+          {shut && ` · ${t.closedLabel}`}
+        </span>
         <span className="truck-day" title={t.dayTitle}>
           📅 {t.dayLabel(day.date, day.served.length, TOTAL_ORDERS)}
         </span>
@@ -92,24 +101,18 @@ export function TruckApp() {
           </div>
         )}
         {ready && dayDone && !front && !consoleOpen && (
-          <div className="day-done" role="status">
-            <p className="day-done-title">{t.dayDoneTitle}</p>
-            <p className="day-done-text">{t.dayDoneText}</p>
-            <button className="primary-button" onClick={restartDay}>
-              ↺ {t.newDay}
-            </button>
-          </div>
+          <DaySummary db={db} day={day} dateLabel={t.dateLabel(day.date)} t={t} onNewDay={restartDay} />
         )}
         {ready && !consoleOpen && lens && (
           <DataLens cards={lensCards} summaries={summaries} needed={orderTables} t={t} />
         )}
-        {ready && !consoleOpen && (
+        {ready && !consoleOpen && !dayDone && (
           <>
             <div className={aimed ? 'crosshair crosshair-on' : 'crosshair'} aria-hidden="true" />
             {aimed && <p className="aim-label">E · {t.truckThings[aimed]}</p>}
           </>
         )}
-        {ready && !consoleOpen && !locked && (
+        {ready && !consoleOpen && !locked && !dayDone && (
           <div className="truck-start" aria-hidden="true">
             <p className="truck-start-title">🖱 {t.truckStart}</p>
             <p className="truck-start-hint">{t.truckStartHint}</p>
@@ -122,6 +125,14 @@ export function TruckApp() {
             aria-label={t.truckOrder}
             style={{ left: `${anchor.x * 100}%`, bottom: `${(1 - anchor.y) * 100}%` }}
           >
+            {mood && patienceLeft !== null && (
+              <p className={`order-mood order-mood-${mood}`} title={t.moodLabels[mood]}>
+                <span aria-hidden="true">{t.moods[mood]}</span>
+                <span className="order-patience" aria-label={t.moodLabels[mood]}>
+                  <span style={{ width: `${Math.round(patienceLeft * 100)}%` }} />
+                </span>
+              </p>
+            )}
             <p className="order-bubble-text">{orderLine(order, lang)}</p>
             {answerWhere && <p className="order-bubble-hint">👉 {t.truckAnswerAt(answerWhere)}</p>}
           </div>

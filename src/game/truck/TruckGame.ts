@@ -4,6 +4,14 @@
  * click to use what the crosshair is on. Talks to React only through the TruckBridge.
  */
 import * as THREE from 'three';
+import {
+  arrivalTime,
+  CLOSING,
+  GAME_MINUTES_PER_SECOND,
+  OPENING,
+  PATIENCE_MINUTES,
+  QUIET_SPEEDUP,
+} from '../../sql-core/truck/day';
 import { PROTOTYPE_ORDERS, type CustomerLook } from '../../sql-core/truck/orders';
 import { inkColour } from './colour';
 import type { LensCard, TruckBridge } from './bridge';
@@ -24,8 +32,6 @@ import {
   type InteractableId,
 } from './world';
 
-/** Seconds between customers arriving. */
-const ARRIVAL_GAP = 3;
 /** About this many screen pixels per scene pixel: big riso pixels, light on the GPU. */
 const TARGET_LINES = 300;
 const MOUSE_SENSITIVITY = 0.0024;
@@ -57,23 +63,30 @@ export class TruckGame {
   private queue = new TruckQueue();
   private customers = new Map<QueueCustomer, CustomerModel>();
   private nextOrder = 0;
-  private sinceArrival = ARRIVAL_GAP;
   private frontOrderId: string | null = null;
+  /** The truck's clock: minutes since midnight. */
+  private clock: number = OPENING;
+  private lastClockMinute = -1;
+  private lastPatience = '';
+  private closed = false;
+  private setWallClock: (minutes: number) => void = () => {};
   private lastAnchor = '';
   private walkClock = 0;
   private lensOn = false;
   private lensAmount = 0;
   private lastCards = '';
 
-  /** Today's orders still to come (orders already served today are skipped). */
+  /** Today's orders still to come (orders already served or missed today are skipped). */
   private readonly orders: typeof PROTOTYPE_ORDERS;
 
   constructor(
     private readonly parent: HTMLElement,
     private readonly bridge: TruckBridge,
-    served: readonly string[] = [],
+    /** Where the day stands on load: orders already handled, and the clock. */
+    start: { handled: readonly string[]; clock: number } = { handled: [], clock: OPENING },
   ) {
-    this.orders = PROTOTYPE_ORDERS.filter((o) => !served.includes(o.id));
+    this.orders = PROTOTYPE_ORDERS.filter((o) => !start.handled.includes(o.id));
+    this.clock = Math.max(OPENING, start.clock);
     // Colours are used exactly as written (colour.ts); no conversion on output either.
     this.renderer = new THREE.WebGLRenderer({ antialias: false, powerPreference: 'high-performance' });
     this.renderer.outputColorSpace = THREE.LinearSRGBColorSpace;
@@ -92,7 +105,10 @@ export class TruckGame {
     const fill = new THREE.DirectionalLight(0xffffff, 0.15 * Math.PI);
     fill.position.set(3, 4, 8);
     this.scene.add(fill);
-    this.scene.add(buildTruck(), buildPark());
+    const truck = buildTruck();
+    this.setWallClock = truck.userData.setClock as (minutes: number) => void;
+    this.setWallClock(this.clock);
+    this.scene.add(truck, buildPark());
 
     this.observer = new ResizeObserver(() => this.resize());
     this.observer.observe(parent);
@@ -233,16 +249,43 @@ export class TruckGame {
     this.emitLensCards();
   }
 
+  /**
+   * The truck's clock: runs while no console is open, faster when nobody is waiting, and stops at
+   * closing time. Customers' patience runs on the same clock.
+   */
+  private updateClock(seconds: number): number {
+    if (seconds <= 0 || this.clock >= CLOSING) return 0;
+    const quiet = this.queue.line.length === 0;
+    const minutes = Math.min(CLOSING - this.clock, seconds * GAME_MINUTES_PER_SECOND * (quiet ? QUIET_SPEEDUP : 1));
+    this.clock += minutes;
+    const whole = Math.floor(this.clock);
+    if (whole !== this.lastClockMinute) {
+      this.lastClockMinute = whole;
+      this.setWallClock(this.clock);
+      this.bridge.emit('clock', whole);
+    }
+    return minutes;
+  }
+
   private updateCustomers(seconds: number): void {
-    this.sinceArrival += seconds;
-    if (this.nextOrder < this.orders.length && this.sinceArrival >= ARRIVAL_GAP && this.queue.canJoin() && seconds > 0) {
+    const gameMinutes = this.updateClock(seconds);
+    // Customers arrive at their time of day, until closing.
+    const next = this.orders[this.nextOrder];
+    if (next && this.clock < CLOSING && this.clock >= arrivalTime(PROTOTYPE_ORDERS.indexOf(next)) && this.queue.canJoin() && seconds > 0) {
       const order = this.orders[this.nextOrder++];
       const customer = this.queue.join(order.id);
       if (customer) {
-        this.sinceArrival = 0;
         const model = buildCustomer(order.look as CustomerLook);
         this.scene.add(model.root);
         this.customers.set(customer, model);
+      }
+    }
+    // Patience runs out while waiting in line (not while walking off, and not while time is stopped).
+    for (const customer of [...this.queue.line]) {
+      customer.waited += gameMinutes;
+      if (customer.waited >= PATIENCE_MINUTES) {
+        this.queue.giveUp(customer);
+        this.bridge.emit('gaveUp', customer.orderId);
       }
     }
     for (const gone of this.queue.update(seconds)) {
@@ -270,6 +313,18 @@ export class TruckGame {
     if (frontId !== this.frontOrderId) {
       this.frontOrderId = frontId;
       this.bridge.emit('front', front ? { orderId: front.orderId } : null);
+    }
+    const patience = front ? { orderId: front.orderId, left: Math.max(0, 1 - front.waited / PATIENCE_MINUTES) } : null;
+    const patienceKey = patience ? `${patience.orderId}:${patience.left.toFixed(2)}` : '';
+    if (patienceKey !== this.lastPatience) {
+      this.lastPatience = patienceKey;
+      this.bridge.emit('patience', patience);
+    }
+    // The day is over once nobody else will come (closing time, or no orders left) and the line is empty.
+    const noneToCome = this.clock >= CLOSING || this.nextOrder >= this.orders.length;
+    if (!this.closed && noneToCome && this.queue.line.length === 0) {
+      this.closed = true;
+      this.bridge.emit('closed', true);
     }
   }
 

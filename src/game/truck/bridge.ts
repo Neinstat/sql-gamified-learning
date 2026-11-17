@@ -10,6 +10,10 @@
  *   game → app   'locked'  the mouse is captured for looking around (pointer lock)
  *   app → game   'serve'   the front customer has been served and walks away
  *   app → game   'pause'   an overlay is open (true): time stops and the player can't move
+ *   game → app   'clock'   the truck's clock moved on (minutes since midnight, whole minutes)
+ *   game → app   'patience' how much patience the customer at the window has left (0–1), or null
+ *   game → app   'gaveUp'  a customer waited too long and left without buying (their order id)
+ *   game → app   'closed'  the day is over: closing time (or no one left to come) and the line is empty
  *   game → app   'lensKey' the player pressed L (the app decides whether the Data Lens is on)
  *   app → game   'lens'    turn the Data Lens on or off
  *   game → app   'lensCards' where each table's card is on screen while the lens is on (empty
@@ -30,6 +34,10 @@ type TruckEvents = {
   locked: boolean;
   serve: true;
   pause: boolean;
+  clock: number;
+  patience: { orderId: string; left: number } | null;
+  gaveUp: string;
+  closed: true;
   lensKey: true;
   lens: boolean;
   lensCards: LensCard[];

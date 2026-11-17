@@ -23,6 +23,10 @@ export type QueueCustomer = {
   orderId: string;
   x: number;
   state: 'walking' | 'waiting' | 'leaving';
+  /** Game minutes spent in the line so far (the game counts it; patience runs out at a limit). */
+  waited: number;
+  /** Served customers walk on past the window; those who gave up walk back the way they came. */
+  walkOff?: 'on' | 'back';
 };
 
 export function spotX(spot: number): number {
@@ -42,7 +46,7 @@ export class TruckQueue {
 
   join(orderId: string): QueueCustomer | null {
     if (!this.canJoin()) return null;
-    const customer: QueueCustomer = { orderId, x: QUEUE.enterX, state: 'walking' };
+    const customer: QueueCustomer = { orderId, x: QUEUE.enterX, state: 'walking', waited: 0 };
     this.line.push(customer);
     return customer;
   }
@@ -59,8 +63,19 @@ export class TruckQueue {
     if (!served) return null;
     this.line.shift();
     served.state = 'leaving';
+    served.walkOff = 'on';
     this.leaving.push(served);
     return served;
+  }
+
+  /** A customer who waited too long leaves the line (from any spot) and walks back. */
+  giveUp(customer: QueueCustomer): void {
+    const index = this.line.indexOf(customer);
+    if (index < 0) return;
+    this.line.splice(index, 1);
+    customer.state = 'leaving';
+    customer.walkOff = 'back';
+    this.leaving.push(customer);
   }
 
   /** Moves everyone; returns customers who walked out of sight this step. */
@@ -76,8 +91,9 @@ export class TruckQueue {
     });
     const gone: QueueCustomer[] = [];
     for (const c of [...this.leaving]) {
-      c.x = Math.min(QUEUE.exitX, c.x + step);
-      if (c.x >= QUEUE.exitX) {
+      const back = c.walkOff === 'back';
+      c.x = back ? Math.max(QUEUE.enterX, c.x - step) : Math.min(QUEUE.exitX, c.x + step);
+      if (back ? c.x <= QUEUE.enterX : c.x >= QUEUE.exitX) {
         this.leaving.splice(this.leaving.indexOf(c), 1);
         gone.push(c);
       }

@@ -8,7 +8,8 @@ import { isCase, type RequestLevel } from '../sql-core/levels';
 import { stationTables, tablesInQuery } from '../sql-core/stations';
 import { findOrderLevel } from '../sql-core/truck/levels';
 import { OBJECT_STATION, objectForStation, type TruckObjectId } from '../sql-core/truck/objects';
-import { parseDayLog, saleSql, serveOrder, emptyDay, type DayLog } from '../sql-core/truck/day';
+import { emptyDay, missOrder, moodFor, parseDayLog, saleSql, serveOrder, TIPS, type DayLog } from '../sql-core/truck/day';
+import { starsFor } from './rewards';
 import { PROTOTYPE_ORDERS, type TruckOrder } from '../sql-core/truck/orders';
 import type { FrontCustomer, TruckBridge } from '../game/truck/bridge';
 import { ConsoleOverlay } from './ConsoleOverlay';
@@ -53,7 +54,12 @@ export function useTruckShift(bridge: TruckBridge, lang: Lang, t: UiText) {
   const [front, setFront] = useState<FrontCustomer | null>(null);
   const [orderOpen, setOrderOpen] = useState(false);
   const [exploring, setExploring] = useState<TruckObjectId | null>(null);
-  const [solved, setSolved] = useState(false);
+  /** Set once the order's answer is right: how many wrong runs came before it (for stars). */
+  const [solved, setSolved] = useState<{ mistakes: number } | null>(null);
+  /** Patience left of the customer at the window (0–1), for their mood and tip. */
+  const [patience, setPatience] = useState<{ orderId: string; left: number } | null>(null);
+  /** The game says the day is over (closing time, or nobody left to come, and the line is empty). */
+  const [closed, setClosed] = useState(false);
   const [hintsUsed, setHintsUsed] = useState(0);
   const [toast, setToast] = useState<string | null>(null);
 
@@ -81,9 +87,33 @@ export function useTruckShift(bridge: TruckBridge, lang: Lang, t: UiText) {
 
   // Each new order starts with a clean console.
   useEffect(() => {
-    setSolved(false);
+    setSolved(null);
     setHintsUsed(0);
   }, [order?.id]);
+
+  // The day as the game plays it: the clock, impatient customers, closing time. Saved as it goes.
+  const updateDay = useCallback((change: (log: DayLog) => DayLog) => {
+    setDay((prev) => {
+      const next = change(prev);
+      if (next !== prev) saveDay(next);
+      return next;
+    });
+  }, []);
+  // The saved clock never goes back (only "start the day again" resets it, by replacing the log).
+  useEffect(
+    () => bridge.on('clock', (minutes) => updateDay((log) => (minutes > log.clock ? { ...log, clock: minutes } : log))),
+    [bridge, updateDay],
+  );
+  useEffect(() => bridge.on('patience', setPatience), [bridge]);
+  useEffect(() => bridge.on('closed', () => setClosed(true)), [bridge]);
+  useEffect(
+    () =>
+      bridge.on('gaveUp', (orderId) => {
+        updateDay((log) => missOrder(log, orderId));
+        setToast(t.gaveUp);
+      }),
+    [bridge, updateDay, t],
+  );
 
   // A short message that fades on its own.
   useEffect(() => {
@@ -112,13 +142,17 @@ export function useTruckShift(bridge: TruckBridge, lang: Lang, t: UiText) {
     if (!solved || !order) return;
     // A solved order is handed over: it becomes sales rows, the day log is saved, and the
     // customer leaves so the next one steps up.
-    const next = serveOrder(day, order.id);
-    const served = next.served[next.served.length - 1];
-    setDay(next);
-    saveDay(next);
-    db?.write(saleSql(order, next.date, served.at)).catch((err) => setToast(String(err)));
+    const left = patience?.orderId === order.id ? patience.left : 1;
+    const served = {
+      orderId: order.id,
+      at: Math.floor(day.clock),
+      tip: TIPS[moodFor(left)],
+      stars: starsFor(hintsUsed, solved.mistakes),
+    };
+    updateDay((log) => serveOrder(log, served));
+    db?.write(saleSql(order, day.date, served.at)).catch((err) => setToast(String(err)));
     bridge.emit('serve', true);
-  }, [bridge, solved, order, day, db]);
+  }, [bridge, solved, order, day, db, patience, hintsUsed, updateDay]);
 
   const closeExplore = useCallback(() => setExploring(null), []);
 
@@ -147,7 +181,7 @@ export function useTruckShift(bridge: TruckBridge, lang: Lang, t: UiText) {
         visible={orderOpen}
         hintsUsed={hintsUsed}
         onRevealHint={() => setHintsUsed((n) => n + 1)}
-        onCorrect={() => setSolved(true)}
+        onCorrect={(mistakes) => setSolved({ mistakes })}
         reward={null}
         solvedMessage={t.truckServed}
         doneLabel={t.truckServe}
@@ -208,7 +242,10 @@ export function useTruckShift(bridge: TruckBridge, lang: Lang, t: UiText) {
     /** Today so far: the date, and the orders served (each one is in `sales`). */
     day,
     /** Every order of the day has been served. */
-    dayDone: day.served.length >= PROTOTYPE_ORDERS.length,
+    dayDone: closed,
+    /** The mood of the customer at the window (null when nobody is there). */
+    mood: front && patience?.orderId === front.orderId ? moodFor(patience.left) : null,
+    patienceLeft: front && patience?.orderId === front.orderId ? patience.left : null,
     consoleOpen: open,
     overlays: (
       <>

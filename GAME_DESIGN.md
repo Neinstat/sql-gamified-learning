@@ -62,7 +62,8 @@ A **completely fresh start** (owner's decision, 16 Nov 2026): v1's story (Grandm
 **Time and pressure (decided):**
 - **The clock stops while the tablet is open.** Writing SQL is never timed.
 - A customer's patience only drops while they wait in the queue, and **only affects the tip**. There is no losing. A customer who waits too long leaves without tipping, but their task comes back on another day.
-- One day takes about 8–12 real minutes (8–12 orders + 1 manager case).
+- One day takes about 8–12 real minutes (8–12 orders + 1 manager case). Built in 4.10: the clock runs at 0.7 game minutes per real second (≈ 10 minutes for 10:00–17:00), and **4× faster while nobody is waiting**, so there is no idle waiting.
+- Customers arrive **spread over the day** (prototype: 10:00, 10:35, 11:15, 12:00, 12:50, 13:50, 15:00). Patience is **60 game minutes** in the line; their mood shows in the speech bubble (😊 / 😐 / 😠 with a patience bar), and the tip is **$1.00 / $0.50 / $0** by mood when the order is handed over.
 - v1's Rush Hour becomes **"Lunch Rush"**: an optional event from 12:00 to 13:00 with quick orders and a running clock, from week 3.
 
 ## 5. Tasks: order templates and repetition
@@ -229,7 +230,7 @@ Built in phases; every phase produces something playable. Every iteration: build
 | 4.7 ✅ | **Using the truck's objects:** the menu board, fridge and recipe binders open the console with their own tables; an order may need checking another object first | Each object opens its tables; one order uses the fridge (`inventory`) |
 | 4.8 ✅ | **Data Lens** (signature feature): a button that shows tables over every object | The Data Lens works on every side of the truck |
 | 4.9 ✅ | **Sales into the database** (`INSERT` by the game, `channel = 'truck'`) + the day log in progress, replayed on load | After serving, a `sales` query shows today's sales, also after reloading the page |
-| 4.10 | **The clock** 10:00–17:00, patience → tips, closing time + end-of-day summary | A day can be played from opening to the summary |
+| 4.10 ✅ | **The clock** 10:00–17:00, patience → tips, closing time + end-of-day summary | A day can be played from opening to the summary |
 | 4.11 | **The manager's knock:** The Manager (suit) at the back door, one small case using the case engine on today's data | The manager's case can be solved with 📌 evidence |
 | 4.12 | Owner playtest + fixes | Decision: on to Phase 5, or change the concept |
 
@@ -262,6 +263,15 @@ Built in phases; every phase produces something playable. Every iteration: build
 - The day log is saved in the browser (`sql-valley.truck-day`). On load, `getDayDatabase` replays it **before** anyone can query; the game skips customers already served. The HUD shows "📅 Nov 1 · 3/7 served"; after the last order a card suggests `SELECT * FROM sales WHERE channel = 'truck';` and offers to start the day again. Data Lens cards reload after each sale.
 - Checked in the browser: one sale takes `sales` from 7,694 to 7,695 rows, a reload keeps it (and the next customer is the second one), and a full day gives 7,703 rows.
 - ⚠ For Phase 6: v1 questions over *all* sales now include the truck's sales. Answers are still graded fairly (same data), but teaching traps can break — e.g. Chapter 3's "item 6 sold exactly 400 portions" (`>` vs `>=`) becomes 401 after the *How Much Milk?* customer buys a Flat White. Moved questions should be limited to the history (August–October) or rewritten.
+
+**4.10 as built (17 Nov 2026):**
+- `src/sql-core/truck/day.ts` (tested): the day rules — `OPENING`/`CLOSING`, `GAME_MINUTES_PER_SECOND`, `QUIET_SPEEDUP`, `PATIENCE_MINUTES`, `arrivalTime`, `moodFor`, `TIPS`, `formatClock`, `isDayOver` — and a richer day log: `{ date, clock, served: [{ orderId, at, tip, stars }], missed }`. A log saved by 4.9 (times as text) is read as a fresh day without crashing. `revenueSql(date)` is the summary's query.
+- `queue.ts`: `giveUp(customer)` — anyone in the line can leave; they walk back down the path and the others close the gap (tested).
+- `TruckGame.ts`: owns the clock (stops while a console is open, ×4 when the line is empty, stops at 17:00), moves the wall clock's hands, lets customers arrive at their time, counts their patience, sends `clock`, `patience`, `gaveUp` and `closed` (closing time or nobody else to come, and the line empty). A reload carries on from the saved clock and skips orders already served or missed.
+- `useTruckShift.tsx`: saves the clock as it moves (never backwards), records missed customers, and on hand-over records the time, the tip (from the mood) and the stars (`starsFor`: hints and wrong runs).
+- `src/app/DaySummary.tsx`: the **end-of-day summary** — orders served, customers who left, revenue, tips and stars. Revenue comes from running `revenueSql` on the tablet's role, and the query is shown: *"How the revenue was counted — you can run this on the tablet too."*
+- HUD: 🕙 clock (red "closed" after closing) next to the day's date and orders served.
+- Checked in the browser: the clock runs and stops while the tablet is open; an ignored customer turns 😐, then leaves at 11:00 (60 minutes); a served customer at 11:14 gets a $0.50 tip and ⭐⭐⭐; at the end the summary shows revenue $6.00 from the query (2 × Americano); a reload mid-afternoon carries on at the saved time.
 
 **Cleanup (17 Nov 2026):** v1's code (Phaser, the top-down café, Journal, shop, quests, `progress.ts`), the 2D truck prototypes, 72 unused UI strings, 112 unused CSS rules and the Phaser dependency were removed. `src/sql-core/` stays whole because its content is reused in Phase 6. Documents were moved to English for a global audience.
 

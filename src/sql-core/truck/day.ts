@@ -1,49 +1,113 @@
 /**
- * A working day in the food truck (GAME_DESIGN.md §4, §8): which orders have been served, and
- * the sales they become. The game, never the player, writes these sales to the database, with
- * `channel = 'truck'`. Progress only stores the day log; on load the database is rebuilt from its
- * seed and the log is replayed, so the data is exactly the same every time.
+ * A working day in the food truck (GAME_DESIGN.md §4, §8): the clock, when customers arrive, how
+ * patient they are, and the orders served (each becomes `sales` rows). The game, never the
+ * player, writes these sales, with `channel = 'truck'`. Progress only stores the day log; on load
+ * the database is rebuilt from its seed and the log is replayed, so the data is always the same.
+ *
+ * Times are minutes since midnight (10:00 = 600).
  */
 import { PROTOTYPE_ORDERS, type TruckOrder } from './orders';
 
 /** The first play day: the truck's history (Aug–Oct 2026) ends the day before. */
 export const FIRST_PLAY_DATE = '2026-11-01';
-export const OPENING_TIME = '10:00';
+export const OPENING = 10 * 60;
+export const CLOSING = 17 * 60;
 
-/** One served order: which order, and when (HH:MM, the truck's clock). */
-export type ServedOrder = { orderId: string; at: string };
-
-export type DayLog = { date: string; served: ServedOrder[] };
-
-export const emptyDay = (): DayLog => ({ date: FIRST_PLAY_DATE, served: [] });
+/** About ten real minutes for a 7-hour day; the clock stops while a console is open. */
+export const GAME_MINUTES_PER_SECOND = 0.7;
+/** With nobody waiting at the window, time runs this much faster (no idle waiting). */
+export const QUIET_SPEEDUP = 4;
+/** How long (game minutes) a customer waits in the queue before giving up. */
+export const PATIENCE_MINUTES = 60;
 
 /**
- * When the next order is served. Until the clock arrives (Phase 4.10) a day simply advances
- * 12 minutes per order from opening time.
+ * When each prototype order's customer turns up (minutes after opening), spread over the day.
+ * One per order, in order.
  */
-export function nextServeTime(log: DayLog): string {
-  const [h, m] = OPENING_TIME.split(':').map(Number);
-  const minutes = h * 60 + m + log.served.length * 12;
-  return `${String(Math.floor(minutes / 60)).padStart(2, '0')}:${String(minutes % 60).padStart(2, '0')}`;
+export const ARRIVALS = [0, 35, 75, 120, 170, 230, 300] as const;
+
+export function arrivalTime(index: number): number {
+  return OPENING + (ARRIVALS[index] ?? ARRIVALS[ARRIVALS.length - 1] + 30 * (index - ARRIVALS.length + 1));
 }
 
-export function serveOrder(log: DayLog, orderId: string): DayLog {
-  if (log.served.some((s) => s.orderId === orderId)) return log;
-  return { ...log, served: [...log.served, { orderId, at: nextServeTime(log) }] };
+/** "10:05" */
+export function formatClock(minutes: number): string {
+  const m = Math.max(0, Math.floor(minutes));
+  return `${String(Math.floor(m / 60)).padStart(2, '0')}:${String(m % 60).padStart(2, '0')}`;
+}
+
+/** How a customer feels, from the patience they have left (1 = just arrived, 0 = leaving). */
+export type Mood = 'happy' | 'okay' | 'annoyed';
+
+export function moodFor(patienceLeft: number): Mood {
+  if (patienceLeft > 2 / 3) return 'happy';
+  if (patienceLeft > 1 / 3) return 'okay';
+  return 'annoyed';
+}
+
+/** The tip for an order, from the customer's mood when it was handed over. */
+export const TIPS: Record<Mood, number> = { happy: 1, okay: 0.5, annoyed: 0 };
+
+/** One served order: which, when (minutes since midnight), the tip, and the stars earned. */
+export type ServedOrder = { orderId: string; at: number; tip: number; stars: number };
+
+export type DayLog = {
+  date: string;
+  /** The truck's clock (minutes since midnight), so a reload carries on from here. */
+  clock: number;
+  served: ServedOrder[];
+  /** Customers who gave up waiting (their order comes back on another day). */
+  missed: string[];
+};
+
+export const emptyDay = (): DayLog => ({ date: FIRST_PLAY_DATE, clock: OPENING, served: [], missed: [] });
+
+export function serveOrder(log: DayLog, served: ServedOrder): DayLog {
+  if (isHandled(log, served.orderId)) return log;
+  return { ...log, served: [...log.served, served] };
+}
+
+export function missOrder(log: DayLog, orderId: string): DayLog {
+  if (isHandled(log, orderId)) return log;
+  return { ...log, missed: [...log.missed, orderId] };
+}
+
+export const isHandled = (log: DayLog, orderId: string) =>
+  log.served.some((s) => s.orderId === orderId) || log.missed.includes(orderId);
+
+/** The day is over once it is closing time and every customer has been served or has left. */
+export function isDayOver(log: DayLog): boolean {
+  return log.clock >= CLOSING || log.served.length + log.missed.length >= PROTOTYPE_ORDERS.length;
 }
 
 /** Read a saved day; anything broken or unknown falls back to a fresh day. */
 export function parseDayLog(raw: string | null): DayLog {
   if (!raw) return emptyDay();
   try {
-    const data = JSON.parse(raw) as Partial<DayLog>;
+    const data = JSON.parse(raw) as Partial<DayLog> & { served?: unknown[]; missed?: unknown[] };
     if (typeof data.date !== 'string' || !Array.isArray(data.served)) return emptyDay();
     const known = new Set(PROTOTYPE_ORDERS.map((o) => o.id));
-    const served = data.served.filter(
-      (s): s is ServedOrder =>
-        !!s && typeof s.orderId === 'string' && known.has(s.orderId) && typeof s.at === 'string' && /^\d\d:\d\d$/.test(s.at),
+    const minutes = (v: unknown) => typeof v === 'number' && Number.isFinite(v) && v >= 0 && v < 24 * 60;
+    const served: ServedOrder[] = [];
+    for (const s of data.served as Partial<ServedOrder>[]) {
+      if (!s || typeof s.orderId !== 'string' || !known.has(s.orderId) || !minutes(s.at)) continue;
+      if (served.some((x) => x.orderId === s.orderId)) continue;
+      served.push({
+        orderId: s.orderId,
+        at: Math.floor(s.at as number),
+        tip: typeof s.tip === 'number' && s.tip >= 0 ? s.tip : 0,
+        stars: s.stars === 1 || s.stars === 2 || s.stars === 3 ? s.stars : 1,
+      });
+    }
+    const missed = (Array.isArray(data.missed) ? data.missed : []).filter(
+      (id): id is string => typeof id === 'string' && known.has(id) && !served.some((s) => s.orderId === id),
     );
-    return { date: /^\d{4}-\d\d-\d\d$/.test(data.date) ? data.date : FIRST_PLAY_DATE, served };
+    return {
+      date: /^\d{4}-\d\d-\d\d$/.test(data.date) ? data.date : FIRST_PLAY_DATE,
+      clock: minutes(data.clock) ? Math.max(OPENING, Math.floor(data.clock as number)) : OPENING,
+      served,
+      missed: [...new Set(missed)],
+    };
   } catch {
     return emptyDay();
   }
@@ -52,10 +116,12 @@ export function parseDayLog(raw: string | null): DayLog {
 /**
  * The INSERT that records one served order: one `sales` row per item bought, at the menu price,
  * with the next free `sale_id`s and one new `order_id`. Built only from our own order data
- * (numbers and a checked timestamp), never from player input.
+ * (numbers and a checked date and time), never from player input.
  */
-export function saleSql(order: TruckOrder, date: string, at: string): string {
-  if (!/^\d{4}-\d\d-\d\d$/.test(date) || !/^\d\d:\d\d$/.test(at)) throw new Error(`Bad sale time: ${date} ${at}`);
+export function saleSql(order: TruckOrder, date: string, at: number): string {
+  if (!/^\d{4}-\d\d-\d\d$/.test(date) || !Number.isInteger(at) || at < 0 || at >= 24 * 60) {
+    throw new Error(`Bad sale time: ${date} ${at}`);
+  }
   const lines = order.buys
     .map((b, i) => {
       if (!Number.isInteger(b.itemId) || !Number.isInteger(b.quantity) || b.quantity < 1) {
@@ -67,7 +133,7 @@ export function saleSql(order: TruckOrder, date: string, at: string): string {
   return `INSERT INTO sales (sale_id, order_id, sold_at, item_id, quantity, unit_price, channel, customer_id)
 SELECT (SELECT COALESCE(MAX(sale_id), 0) FROM sales) + line.n,
        (SELECT COALESCE(MAX(order_id), 0) FROM sales) + 1,
-       TIMESTAMP '${date} ${at}:00',
+       TIMESTAMP '${date} ${formatClock(at)}:00',
        m.item_id, line.quantity, m.price, 'truck', NULL
 FROM (VALUES ${lines}) AS line (n, item_id, quantity)
 JOIN menu_items m ON m.item_id = line.item_id
@@ -80,4 +146,16 @@ export function daySalesSql(log: DayLog): string[] {
     const order = PROTOTYPE_ORDERS.find((o) => o.id === s.orderId);
     return order ? [saleSql(order, log.date, s.at)] : [];
   });
+}
+
+/**
+ * The query the end-of-day summary runs (and shows) for today's revenue: a small lesson in itself.
+ */
+export function revenueSql(date: string): string {
+  if (!/^\d{4}-\d\d-\d\d$/.test(date)) throw new Error(`Bad date: ${date}`);
+  return `SELECT COUNT(DISTINCT order_id) AS orders,
+       SUM(quantity * unit_price) AS revenue
+FROM sales
+WHERE channel = 'truck'
+  AND sold_at::date = '${date}';`;
 }
