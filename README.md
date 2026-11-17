@@ -24,7 +24,7 @@ You are the new hire at **Rolling Roast**, a coffee food truck parked in a city 
 
 1. Click the screen to look around (**Esc** frees the mouse).
 2. **WASD** or the arrow keys to walk around the truck, the **mouse** to look.
-3. Aim the crosshair at something and press **E** (or click): the **tablet** on the counter takes orders; the fridge, menu board, recipe binders and back door come next.
+3. Aim the crosshair at something and press **E** (or click). Each object sees its own tables: the **tablet** (sales, customers, menu), the **fridge** (stock, suppliers), the **menu board** and the **recipe binders**. The speech bubble tells you where to answer each order; any other object lets you look around its data freely.
 4. Read the customer's request, write SQL, press **Run** (or Ctrl/⌘ + Enter). Your *result* is graded, not your text, with specific feedback when it isn't right yet.
 5. **Hand over the order**, and the next customer steps up. Time stops while the tablet is open.
 
@@ -38,7 +38,7 @@ Everything is drawn through a **risograph shader**: the 3D scene is rendered at 
 
 ## Status
 
-🚧 **Phase 4: the one-day prototype.** The 3D truck, the park, the queue, the tablet and the riso look are in. Next: the fridge, menu board and recipe binders opening their own tables, the "Data Lens", sales going into the database, the clock and the end-of-day summary, and The Manager.
+🚧 **Phase 4: the one-day prototype.** The 3D truck, the park, the queue, the riso look, and objects that each open their own tables are in. Next: the "Data Lens", sales going into the database, the clock and the end-of-day summary, and The Manager.
 
 The SQL core is complete from the first version of the game: 34 levels in six chapters (from `SELECT` to an analysis case), Mini Cases, a Skill Check and a timed mode. Phase 6 turns them into customer orders and manager questions over six in-game weeks.
 

@@ -1,7 +1,7 @@
 /**
- * Food truck orders (GAME_DESIGN.md §14.4–14.5). In the Phase 4 prototype they are written by
- * hand and reuse Chapter 1 levels: the customer's line is the request, the level holds the SQL.
- * Phase 5 replaces this list with order templates.
+ * Food truck orders (GAME_DESIGN.md §4–§5). In the Phase 4 prototype they are written by hand:
+ * the customer's line is the request, the level holds the SQL (a Chapter 1 level, or one of the
+ * truck's own levels in levels.ts). Phase 5 replaces this list with order templates.
  */
 import type { Lang } from '../feedback';
 import { ORDERS_ID } from './locales/id/orders';
@@ -38,15 +38,27 @@ export const PROTOTYPE_ORDERS: readonly TruckOrder[] = [
     line: "Which coffees can I actually order today? Not the ones you're out of.",
   },
   {
+    id: 'proto-milk-supplier',
+    levelId: 'truck-milk-supplier',
+    look: 'grandpa',
+    line: 'Your milk tastes different lately. Who brings it now, and when?',
+  },
+  {
+    id: 'proto-milk-recipes',
+    levelId: 'truck-milk-recipes',
+    look: 'painter',
+    line: 'My doctor says less milk. How much milk is in each of your drinks?',
+  },
+  {
     id: 'proto-tea-dessert',
     levelId: 'ch1-4',
-    look: 'grandpa',
+    look: 'student',
     line: 'Coffee keeps me up at night. Show me your teas and desserts, please.',
   },
   {
     id: 'proto-chocolate',
     levelId: 'ch1-5',
-    look: 'painter',
+    look: 'office',
     line: 'Anything with chocolate in it? I mean anything at all.',
   },
 ];

@@ -67,8 +67,8 @@ const en = (fb: Feedback): string => {
       return 'Only questions for the data here: start with SELECT (or WITH).';
     case 'other-station':
       return fb.station
-        ? `This station can't see \`${fb.table}\` — it's at the ${STATION_NAMES.en[fb.station]}.`
-        : `This station can't see \`${fb.table}\`.`;
+        ? `You can't see \`${fb.table}\` from here — that table is at the ${STATION_NAMES.en[fb.station]}.`
+        : `You can't see \`${fb.table}\` from here.`;
     case 'stopped':
       return 'Query stopped. Try a smaller one — a WHERE or LIMIT helps.';
     case 'missing-columns':
@@ -120,8 +120,8 @@ const id = (fb: Feedback): string => {
       return 'Di sini hanya untuk bertanya ke data: mulai dengan SELECT (atau WITH).';
     case 'other-station':
       return fb.station
-        ? `Stasiun ini tidak bisa melihat \`${fb.table}\` — tabel itu ada di ${STATION_NAMES.id[fb.station]}.`
-        : `Stasiun ini tidak bisa melihat \`${fb.table}\`.`;
+        ? `Dari sini kamu tidak bisa melihat \`${fb.table}\` — tabel itu ada di ${STATION_NAMES.id[fb.station]}.`
+        : `Dari sini kamu tidak bisa melihat \`${fb.table}\`.`;
     case 'stopped':
       return 'Query dihentikan. Coba yang lebih kecil — WHERE atau LIMIT bisa membantu.';
     case 'missing-columns':

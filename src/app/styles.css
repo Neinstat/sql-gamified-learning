@@ -993,3 +993,10 @@ body {
   margin: 0.25rem 0 0;
   font-size: 0.85rem;
 }
+
+/* Look-around console (4.7): a line under the title explaining nothing is graded. */
+.explore-hint {
+  margin: 0 0 0.75rem;
+  font-size: 0.9rem;
+  color: var(--ink);
+}

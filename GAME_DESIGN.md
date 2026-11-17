@@ -226,7 +226,7 @@ Built in phases; every phase produces something playable. Every iteration: build
 |---|---|---|
 | 4.1–4.5 ✅ | **Finding the look** with 2D prototypes: a static truck, the queue + tablet, a side-view truck to walk around, a first-person panorama in the riso style. Replaced by 4.6; code removed (git tag `v2-prototypes`). Details and screenshots in `docs/JOURNEY.md` | The order → tablet → SQL → served loop works; the riso style is born |
 | 4.6 ✅ | **3D prototype** (Three.js): low-poly truck and park, WASD + mouse, E/click to use, 3D customers queueing, the order tablet, the riso shader → **locked in**; v1 and 2D code removed, `/` opens the 3D truck | The owner tried it and chose 3D ✅ |
-| 4.7 | **Using the truck's objects:** the menu board, fridge and recipe binders open the console with their own tables; an order may need checking another object first | Each object opens its tables; one order uses the fridge (`inventory`) |
+| 4.7 ✅ | **Using the truck's objects:** the menu board, fridge and recipe binders open the console with their own tables; an order may need checking another object first | Each object opens its tables; one order uses the fridge (`inventory`) |
 | 4.8 | **Data Lens** (signature feature): a button that shows tables over every object | The Data Lens works on every side of the truck |
 | 4.9 | **Sales into the database** (`INSERT` by the game, `channel = 'truck'`) + the day log in progress, replayed on load | After serving, a `sales` query shows today's sales, also after reloading the page |
 | 4.10 | **The clock** 10:00–17:00, patience → tips, closing time + end-of-day summary | A day can be played from opening to the summary |
@@ -238,7 +238,15 @@ Built in phases; every phase produces something playable. Every iteration: build
 - `src/game/truck/build.ts`: the truck (a wall with the window cut out, counters, a tilted tablet, a fridge full of bottles, stock shelves, a red espresso machine, the menu board, recipe binders, a clock, the back door), the park (striped lawn, path, benches, picnic tables with umbrellas, lamps and string lights, trees, skyline, sun, the truck's awning), and blocky 1.75 m customers with swinging arms and legs.
 - `src/game/truck/risoPass.ts`: the low-resolution render, ink mapping with dither, depth outlines and the red misprint. Without exact ink colours and lights × π, everything turns dark green.
 - `src/game/truck/TruckGame.ts`: WASD/arrows, mouse look (pointer lock; dragging works too), click/E on the thing under the crosshair, head bob, customers turning to walk and then facing the truck, and the front customer's head position sent to React (`anchor`) for the speech bubble. Time stops while the tablet is open (keyboard and pointer lock released).
-- Not yet: phone controls; the fridge, menu board, recipe binders and door only show a "next update" message.
+- Not yet: phone controls.
+
+**4.7 as built (17 Nov 2026):**
+- `src/sql-core/truck/objects.ts` is the source of truth for the truck's objects: which tables each one sees (`OBJECT_STATION`: tablet → `sales`, `customers`, `menu_items`; fridge → `inventory`, `suppliers`; menu board → `menu_items`; recipe binders → `recipes`, `menu_items`; back door → nothing yet) and where an order is answered (`objectForStation`: menu and sales questions on the tablet, stock at the fridge, recipes at the recipe binders).
+- Using the object an order needs opens the order's console; any other object with data opens a **look-around console** (`src/console/ExploreConsole.tsx`): any query on its own tables, run as its PostgreSQL role, ungraded. Its header says where the current order is answered. The back door shows a short message until The Manager arrives (4.11).
+- The speech bubble says where to answer ("Answer at the fridge (aim + E)").
+- Feedback names the truck's objects: "You can't see `sales` from here — that table is at the tablet." (`STATION_NAMES` now holds object names.)
+- Two new requests written for the truck (`src/sql-core/truck/levels.ts`, Indonesian in `locales/id/levels.ts`), week 2 concepts with fill-in-the-blank input: *Who Brings the Milk?* at the fridge (`suppliers`, `WHERE … AND until IS NULL` → Highland Dairy at 12:00, a first clue for the Analysis Case) and *How Much Milk?* at the recipe binders (`recipes`, `WHERE ingredient = 'milk'`). The prototype day now has seven orders; looks are ordered so no two identical customers stand in the queue together (tested).
+- `findOrderLevel` finds an order's level among the chapters and the truck's own levels, translated, with English as the fallback.
 
 **Cleanup (17 Nov 2026):** v1's code (Phaser, the top-down café, Journal, shop, quests, `progress.ts`), the 2D truck prototypes, 72 unused UI strings, 112 unused CSS rules and the Phaser dependency were removed. `src/sql-core/` stays whole because its content is reused in Phase 6. Documents were moved to English for a global audience.
 

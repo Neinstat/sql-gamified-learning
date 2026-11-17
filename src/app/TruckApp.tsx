@@ -15,7 +15,7 @@ export function TruckApp() {
   const [locked, setLocked] = useState(false);
   const [aimed, setAimed] = useState<string | null>(null);
   const [anchor, setAnchor] = useState<{ x: number; y: number } | null>(null);
-  const { front, order, tabletOpen, tablet, toastView } = useTruckShift(bridge, lang, t);
+  const { front, order, answerWhere, consoleOpen, overlays } = useTruckShift(bridge, lang, t);
 
   useEffect(() => {
     document.documentElement.lang = lang;
@@ -64,19 +64,19 @@ export function TruckApp() {
             <div className="loading-bar" aria-hidden="true" />
           </div>
         )}
-        {ready && !tabletOpen && (
+        {ready && !consoleOpen && (
           <>
             <div className={aimed ? 'crosshair crosshair-on' : 'crosshair'} aria-hidden="true" />
             {aimed && <p className="aim-label">E · {t.truckThings[aimed]}</p>}
           </>
         )}
-        {ready && !tabletOpen && !locked && (
+        {ready && !consoleOpen && !locked && (
           <div className="truck-start" aria-hidden="true">
             <p className="truck-start-title">🖱 {t.truckStart}</p>
             <p className="truck-start-hint">{t.truckStartHint}</p>
           </div>
         )}
-        {front && order && anchor && !tabletOpen && (
+        {front && order && anchor && !consoleOpen && (
           <div
             className="order-bubble"
             role="status"
@@ -84,11 +84,10 @@ export function TruckApp() {
             style={{ left: `${anchor.x * 100}%`, bottom: `${(1 - anchor.y) * 100}%` }}
           >
             <p className="order-bubble-text">{orderLine(order, lang)}</p>
-            <p className="order-bubble-hint">📱 {t.truckAnswer}</p>
+            {answerWhere && <p className="order-bubble-hint">👉 {t.truckAnswerAt(answerWhere)}</p>}
           </div>
         )}
-        {toastView}
-        {tablet}
+        {overlays}
       </div>
     </div>
   );

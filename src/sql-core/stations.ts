@@ -1,7 +1,7 @@
 /**
- * Stations: the places in the café where the SQL console can be opened.
- * Each one sees a different part of the data (GAME_DESIGN.md §3), which teaches that
- * company data lives in many systems. Pure data: no game engine or UI here.
+ * Stations: each one sees a different part of the data (GAME_DESIGN.md §8), which teaches that
+ * company data lives in many systems. In the food truck every station is an object the player can
+ * use (truck/objects.ts). Pure data: no game engine or UI here.
  */
 export type StationId = 'menu-board' | 'cash-register' | 'recipe-book' | 'stock-ledger' | 'back-office';
 
@@ -13,27 +13,30 @@ export const STATIONS: Record<StationId, { tables: readonly string[] }> = {
   'recipe-book': { tables: ['recipes', 'menu_items'] },
   // In the storeroom: what came in, from whom, and when it ran out.
   'stock-ledger': { tables: ['inventory', 'suppliers'] },
-  // Grandma's computer sees everything: the Analysis Case (Chapter 5).
+  // Sees everything: the manager's cases and the Analysis Case.
   'back-office': { tables: ['menu_items', 'sales', 'customers', 'recipes', 'inventory', 'suppliers'] },
 };
 
 export const STATION_IDS = Object.keys(STATIONS) as StationId[];
 
-/** Station names as players see them (used in feedback and in the UI). */
+/**
+ * Where each station is in the food truck, as players see it in feedback ("that table is at the
+ * fridge"). Lower case: used inside sentences.
+ */
 export const STATION_NAMES: Record<'en' | 'id', Record<StationId, string>> = {
   en: {
-    'menu-board': 'Menu board',
-    'cash-register': 'Cash register',
-    'recipe-book': 'Recipe book',
-    'stock-ledger': 'Stock ledger',
-    'back-office': "Grandma's computer",
+    'menu-board': 'menu board',
+    'cash-register': 'tablet',
+    'recipe-book': 'recipe binders',
+    'stock-ledger': 'fridge',
+    'back-office': "manager's laptop",
   },
   id: {
-    'menu-board': 'Papan menu',
-    'cash-register': 'Mesin kasir',
-    'recipe-book': 'Buku resep',
-    'stock-ledger': 'Buku stok',
-    'back-office': 'Komputer Nenek',
+    'menu-board': 'papan menu',
+    'cash-register': 'tablet',
+    'recipe-book': 'binder resep',
+    'stock-ledger': 'kulkas',
+    'back-office': 'laptop manajer',
   },
 };
 

@@ -6,10 +6,11 @@
  * Axes: x along the truck (left −, right +), y up (truck floor = 0), z towards the back wall (+).
  * The serving window is in the front wall (z = −DEPTH/2) and looks out over the park.
  */
+import type { TruckObjectId } from '../../sql-core/truck/objects';
 import { QUEUE } from './queue';
 
-/** Things in the truck the player can use. */
-export type InteractableId = 'fridge' | 'tablet' | 'menu-board' | 'recipe-shelf' | 'back-door';
+/** Things in the truck the player can use (which tables each one sees: sql-core/truck/objects.ts). */
+export type InteractableId = TruckObjectId;
 
 export type Vec3 = { x: number; y: number; z: number };
 export type Box3 = { min: Vec3; max: Vec3 };

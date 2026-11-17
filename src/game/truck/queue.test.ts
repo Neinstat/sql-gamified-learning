@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { PROTOTYPE_ORDERS } from '../../sql-core/truck/orders';
 import { QUEUE, spotX, TruckQueue } from './queue';
 
 const settle = (q: TruckQueue, seconds = 20) => {
@@ -77,4 +78,13 @@ describe('TruckQueue', () => {
     expect(q.serveFront()).toBeNull();
   });
 
+});
+
+describe('the prototype day', () => {
+  it('never puts two people who look the same in the queue at once', () => {
+    for (let i = 0; i + QUEUE.maxWaiting <= PROTOTYPE_ORDERS.length; i++) {
+      const looks = PROTOTYPE_ORDERS.slice(i, i + QUEUE.maxWaiting).map((o) => o.look);
+      expect(new Set(looks).size, looks.join(', ')).toBe(looks.length);
+    }
+  });
 });

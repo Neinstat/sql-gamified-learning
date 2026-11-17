@@ -45,7 +45,8 @@ export function getChapters(lang: Lang): Chapter[] {
   });
 }
 
-function applyText(level: Level, text: LevelText | undefined): Level {
+/** A level with its text replaced by a translation (SQL is never translated). */
+export function applyText(level: Level, text: LevelText | undefined): Level {
   if (!text) return level;
   const translated = {
     ...level,
