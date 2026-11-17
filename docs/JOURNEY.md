@@ -1,129 +1,129 @@
-# Perjalanan Desain SQL Valley
+# The Design Journey of SQL Valley
 
-Dokumentasi bagaimana SQL Valley berubah dari **kafe top-down 2D** menjadi **food truck 3D orang pertama bergaya risograf**: setiap tahap, apa yang dibangun, kenapa berubah, dan apa yang dipelajari. Ditulis 17 November 2026, saat versi 3D ditetapkan sebagai konsep tetap.
+How SQL Valley changed from a **top-down 2D café** into a **first-person 3D food truck in a risograph style**: every stage, what was built, why it changed, and what we learned. Written on 17 November 2026, when the 3D version was locked in.
 
-> Semua versi lama tetap bisa dibuka dari git:
-> - `git checkout v1-cafe-mvp` — kafe top-down (MVP v1, Fase 1–3)
-> - `git checkout v2-prototypes` — semua prototipe food truck (2D 4.1–4.5 dan 3D 4.6)
+> Every old version can still be opened from git:
+> - `git checkout v1-cafe-mvp` — the top-down café (v1 MVP, Phases 1–3)
+> - `git checkout v2-prototypes` — every food truck prototype (2D 4.1–4.5 and 3D 4.6)
 >
-> Kembali ke versi terbaru: `git checkout main`.
+> Back to the latest version: `git checkout main`.
 
 ---
 
-## Ringkasan
+## Summary
 
-| Tahap | Tanggal | Tampilan | Kenapa ditinggalkan / dilanjutkan |
+| Stage | Date | Look | Why it was left behind / kept |
 |---|---|---|---|
-| **v1 · Kafe top-down** (Fase 1–3) | 13–16 Nov | 2D pixel art, kamera dari atas, berjalan ke stasiun | MVP lengkap, tapi pemilik project ingin konsep baru yang lebih fokus |
-| **4.1 · Truck statis** | 16 Nov | 2D satu layar, tampak dari dalam truck | Terlalu kecil dan diam |
-| **4.2–4.3 · Antrean + tablet** | 16 Nov | Sama, ditambah pelanggan dan tablet SQL | Alur pesanan terbukti jalan; tampilan masih kurang |
-| **4.4 · Truck dijelajahi** | 16 Nov | 2D tampak samping, berjalan WASD, kamera mengikuti | "Tidak sesuai": ingin orang pertama, dan gaya terlalu generik |
-| **4.5 · Orang pertama + risograf** | 17 Nov | 2D panorama 4 sisi, taman, gaya cetak risograf | "Oke tapi kurang greget"; ingin 3D yang bisa jalan |
-| **4.6 · Prototipe 3D** ✅ | 17 Nov | 3D low-poly orang pertama + shader risograf | **Ditetapkan sebagai konsep tetap** |
+| **v1 · Top-down café** (Phases 1–3) | 13–16 Nov | 2D pixel art, camera from above, walk to stations | A complete MVP, but the owner wanted a new, more focused concept |
+| **4.1 · Static truck** | 16 Nov | 2D, one screen, seen from inside the truck | Too small and too still |
+| **4.2–4.3 · Queue + tablet** | 16 Nov | Same, plus customers and an SQL tablet | The order loop worked; the look still fell short |
+| **4.4 · A truck to walk around** | 16 Nov | 2D side view, WASD walking, following camera | "Not what I want": the owner wanted first person, and the style felt generic |
+| **4.5 · First person + risograph** | 17 Nov | A 2D panorama of four sides, a park, a risograph-print style | "Okay, but not exciting enough"; the owner wanted 3D with walking |
+| **4.6 · 3D prototype** ✅ | 17 Nov | First-person low-poly 3D + a risograph shader | **Locked in as the game's concept** |
 
 ---
 
-## v1 · Kafe warisan Grandma (Fase 1–3)
+## v1 · Grandma's café (Phases 1–3)
 
-**Konsep:** pemain mewarisi kafe Grandma di lembah dan menjadi analis data keluarga. Pemain berjalan di kafe top-down, berbicara dengan tokoh (Grandma, Barista, Regular, Supplier), lalu membuka konsol SQL di stasiun tertentu (Menu board, Cash register, Recipe book, Stock ledger, Back office).
+**Concept:** the player inherits Grandma's café in a valley and becomes the family's data analyst. They walk around a top-down café, talk to people (Grandma, the Barista, a Regular, the Supplier) and open an SQL console at a station (Menu board, Cash register, Recipe book, Stock ledger, Back office).
 
-**Yang dibangun:** Chapter 0–5 (34 level, termasuk 4 Mini Case dan Analysis Case "October sales dropped 18%"), PostgreSQL di browser (PGlite), pengecek jawaban, input bertahap (blok → isi kosong → ketik bebas), EN/ID, bintang/koin/upgrade/streak/badge, Skill Check, Rush Hour, dan 477 tes otomatis.
+**What was built:** Chapters 0–5 (34 levels, including 4 Mini Cases and the Analysis Case "October sales dropped 18%"), PostgreSQL in the browser (PGlite), the answer checker, input that grows (blocks → fill in the blanks → free typing), English and Indonesian, stars/coins/upgrades/streaks/badges, a Skill Check, Rush Hour, and 477 automated tests.
 
-![Kafe Grandma setelah semua upgrade](journey/v1-cafe.jpg)
+![Grandma's café after every upgrade](journey/v1-cafe.jpg)
 
 | | |
 |---|---|
-| ![Dialog dengan Grandma](journey/v1-dialogue.jpg) | ![Mini Case: hasil query disematkan sebagai bukti](journey/v1-mini-case.jpg) |
-| ![Dapur yang terbuka di Chapter 4](journey/v1-kitchen.jpg) | ![Ruang depan saat Chapter 4](journey/v1-chapter4.jpg) |
+| ![A dialogue with Grandma](journey/v1-dialogue.jpg) | ![A Mini Case: a query result pinned as evidence](journey/v1-mini-case.jpg) |
+| ![The kitchen, which opens in Chapter 4](journey/v1-kitchen.jpg) | ![The front room during Chapter 4](journey/v1-chapter4.jpg) |
 
-**Kenapa berubah:** MVP sudah lengkap, tetapi pemilik project punya gagasan yang lebih kuat: food truck dengan jam buka, pelanggan yang antre membawa pesanan (tugas SQL), pengulangan agar query tidak mudah lupa, dan manajer yang menanyakan penjualan. Tugas datang sendiri, sehingga pemain tidak perlu berjalan jauh ke stasiun.
+**Why it changed:** the MVP was complete, but the owner had a stronger idea: a food truck with opening hours, customers who queue with orders (SQL tasks), repetition so queries are not forgotten, and a manager who asks about sales. Tasks come to the player, so there is no long walk to a station.
 
-**Yang dipertahankan:** seluruh **inti SQL** (database, pengecek jawaban, data level, terjemahan) dan **konsol SQL**. Keputusan arsitektur v1 untuk memisahkan inti SQL dari dunia game membuat semua perubahan berikutnya murah.
-
----
-
-## 4.1 · Food truck statis
-
-Satu adegan 2D 480×270 yang dilihat dari dalam truck: jendela saji dengan awning, kota di luar, counter dengan tablet, papan menu, jam, dan pintu belakang. Grandma dan semua tokoh v1 dihapus atas permintaan pemilik project, diganti **The Manager** berjas yang bossy (belum digambar).
-
-![Adegan truck statis 4.1](journey/v2-4-1-static.jpg)
-
-**Pelajaran:** zoom bilangan bulat menjaga piksel tetap tajam, tetapi satu layar statis terasa kosong.
+**What was kept:** the whole **SQL core** (database, answer checker, level data, translations) and the **SQL console**. v1's decision to keep the SQL core separate from the game world made every later change cheap.
 
 ---
 
-## 4.2–4.3 · Antrean pelanggan dan tablet SQL
+## 4.1 · A static food truck
 
-Lima pelanggan baru datang, antre, dan yang terdepan menyampaikan pesanan dalam gelembung (EN/ID). Pesanan memakai soal Chapter 1. Tablet membuka konsol SQL v1. Waktu berhenti saat tablet terbuka, dan jawaban benar membuat pelanggan dilayani dan antrean maju.
+One 2D scene, 480×270, seen from inside the truck: a serving window with an awning, the city outside, a counter with a tablet, a menu board, a clock and a back door. Grandma and every v1 character were dropped at the owner's request, replaced by **The Manager**, a bossy boss in a suit (not drawn yet).
 
-![Antrean pelanggan dengan gelembung pesanan](journey/v2-4-2-queue.jpg)
+![The static truck scene, 4.1](journey/v2-4-1-static.jpg)
 
-**Pelajaran:** **alur inti game terbukti**: pesanan → tablet → SQL → dilayani. Logika antrean (`queue.ts`) dan pesanan (`orders.ts`) ditulis tanpa engine, sehingga dipakai terus sampai versi 3D. Tes otomatis menemukan bug nyata: dua pelanggan bisa muncul bertumpuk.
-
-**Masukan pemilik project:** "Jelek dan kurang… terlalu kecil dan minim interaksi, tidak ada camera movement."
+**Lesson:** whole-number zoom keeps pixels sharp, but one still screen feels empty.
 
 ---
 
-## 4.4 · Truck yang bisa dijelajahi (tampak samping)
+## 4.2–4.3 · The customer queue and the SQL tablet
 
-Interior 2D selebar dua layar. Pemain besar berjalan dengan WASD, kamera mengikuti, dan pelanggan setengah badan terlihat di jendela. Tanda **E** muncul di dekat benda. Tombol 🏷 menampilkan label **PLACEHOLDER** pada semua gambar sementara (daftarnya di `docs/ASSETS.md`).
+Five new customers arrive, queue up, and the one at the front says their order in a speech bubble (English or Indonesian). Orders use Chapter 1's questions. The tablet opens v1's SQL console. Time stops while the tablet is open, and a correct answer serves the customer and moves the queue along.
 
-![Berjalan di dalam truck, dengan label placeholder](journey/v2-4-4-walk.jpg)
+![The customer queue with an order bubble](journey/v2-4-2-queue.jpg)
 
-**Masukan pemilik project:** ingin **orang pertama**, dan gaya visualnya **terlalu generik, tidak memorable, main aman**. Latar gedung diminta diganti menjadi **taman** dengan tempat duduk yang nanti ramai bila bisnis ramai.
+**Lesson:** **the game's core loop works**: order → tablet → SQL → served. The queue logic (`queue.ts`) and the orders (`orders.ts`) were written without an engine, so they lasted all the way to the 3D version. The automated tests caught a real bug: two customers could appear on top of each other.
+
+**Owner's feedback:** "Ugly and lacking… too small, hardly any interaction, no camera movement."
 
 ---
 
-## 4.5 · Orang pertama, taman, dan gaya risograf
+## 4.4 · A truck you can walk around (side view)
 
-Panorama 2D empat sisi (kulkas & stok, jendela saji, dapur, pintu belakang). Pemain menoleh dengan A/D atau tombol ‹ ›, menyorot benda dengan kursor, dan mengklik untuk memakainya. Di luar jendela ada taman berlapis dengan parallax: langit senja, siluet kota jauh, pohon, jalan setapak, bangku, dan meja piknik. Pelanggan antre dengan perspektif (makin jauh, makin kecil).
+A 2D interior two screens wide. A big player character walks with WASD, the camera follows, and half-body customers show in the window. An **E** prompt appears near objects. A 🏷 button shows **PLACEHOLDER** labels on every temporary picture (listed in `docs/ASSETS.md`).
 
-Lahir **gaya cetak risograf**: tinta terbatas di atas kertas krem, bayangan dari pola titik (dither), dan garis merah yang "meleset" 1 piksel seperti hasil cetak riso.
+![Walking inside the truck, with placeholder labels](journey/v2-4-4-walk.jpg)
+
+**Owner's feedback:** wanted **first person**, and found the visual style **too generic, not memorable, playing it safe**. The city buildings outside should become a **park**, with seats that fill up when business is good.
+
+---
+
+## 4.5 · First person, a park, and the risograph style
+
+A 2D panorama of four sides (fridge & stock, serving window, kitchen, back door). The player turns with A/D or the ‹ › buttons, highlights objects with the cursor and clicks to use them. Outside the window, a layered park with parallax: a dusk sky, a faint distant city, trees, a path, benches and picnic tables. Customers queue in perspective: the further away, the smaller.
+
+The **risograph-print style** was born here: a few inks on cream paper, shading from dotted patterns (dither), and red outlines that are one pixel "off", like a riso print.
 
 | | |
 |---|---|
-| ![Jendela saji dan taman](journey/v2-4-5-window.jpg) | ![Dapur dengan mesin espresso merah](journey/v2-4-5-kitchen.jpg) |
+| ![The serving window and the park](journey/v2-4-5-window.jpg) | ![The kitchen with a red espresso machine](journey/v2-4-5-kitchen.jpg) |
 
-**Masukan pemilik project:** "Oke, tapi kurang greget." Yang sebenarnya diinginkan adalah **3D yang bisa jalan WASD**. Kekhawatirannya: apakah game web jadi berat?
+**Owner's feedback:** "It's okay, but not exciting enough." What they really wanted was **3D with WASD walking**, and they worried a web game would become too heavy.
 
-**Jawaban:** tidak. Three.js hanya ±150 KB, jauh lebih kecil dari database SQL (±10 MB). Aset 3D gratis (CC0) justru lebih banyak dan lebih bagus daripada karakter 2D besar.
+**The answer:** it does not. Three.js is about 150 KB, far smaller than the SQL database (about 10 MB). Free (CC0) 3D assets are also more plentiful and better than big 2D characters.
 
 ---
 
-## 4.6 · Prototipe 3D ✅ (konsep tetap)
+## 4.6 · 3D prototype ✅ (locked in)
 
-Dunia 3D low-poly dengan **Three.js**. Pemain berjalan di dalam truck dengan **WASD**, melihat dengan **mouse**, lalu membidik benda dan menekan **E**. Pelanggan 3D berjalan di jalan setapak taman, antre, lalu berbalik menghadap truck. Gelembung pesanan menempel di kepala pelanggan terdepan.
+A low-poly 3D world with **Three.js**. The player walks inside the truck with **WASD**, looks with the **mouse**, aims at an object and presses **E**. 3D customers walk up the park path, queue, then turn to face the truck. The speech bubble follows the head of the customer at the window.
 
-Ciri khasnya, **shader risograf**: adegan dirender berpiksel besar, warnanya dipetakan ke tinta riso dengan dither Bayer 4×4, ada garis tepi tinta, dan garis merah yang meleset. Hasilnya seperti **poster risograf yang bisa dijelajahi**.
+The signature look is the **risograph shader**: the scene is rendered with big pixels, its colours are mapped to the riso inks with a 4×4 Bayer dither, ink outlines are drawn, and a red copy of each outline is printed one pixel off. The result looks like **a risograph poster you can walk around in**.
 
-![Melihat keluar jendela: pelanggan antre di taman](journey/v2-4-6-window.jpg)
+![Looking out of the window: customers queueing in the park](journey/v2-4-6-window.jpg)
 
 | | |
 |---|---|
-| ![Interior: mesin espresso, rak stok, kulkas, jendela](journey/v2-4-6-interior.jpg) | ![Tablet SQL terbuka di atas dunia 3D](journey/v2-4-6-tablet.jpg) |
+| ![Inside: the espresso machine, stock shelves, fridge and window](journey/v2-4-6-interior.jpg) | ![The SQL tablet open over the 3D world](journey/v2-4-6-tablet.jpg) |
 
-**Masukan pemilik project:** *"That is so sickkk, keren banget!"* → 3D ditetapkan sebagai konsep besar game.
+**Owner's feedback:** *"That is so sickkk, keren banget!"* → 3D was locked in as the game's big concept.
 
-**Pelajaran teknis:**
-- Three.js versi baru memakai **satuan lampu fisik**: intensitas lampu harus dikali π, kalau tidak semua objek tergambar terlalu gelap.
-- Warna tinta harus dipakai **persis** (tanpa konversi sRGB → linear) di adegan maupun di shader. Kalau tidak, warna dipetakan ke tinta yang salah dan semuanya jadi kehijauan.
-- Seluruh kode 3D hanya **127 KB** terkompresi.
+**Technical lessons:**
+- Recent Three.js versions use **physical light units**: light intensities must be multiplied by π, or everything renders far too dark.
+- Ink colours must be used **exactly as written** (no sRGB → linear conversion) in both the scene and the shader. Otherwise colours map to the wrong ink and everything turns green.
+- All the 3D code is only **127 KB** gzipped.
 
 ---
 
-## Yang dibawa ke versi tetap
+## What carried over into the final version
 
-| Dari | Dipakai di versi 3D |
+| From | Used in the 3D version |
 |---|---|
-| v1 | Inti SQL (PGlite, pengecek jawaban, 34 level, terjemahan, Skill Check, Rush Hour), konsol SQL, sistem bahasa EN/ID |
-| 4.2–4.3 | Antrean pelanggan (`queue.ts`), daftar pesanan (`orders.ts`), alur tablet |
-| 4.4 | Penandaan aset sementara (`docs/ASSETS.md`) |
-| 4.5 | Palet & gaya risograf (`riso.ts`), konsep taman yang ramai bila bisnis ramai, empat area truck (kulkas, jendela, dapur, pintu) |
-| 4.6 | Semuanya: dunia 3D, kontrol, shader |
+| v1 | The SQL core (PGlite, answer checker, 34 levels, translations, Skill Check, Rush Hour), the SQL console, the English/Indonesian language system |
+| 4.2–4.3 | The customer queue (`queue.ts`), the order list (`orders.ts`), the tablet flow |
+| 4.4 | Marking temporary art (`docs/ASSETS.md`) |
+| 4.5 | The riso palette and style (`riso.ts`), the park that fills up when business is good, the four areas of the truck (fridge, window, kitchen, door) |
+| 4.6 | Everything: the 3D world, the controls, the shader |
 
-## Pelajaran proses
+## Lessons about the process
 
-1. **Pisahkan inti dari tampilan.** Karena inti SQL tidak bergantung pada engine game, tampilan bisa diganti lima kali tanpa menyentuh logika SQL.
-2. **Prototipe kecil dulu, bongkar belakangan.** Setiap arah baru dibuka lewat alamat terpisah (`?truck`, `?truck3d`) sehingga versi lama tidak rusak sampai versi baru terbukti.
-3. **Masukan yang jujur mempercepat.** "Jelek", "kurang greget", dan "jangan main aman" adalah arahan yang langsung mengubah keputusan desain.
-4. **Pilih gaya yang cocok dengan cara membuatnya.** Gaya risograf (bentuk datar, tinta terbatas) cocok digambar lewat kode maupun shader. Karena itulah prototipe tetap terlihat khas walaupun asetnya masih sementara.
+1. **Keep the core separate from the look.** Because the SQL core does not depend on the game engine, the look could be replaced five times without touching the SQL logic.
+2. **Prototype small, remove later.** Each new direction opened at its own address (`?truck`, `?truck3d`), so old versions kept working until the new one proved itself.
+3. **Honest feedback speeds things up.** "Ugly", "not exciting enough" and "don't play it safe" were direct instructions that changed design decisions.
+4. **Pick a style that suits how it is made.** The risograph style (flat shapes, few inks) works well both drawn in code and in a shader. That is why the prototype looks distinctive even with placeholder art.

@@ -1,564 +1,258 @@
-# SQL Valley — Dokumen Desain Game
+# SQL Valley — Game Design Document
 
-> Game web 2D *top-down* untuk belajar SQL sambil belajar **berpikir seperti analis Business Intelligence (BI)**: pemain berjalan menjelajahi kafe warisannya, bertemu tokoh, dan menyelesaikan tugas dengan menulis SQL di konsol yang tersebar di berbagai sudut kafe.
-> Status: 🚚 **v2 — food truck 3D orang pertama (ditetapkan 17 Nov 2026), Fase 4 berjalan.** Desain v2 ada di **§14**; perjalanan desainnya (dengan screenshot) di [`docs/JOURNEY.md`](docs/JOURNEY.md). Bagian §1–§13 mencatat desain **v1 (kafe top-down, MVP selesai 16 Nov 2026)**: kodenya sudah dihapus dari game dan hanya ada di tag git `v1-cafe-mvp`; yang masih berlaku di v2 disebut di §14.2. Dokumen ini adalah sumber kebenaran untuk keputusan desain — perbarui saat ada keputusan baru.
+> A first-person 3D web game for learning SQL while learning to **think like a Business Intelligence (BI) analyst**. You run a coffee food truck parked in a city park; customers at the window bring requests you answer with SQL on the truck's tablet, and a bossy manager knocks on the back door with business questions.
 >
-> **Bahasa:** dokumen ini ditulis dalam Bahasa Indonesia. Game memakai **English sebagai bahasa utama** dengan **pilihan Bahasa Indonesia** untuk teks cerita & UI; SQL, nama tabel/kolom, dan isi data selalu English (lihat §10). Istilah dan contoh in-game di bawah ditulis dalam English.
+> **Status:** 🚚 Version 2 (3D food truck) was locked in on 17 Nov 2026. **Phase 4 (the one-day prototype) is in progress.** Version 1 (a top-down 2D café, MVP finished 16 Nov 2026) has been removed from the code; it lives in git tag `v1-cafe-mvp`. How the design got here, with screenshots: [`docs/JOURNEY.md`](docs/JOURNEY.md).
+>
+> This document is the single source of truth for design decisions. Update it whenever a new decision is made.
+>
+> **Language:** the game's main language is **English**, with **Bahasa Indonesia** as a player option for story and UI text. SQL keywords, table and column names, data values and PostgreSQL error messages always stay in English.
 
 ---
 
-## 1. Visi
+## 1. Vision
 
-Kebanyakan sumber belajar SQL hanya mengajarkan **sintaks**:
+Most SQL resources only teach **syntax**:
 
-- **SQLBolt**: kurva belajar landai dan mudah diikuti, tapi kurang interaktif dan kurang seru.
-- **LeetCode**: interaktif, tapi studi kasusnya sering melompat terlalu sulit untuk pemula.
+- **SQLBolt** has a gentle, easy-to-follow learning curve, but it is not very interactive or fun.
+- **LeetCode** is interactive, but its case studies often jump too far in difficulty for beginners.
 
-**SQL Valley** mengajarkan SQL dengan kurva landai seperti SQLBolt, dibungkus mekanik game yang membuat pemain ingin lanjut, dan berujung pada kemampuan yang dipakai di dunia kerja: **menjawab pertanyaan bisnis dengan data** — sampai level "sales dropped last month, why?".
+**SQL Valley** keeps SQLBolt's gentle curve, wraps it in game mechanics that make players want to keep going, and ends with the skill real data jobs need: **answering business questions with data** — all the way to "sales dropped last month, why?".
 
-## 2. Target pemain
+## 2. Players
 
-| Pemain | Jalur |
+| Player | Path |
 |---|---|
-| **Pemula total** (belum pernah menulis SQL) | Mulai dari Chapter 0 (tutorial) |
-| **Sudah tahu dasar** | Ikut **Skill Check** di awal → boleh langsung lompat ke chapter yang sesuai |
+| **Complete beginners** (never written SQL) | Start at week 1 |
+| **Players who know the basics** | Take the **Skill Check** first and skip ahead to the right week |
 
-### Skill Check (diputuskan di perencanaan Fase 3)
-- **Dibuat begitu Chapter 3–4 ada** (iterasi 3.9), tidak menunggu MVP selesai.
-- **Adaptif per chapter:** 2 soal ketik bebas per chapter, mulai dari Chapter 0. Berhenti di chapter pertama yang gagal (salah satu dari 2 soal tidak terjawab) → pemain mulai dari chapter itu.
-- Ditawarkan Grandma di hari pertama ("Worked with data before?") dan bisa diulang dari Journal. Pemula total cukup menjawab "No" dan mulai di Chapter 0.
-- Chapter yang dilewati **terbuka tapi tanpa bintang**, sehingga bisa dimainkan ulang kapan saja; Mini Case chapter yang dilewati tetap bisa dimainkan.
-- Soal Skill Check terpisah dari soal level (pemain tidak sekadar mengulang jawaban level), dinilai dengan pengecek jawaban yang sama.
-- **Dibangun di 3.9** (`src/sql-core/skillCheck.ts`, `src/app/SkillCheck.tsx`):
-  - 10 soal ketik bebas (Chapter 0–4), semua dijalankan dengan role **Cash register** (melihat `sales`, `customers`, `menu_items`). Tes memastikan setiap soal bisa dijalankan, tidak sama dengan jawaban level, dan sudah diterjemahkan (`locales/id/skillCheck.ts`).
-  - Pemain baru disambut kartu Grandma ("Worked with data before?") dengan dua pilihan: mulai dari awal, atau ikut Skill Check. Kartu ini hanya muncul sekali (`skillCheckOffered`); simpanan lama dianggap sudah ditawari. Skill Check juga bisa dibuka dari Journal.
-  - Tombol "I don't know this one" menghitung soal itu sebagai salah. Skill Check **tidak pernah memundurkan** pemain: dari Journal, hasilnya hanya dipakai bila chapter-nya lebih jauh dari posisi sekarang.
-  - Level yang dilewati disimpan di `skipped`: terbuka di Journal (titik bergaris putus-putus, tanpa bintang/koin) dan ikut dihitung untuk membuka ruangan.
+**Skill Check** (built in v1, `src/sql-core/skillCheck.ts`): adaptive, two free-typing questions per chapter, stopping at the first chapter the player fails. Skipped content stays open (without stars) so it can be played later. In v2 it decides the starting week.
 
-Target akhir: orang yang ingin berkarier sebagai **analis data / BI**, yang perlu paham SQL *dan* konteks bisnis. Pasar global — karena itu bahasa utama game English, dengan pilihan Bahasa Indonesia agar pemula di Indonesia mudah masuk.
+The end goal: people who want a career as a **data / BI analyst**, who need both SQL and business context. The market is global, so the game is in English with an Indonesian option so beginners in Indonesia can get in easily.
 
-## 3. Konsep & cerita
+## 3. Concept & story
 
-Pemain mewarisi **kafe milik nenek (Grandma)** di sebuah kota kecil di lembah, yang sedang kesulitan. Catatan kafe tersimpan di database yang berantakan. Pemain berperan sebagai **analis data** bisnis keluarga ini.
+### Why a food truck (decided 16 Nov 2026)
+- **Focus on SQL, not walking.** In v1 the player walked to a station first. In v2 tasks come to the player through customers at the truck window.
+- **Natural repetition.** Similar orders come back on later days with different details, so queries are practised again without feeling like repeated exercises.
+- **A stronger analyst feel.** The player's own sales go into the database, and the manager asks about that data, so BI questions feel personal.
 
-- **Fokus: simulasi bisnis**, bukan misteri besar. Cerita berupa episode kecil per chapter.
-- Pertanyaan naik kelas mengikuti jenjang karier analis:
+### Story and characters
+A **completely fresh start** (owner's decision, 16 Nov 2026): v1's story (Grandma's café) and its characters are not used.
 
-| Tahap | Jenis pertanyaan | Contoh (in-game) |
+- The player is the **new hire** at **Rolling Roast**, a coffee food truck owned by a small company, **Valley Eats Co.** The truck is parked in a city park and opens **10:00–17:00**.
+- **The Manager** — a boss in a sharp suit and tie, carrying a report tablet. Now and then they knock on the truck's back door and ask for numbers: sales, revenue, what keeps selling out, this month's target. They are **bossy**: short, demanding, no small talk ("Numbers. Now.", "I don't want feelings, I want revenue by day."). A right answer earns a small, stiff compliment.
+- **Customers** queue at the window: new faces, each with their own way of talking. Some become regulars who come back on other days.
+- **A supplier's courier** delivers stock in the morning and brings tasks about `inventory`.
+- The menu is still coffee and snacks (v1's `menu_items` data), so the SQL content of v1's levels still fits. Story text that mentions Grandma or the café is rewritten when it moves over in Phase 6.
+
+## 4. Core loop: one working day
+
+1. **Morning (before opening):** today's summary, a stock check (sometimes a task from the courier), and a lesson card when there is a new concept.
+2. **Open at 10:00:** customers arrive one by one and queue (2–3 visible).
+3. **An order is an SQL task.** The customer at the window says what they want in a speech bubble. The player uses the tablet and answers with SQL. Examples:
+   - "Anything under $4?" → `SELECT … WHERE price < 4;`
+   - "Do you still have oat milk?" → check `inventory` (at the fridge)
+   - "Which drinks have no milk? I'm lactose intolerant." → `JOIN recipes` (at the recipe binders)
+   - "What's my usual?" → `sales` + `customers`
+4. **A correct answer serves the order.** The game records the sale in the database (`INSERT` into `sales`, stock goes down); the player does not write `INSERT` (that is taught later, if at all).
+5. **The manager knocks 🚪** (once a day, at a random time): BI questions about today's or this week's sales, what sells out, and so on. This replaces v1's "So what?" questions and Mini Cases.
+6. **Close at 17:00 → end-of-day summary:** revenue, tips, happy customers, concepts practised, stars for the day.
+
+**Time and pressure (decided):**
+- **The clock stops while the tablet is open.** Writing SQL is never timed.
+- A customer's patience only drops while they wait in the queue, and **only affects the tip**. There is no losing. A customer who waits too long leaves without tipping, but their task comes back on another day.
+- One day takes about 8–12 real minutes (8–12 orders + 1 manager case).
+- v1's Rush Hour becomes **"Lunch Rush"**: an optional event from 12:00 to 13:00 with quick orders and a running clock, from week 3.
+
+## 5. Tasks: order templates and repetition
+
+- An **order template** is one kind of request with randomised parameters (seeded per day), e.g. `price_under(max)`, `items_in_category(category)`, `stock_of(ingredient)`. Each template has a `concept` (e.g. `where-compare`, `group-by`), EN/ID dialogue with slots like `{max}`, a parameterised solution query, and three hints.
+- **Answers are graded on results, as in v1:** the player's result is compared with the solution's result **on the data as it is right now** (including today's sales).
+- **Simple spaced repetition:** each concept has a mastery level from 0 to 5. Right without hints → it goes up and comes back less often (1 → 2 → 4 → 7 days). Wrong, or with hints → it goes down and comes back tomorrow. Each day's orders are picked from this week's new concepts + concepts that are "due" + a little randomness.
+- **Difficulty rises week by week** (§6). Customers never ask for a concept that has not been taught yet.
+- **Manager cases** use v1's case engine (📌 pinned evidence + conclusion questions). Daily cases are small (1–2 queries); end-of-week cases are bigger; the Analysis Case "October sales dropped 18%" closes week 6.
+
+### Kinds of tasks (from v1, still used)
+
+| Kind | What it is |
+|---|---|
+| **Request** | One question, one correct result (customer orders) |
+| **Report** | A result with specific columns (top-N, KPIs) |
+| **Case** 🔍 | An investigation: run any queries, **pin** 📌 the results that prove each answer, then answer 2–3 conclusion questions. Evidence counts when its result contains the key rows. ⭐ solved · ⭐⭐ no hints · ⭐⭐⭐ no unsupported conclusion |
+| **Analysis Case** 🎯 | The big open investigation: "October sales dropped 18%. What happened?", with step-by-step conclusions, each backed by pinned evidence |
+
+### Input grows with the player
+
+| Stage | When | How |
 |---|---|---|
-| Mengambil data | "Show me…" | "Which menu items cost less than $5?" |
-| Melaporkan | "How many / which is the most…" | "What are our top 5 best-sellers this week?" |
-| Mengukur KPI | "How are we doing on…" | "Daily revenue, number of orders, and average order value?" |
-| Menganalisis | "Why…?" | "October sales dropped 18%. What happened?" |
+| Word blocks | Week 1 | Build the query from given blocks, like a puzzle |
+| Fill in the blanks | Week 2 | The query is partly written; the player fills the gaps |
+| Free typing | Week 3 on | A full SQL editor with highlighting and **autocomplete** for table and column names |
 
-**Tokoh** (pemberi permintaan): Grandma (pemilik), barista, supplier, pelanggan tetap. Masing-masing punya gaya bicara sendiri.
+## 6. Curriculum: six weeks
 
-### Dunia top-down
-Game ditampilkan sebagai **dunia 2D dengan kamera dari atas** (genre seperti game simulasi/bertani top-down, dengan visual dan karakter **orisinal**). Skalanya kecil dan fokus — bukan open world besar.
+One week = five working days. v1's chapters map onto weeks:
 
-- Pemain **berjalan bebas** di dalam kafe dan sekitarnya, berbicara dengan tokoh untuk menerima tugas.
-- **Konsol SQL hanya bisa dibuka di stasiun tertentu.** Di luar stasiun, pemain tidak bisa menulis SQL.
-- Setiap stasiun terhubung ke **domain data yang berbeda** — mengajarkan secara alami bahwa data perusahaan tersebar di banyak sistem, dan JOIN adalah cara menyatukannya.
+| Week | SQL (from v1 chapter) | Example order | Manager case at the end of the week | Input |
+|---|---|---|---|---|
+| 1. Opening Week | `SELECT`, `FROM` (Ch0) | "What's on the menu?" | — (tutorial) | Blocks |
+| 2. Picky Customers | `WHERE`, `AND`/`OR`, `IN`, `LIKE`, `IS NULL` (Ch1) | "Vegan and under $5?" | The Menu Audit | Fill in the blanks |
+| 3. Daily Specials | `ORDER BY`, `LIMIT`, `DISTINCT`, aliases, computed columns (Ch2) | "Your 3 cheapest snacks?" | What Should We Promote? | Free |
+| 4. Counting the Till | Aggregates, `GROUP BY`, `HAVING`, dates (Ch3) | "How many lattes sold today?" | The Quiet Day | Free |
+| 5. Regulars & Recipes | `JOIN`, `LEFT JOIN` (Ch4) | "Which drinks have no milk?" | Where Did the Regulars Go? | Free |
+| 6. The Big Question | Everything | A mix of all concepts | Analysis Case: October Sales Dropped | Free |
 
-| Lokasi (in-game) | Stasiun / konsol | Tabel yang bisa diakses |
+After week 6: an **endless free mode**. Days keep coming with spaced repetition; new locations and advanced topics (subqueries, CTEs, window functions, month-over-month analysis) can be added later.
+
+### Existing level content (v1, 34 levels in `src/sql-core/levels/`)
+
+These become order templates and manager cases in Phase 6.
+
+- **Chapter 0 · First Day** (4 levels): what a table is, `SELECT`, `FROM`.
+- **Chapter 1 · Cleaning Up the Menu** (6 + case): `WHERE`, `AND`/`OR`, `IN`, `LIKE`, `IS NULL`; case *The Menu Audit* (which items are not ready to print?).
+- **Chapter 2 · First Reports** (5 + case): the most expensive sandwich (`ORDER BY … DESC`) · the three cheapest desserts (`LIMIT`) · categories (`DISTINCT`) · margin per item (`price - cost AS margin`) · the five biggest margins — **a deliberate trap:** with `DESC`, PostgreSQL puts `NULL` first, so it must be filtered (`IS NOT NULL` or `NULLS LAST`); case *What Should We Promote?* Sorted results are chosen without ties so the expected order is always certain.
+- **Chapter 3 · Numbers Talk** (6 + case): `COUNT(*)` + `WHERE` · total revenue `SUM(quantity * unit_price)` · orders and average order value (`COUNT(DISTINCT order_id)`, `ROUND`; why not `AVG` per row) · revenue per channel (`GROUP BY`) · revenue per month (`DATE_TRUNC`; October drops → first hint of the Analysis Case) · items with more than 400 portions sold (`HAVING`; one item is exactly 400 → `>` vs `>=`); case *The Quiet Day* (`EXTRACT(DOW …)`).
+- **Chapter 4 · Connecting the Dots** (6 + case): items that use milk (`JOIN … ON`, table aliases) · items with no recipe (`LEFT JOIN … IS NULL` → Secret Cake) · portions per category (`JOIN` + `GROUP BY`) · top five items by revenue (Avocado Toast earns most per portion, but Latte wins on volume) · the most loyal customer (`LIMIT 1`; top-5 avoided because of ties) · customers who signed up but never bought (`LEFT JOIN`); case *Where Did the Regulars Go?* Answers with tables in another order, without aliases, or with `NOT EXISTS` are accepted too (tested).
+- **Chapter 5 · The Analysis Case** (2 + case): suppliers, earliest delivery first (the 12:00 delivery is already a clue) · monthly revenue and orders (October: far fewer orders, order value only slightly lower) · the **Analysis Case** with five steps: how much did it drop (number, tolerance ±0.6 → 18 / 18.4 / 18.36% accepted) → which item (Latte) → when (mornings) → why (milk runs out in the morning because the new supplier delivers at noon) → what to do (get milk delivered in the morning again). A conclusion may accept several kinds of evidence; one is enough.
+
+## 7. Look and feel (locked in 17 Nov 2026)
+
+The look was found through six prototypes (see [`docs/JOURNEY.md`](docs/JOURNEY.md)). The one **locked in** is the last:
+
+- **First-person 3D** with **Three.js**. The player stands inside the truck: **WASD / arrow keys** to walk, the **mouse** to look (pointer lock, Esc frees the mouse), aim the **crosshair** at something and press **E** or click. Movement stays inside the truck so the focus stays on SQL.
+- **The truck** (6 × 2.4 × 2.4 m): serving window + counter + tablet in the front wall; **fridge & stock shelves** at the left end (`inventory`); a **back counter** with a red espresso machine, a clock, the **menu board** (`menu_items`) and the **recipe binders** (`recipes`); the **back door** at the right end (The Manager).
+- **Parked in a city park:** a striped lawn, the path customers queue on, benches and picnic tables with umbrellas (which will **fill with visitors when business is good**, Phase 7), lamp posts and string lights, trees, a distant city skyline, a low sun. The park ground is 0.35 m lower than the truck floor so customers' heads sit in the window.
+- **A "risograph print" style** — the signature look, deliberately not playing it safe: the scene is rendered at low resolution (about 300 lines, big pixels), then a shader maps every pixel to the **riso inks** (`src/game/art/riso.ts`) with a **4×4 Bayer dither**, draws **ink outlines** where depth jumps, and prints a **red copy of each outline one pixel off**, like a mis-registered riso layer. Ink colours are used exactly as written (no sRGB → linear conversion), and lights are neutral × π (Three.js uses physical light units).
+- **Planned signature feature: the "Data Lens"** — one button turns the view into "data view": every object shows its table (the fridge → `inventory` rows, a customer → their `customers` row), so the world and the database feel like one.
+- **Placeholder models** made from basic shapes (boxes, cylinders, spheres). Final models will come from **CC0** 3D packs (Kenney, Quaternius, Poly Pizza), recoloured to the riso inks. The status of every part is in [`docs/ASSETS.md`](docs/ASSETS.md); sources and licences go in `CREDITS.md`.
+- React draws the overlays (the SQL tablet, the speech bubble that follows the customer's head, the crosshair, the HUD). The 3D code never imports React; the two only talk through `src/game/truck/bridge.ts`.
+- Size: the 3D code (Three.js + game) is about 128 KB gzipped and loads after the page appears.
+- Not yet: phone controls (see §13).
+
+## 8. Data
+
+- A realistic database: `menu_items` (category, price and cost), `sales` per line item (date and time, channel), `customers`, `recipes`, `inventory`, `suppliers`. Names are English `snake_case`.
+- **Dirty data on purpose** (empty values, missing prices) in some levels, because that is real work.
+- **Sales data** (`src/sql-core/data/sales.ts`): made by a generator with a **fixed seed** (always the same, so answers are stable and testable), 1 August – 31 October 2026, 07:00–17:59, about 4,600 orders and 7,700 rows. `customers`: 60 people — 16 regulars, 39 occasional, 5 who signed up but never bought (for `LEFT JOIN`). Dates and times are returned as text exactly as PostgreSQL writes them.
+- **Hidden patterns** (locked by tests):
+  - **The Quiet Day:** Tuesday is market day → the lowest revenue, because of **fewer orders** (about 40% fewer), not smaller ones.
+  - **Where Did the Regulars Go?:** four regulars came for *Grandma's Secret Cake*; it was dropped after August and they never came back. *(Item names from v1 stay until the data is rewritten.)*
+  - **The Analysis Case:** in October milk often ran out in the morning (`inventory.sold_out_at`), because the new cheaper supplier delivers at 12:00 instead of 06:00. Milk drinks fell, some customers switched to black coffee, some left; October revenue is **18% below September**, and Latte dropped the most.
+- **v2 additions (Phase 4–5):** this history becomes the truck's **past**, so the manager can still ask about it. **Play days** start on 1 November 2026: the player's sales are added to `sales` with `channel = 'truck'`, and daily stock to `inventory`. Progress stores a **day log** (orders served); on load, the data is rebuilt from the seed and the log is replayed, so it is exactly the same every time and stays testable.
+- Player queries are **always read-only** and rolled back. Only the game writes to the database.
+- Each part of the truck sees its own tables (like v1's stations): the tablet sees `menu_items`, `sales` and `customers`; the fridge sees `inventory` and `suppliers`; the menu board sees `menu_items`; the recipe binders see `recipes` + `menu_items`; the manager's cases see everything. This keeps the lesson "company data lives in many systems".
+
+## 9. Answer checking and level format
+
+### Answer checking
+- The **result** is graded, not the query text — there are many right ways to write SQL.
+- Row order only counts when the task asks for it (`ORDER BY` in the solution).
+- Column names and aliases are graded loosely, unless the level teaches aliases.
+- **A query must end with `;`** — a habit from day one. It is checked after the result is right, with a friendly message ("your result is right, just end it with `;`").
+- The player's query and the official solution run on the same database; their **results** are compared.
+- Every player query runs in a **READ ONLY** transaction that is always rolled back; transaction commands (`BEGIN`/`COMMIT`/…) are refused.
+- **Per-area tables:** one PostgreSQL role per area with `GRANT SELECT` on its tables only, then `SET LOCAL ROLE` inside the transaction. `permission denied for table …` becomes a friendly message naming where that table lives. `SET`/`RESET`/`DO` are refused and `set_config` is revoked, so a player cannot switch back to the all-seeing role (tested).
+- The database runs in a **Web Worker**: a running query shows a **■ Stop** button that ends the worker and starts a fresh one (about 1 s; the data is rebuilt exactly the same).
+- Result tables show the **first 200 rows**; the checker always uses every row.
+- Hints: up to three per task, from general direction → the clause needed → nearly there. Hints lower the stars; they never block progress.
+
+### Level format
+Each level is a TypeScript object (`src/sql-core/levels/`, one file per chapter):
+- `id` (e.g. `ch0-1`; saved in progress, so never renamed after release), `title`, `character`
+- `lesson` (optional): a short lesson card for a new concept
+- `dialogue` and `task` (one clear sentence, always visible while working)
+- `input`: `blocks` (may include decoys), `fill-blank` (a template with `___`), or `free`
+- `solution` (only its result is compared), `check` (checker options), `hints` (exactly 3), `success`
+- `soWhat` (optional): a short multiple-choice "what does this mean?" question
+- **Cases**: `kind: 'case'`, with `starters` (editable starting queries) and `questions`, each with an `answer` (`number` or `choice`) and `evidence` — reference queries whose rows must all appear in a pinned result. Columns match by name, or by **value** when the name differs; `exact: true` means the row count must match; otherwise at most `maxRows` rows, so "the whole table" never counts as evidence.
+
+Indonesian text lives in `src/sql-core/levels/locales/id/` (text only — SQL, blocks and answers are never translated). Checker feedback comes back as structured codes and becomes EN/ID sentences in `formatFeedback`. Tests check that every level runs, that blocks are enough to build the answer, that cases' evidence passes its own check, and that every level has a translation with the same structure.
+
+**Orders** (`src/sql-core/truck/orders.ts`): in the Phase 4 prototype, five hand-written orders reuse Chapter 1 levels; each has an `id`, a `levelId`, a customer `look`, and the customer's `line` (Indonesian in `locales/id/orders.ts`, falling back to English).
+
+## 10. Rewards (rules kept from v1)
+
+- **Stars per task:** ⭐ correct · ⭐⭐ correct with no hints · ⭐⭐⭐ no hints and no wrong runs (cases: no unsupported conclusions).
+- **Coins:** 10 per star for a request, 20 per star for a case; a replay only pays the difference to the best result (`src/app/rewards.ts`, tested).
+- In v2, stars and coins are counted per day in the end-of-day summary; coins buy **truck upgrades** (decorations, a bigger fridge, new menu items) and **new locations** in Phase 7. A **daily streak** 🔥 and **badges** 🏅 return in the per-day form.
+
+## 11. Technical decisions
+
+| Topic | Decision | Why |
 |---|---|---|
-| 🪧 Front area | Menu board (papan menu) | `menu_items` |
-| 🧾 Front counter | Cash register | `sales`, `customers` (+ `menu_items` untuk JOIN — sistem kasir mengenal menu) |
-| 🍳 Kitchen | Recipe book | `recipes` (+ `menu_items` untuk JOIN) |
-| 📦 Storeroom | Stock ledger | `inventory`, `suppliers` (Supplier NPC berdiri di sini) |
-| 🗂 Back office | Grandma's computer | Semua tabel (Analysis Case) |
+| Platform | **Web app** in the browser | Easy to reach and to share |
+| Game world | **Three.js** (first-person 3D, risograph post-processing) | Chosen after the 3D prototype (17 Nov 2026); small, flexible, and lots of CC0 3D assets |
+| SQL tablet | **HTML overlay over the canvas** (React, CodeMirror 6) | Editors, autocomplete and result tables are far easier in HTML than inside a canvas |
+| Architecture | **SQL core separate from the game world** | The SQL core was built and tested first; the world could be replaced several times without touching it |
+| Backend | **None** for now | Free to host, quick to build; progress is saved in the browser |
+| SQL engine | **PostgreSQL in the browser via PGlite**, in a Web Worker | Closest dialect to real BI work (Postgres, Redshift, BigQuery, Snowflake); a slow query can be stopped |
+| Languages | **English (main) + Bahasa Indonesia** for story and UI; SQL, tables, columns, data and PostgreSQL errors always English | A global audience; Indonesian makes it easy for local beginners. Translations live in separate files (`locales/id/`) and fall back to English |
+| Build / language / tests | **Vite**, **TypeScript**, **Vitest** | Fast dev server and static builds; field-name mistakes caught before running; the SQL core is tested automatically |
+| Currency | **$ (USD)** | Generic and widely understood |
 
-- **Ruangan terbuka bertahap** mengikuti chapter — membuka ruangan baru adalah bagian dari sistem progres.
-- **Satu peta terhubung** (keputusan Fase 3): semua ruangan ada di satu tilemap, dipisah pintu yang terkunci sampai chapternya terbuka. Tanpa pergantian scene, jadi kamera, pathfinding, dan panah penunjuk tetap bekerja lintas ruangan.
-  - **Tata letak (3.7):** empat ruangan berderet dari barat ke timur — **Back office | Front (kafe) | Kitchen | Storeroom** (54×12 tile, `src/game/rooms/cafe.ts`). Pintu ke Back office dan Kitchen ada di dinding samping ruang depan, di belakang counter (area staf); pintu Storeroom di dinding timur Kitchen.
-  - **Kapan terbuka:** Kitchen di Chapter 4, Storeroom dan Back office di Chapter 5. "Chapter yang sudah dicapai" = chapter saat ini, chapter yang pernah diselesaikan levelnya, dan chapter sesudah chapter yang tuntas (`reachedChapter`). Pintu yang belum terbuka tampil sebagai pintu kayu bergembok dan tidak bisa dilewati.
-  - **Kamera per ruangan:** kamera hanya menampilkan ruangan tempat pemain berada (ruangan lain ditutup gelap), dengan fade singkat saat pindah ruangan. Zoom otomatis dihitung dari ukuran ruangan itu.
-  - **Papan nama pintu:** di kedua sisi tiap pintu ada papan kecil berisi nama ruangan tujuan (🔒 bila masih terkunci), dalam bahasa pemain.
-  - **Penanda "!" lintas ruangan:** bila tugas ada di ruangan lain, "!" (dan panah penunjuk) mengarah ke pintu yang harus dilewati.
-- **Query ke tabel di luar stasiun diblokir** (keputusan Fase 3) dengan pesan ramah, mis. "This station can't see `sales` — it's at the Cash register." Memperkuat pelajaran "data tersebar di banyak sistem". Back office melihat semua tabel. Cara teknis di §10.
-- **Navigasi antar-ruangan** (keputusan Fase 3): **tanpa minimap di layar**. Journal mendapat tab **Café map** (denah ruangan, ruangan terkunci, posisi pemain, dan letak "!" tugas aktif). Bila target ada di ruangan lain, panah penunjuk menunjuk ke pintu menuju ruangan itu; pintu diberi label nama ruangan.
-- Konsol tampil sebagai **panel overlay** di atas dunia game (dunia tetap terlihat di belakang).
-- **Kontrol:** keyboard (WASD/panah untuk berjalan, E/Spasi untuk bicara/membuka stasiun) **dan** klik/tap tujuan untuk berjalan (pathfinding di grid), sehingga bisa dimainkan di desktop maupun HP. Klik/tap pada NPC atau stasiun = berjalan ke sana lalu berinteraksi. Klik pada benda/dinding = berjalan ke tile terdekat yang bisa dicapai. Bisa bicara bila pemain berdiri di tile yang menyentuh tile NPC (termasuk diagonal); gelembung "…" muncul di atas NPC sebagai tanda.
-- **Dialog:** kotak di bawah layar dengan potret 64×64 (ditampilkan 96 px), satu kalimat per langkah; lanjut dengan klik, Spasi, Enter, atau E; Esc menutup. Selama dialog terbuka, dunia berhenti menerima input. NPC yang punya permintaan di level aktif mengucapkan dialog level itu; NPC lain hanya mengobrol singkat. Jalur boleh diagonal tapi tidak memotong sudut; menekan tombol arah membatalkan jalur klik.
-
-### Gaya visual & aset
-- **Pixel art cozy** ala game simulasi/bertani top-down — hanya *konvensi ukurannya* yang diikuti; gambar, karakter, dan warna tetap **orisinal**.
-
-| Jenis aset | Ukuran (px) | Keterangan |
-|---|---|---|
-| Tile peta (lantai, dinding, rumput, jalan) | 16×16 | Satu kotak grid |
-| Item & ikon kecil | 16×16 | Ikon menu, cangkir, dll. |
-| Karakter (pemain & NPC) | 16×32 | Tinggi dua tile |
-| Potret dialog | 64×64 | Wajah tokoh di kotak dialog |
-| Objek tinggi & furnitur | 16×32 atau 32×32 | Counter, mesin kopi, rak, papan menu |
-
-- Ditampilkan dengan **zoom bulat** (mis. 3×) dan `pixelArt: true` agar piksel tetap tajam. Zoom otomatis 2×–4×: bila seluruh ruangan muat pada ≥2× (desktop), ruangan tampil utuh; bila tidak (HP), zoom dipilih agar layar terisi (biasanya 3×) dan kamera mengikuti pemain.
-- **Zoom manual** (masukan uji main Fase 2): tombol − / + di pojok kanan bawah dunia game dan scroll mouse, 1×–4×, diingat di browser. Di HP, 1× memperlihatkan seluruh ruangan.
-- **Panah penunjuk:** bila target "!" berada di luar layar, panah emas di tepi layar menunjuk ke arahnya. *Minimap tidak dibuat* — diganti tab Café map di Journal (keputusan Fase 3, lihat di atas).
-- Hanya **kaki** karakter yang bertabrakan (kepala boleh menutupi benda di belakangnya); benda yang lebih bawah di layar digambar di depan.
-- **Sumber aset Fase 2: placeholder** *(sudah diganti seluruhnya di Fase 3 — lihat "Arah visual final" di bawah)*. Tile dari pack **CC0** (kandidat: Kenney, 16×16) dan sprite karakter/potret placeholder sederhana buatan sendiri. Fokus Fase 2 adalah mekanik; aset final diganti di Fase 3 atau nanti. Setiap aset pihak ketiga dicatat sumber + lisensinya di `CREDITS.md`. *(2.1–2.4: tile, sprite pemain & Grandma, dan potret Grandma placeholder digambar lewat kode di `src/game/placeholderTiles.ts`, `placeholderSprites.ts`, dan `placeholderPortraits.ts` — belum ada aset pihak ketiga.)* *(3.1: `placeholderTiles.ts` diganti `src/game/art/tiles.ts`; sprite & potret Grandma diganti aset final.)*
-
-#### Arah visual final (diputuskan di awal Fase 3)
-- **Suasana: hangat musim gugur** — kayu, krem, oranye bata, hijau zaitun, cahaya lampu hangat. Cocok dengan cerita lembah di musim gugur dan kasus "October sales dropped".
-- **Satu palet tetap: 32 warna** untuk semua aset — tile, karakter, potret, dan aksen UI. Palet disusun sendiri di iterasi 3.1 (`src/game/art/palette.ts`, tanpa lisensi pihak ketiga); aset baru wajib memakai palet ini (dicek tes otomatis).
-- **Sumber aset: tile & furnitur dari pack CC0 16 px** (aman di repo GitHub yang publik), diwarnai ulang ke palet bila perlu; **karakter dan potret dibuat sendiri** agar tokoh SQL Valley khas.
-  - Pack yang dipakai: **Kenney "Roguelike Indoors"** (CC0) — meja, kursi, tanaman pot, counter, lukisan. Pack ini hanya berisi furnitur, jadi lantai, dinding, jendela, rak, mesin kopi, cash register, menu board, dan keset dibuat sendiri. Sumber dicatat di `CREDITS.md`.
-  - **Format aset: grid teks di kode TypeScript** (satu karakter = satu piksel, huruf = warna palet), bukan file PNG. Alasannya: bisa dibaca dan di-diff di git, warnanya terkunci ke palet (dicek tes), dan cara memuatnya sama dengan placeholder Fase 2. Tile Kenney diubah ke grid ini dengan warna dipetakan ke palet; potret 64×64 digambar dari bentuk dasar (elips, persegi) dengan outline otomatis.
-- **Diuji dulu lewat contoh:** satu ruangan (area depan) + satu karakter (Grandma, sprite + potret) dalam gaya final (iterasi 3.1). Bila pemilik project menilai hasilnya kurang, cadangannya **beli asset pack berlisensi komersial** — dengan catatan file aslinya tidak boleh di-commit ke repo publik.
-- **Diganti bertahap**, tidak menunggu semua fitur selesai: ruang depan + Grandma di 3.1; Barista dan Regular saat level mereka disentuh; ruangan baru (kitchen, storeroom, back office) langsung dibuat dalam gaya final; sisa placeholder dibersihkan di iterasi terakhir Fase 3.
-
-## 4. Core loop (per level)
-
-1. **Request** — pemain menemui tokoh di dunia game; tokoh meminta sesuatu lewat dialog, disertai target yang jelas dan petunjuk stasiun mana yang harus didatangi.
-2. **Eksplorasi** — pemain berjalan ke stasiun yang tepat, membuka konsol, lalu melihat daftar tabel, kolom, dan isi tabel.
-3. **Query** — pemain menulis SQL lalu menjalankannya; hasil ditampilkan dengan **animasi** (baris tersaring memudar, dua tabel menyatu saat JOIN, baris berkelompok saat GROUP BY).
-4. **Validasi** — hasil dibandingkan dengan jawaban benar. Jika salah, umpan balik spesifik (mis. "Your result has 12 rows — expected 3", "Column `price` is missing").
-5. **Reward** — koin, XP, dan bintang 1–3.
-6. **Kafe tumbuh** — koin dipakai untuk upgrade kafe.
-
-### Validasi jawaban
-- Yang dinilai adalah **hasil query**, bukan teks query — banyak cara benar menulis SQL.
-- Urutan baris hanya dinilai bila permintaan memang menuntut urutan (ada `ORDER BY` di jawaban).
-- Nama kolom/alias dinilai longgar kecuali level secara eksplisit mengajarkan alias.
-- **Query wajib diakhiri titik koma `;`** — kebiasaan penting sejak hari pertama. Dicek setelah hasilnya benar, dengan pesan ramah ("hasilnya sudah benar, tinggal akhiri dengan `;`"). Mode blok selalu menyediakan blok `;`; template isi-kosong sudah diakhiri `;`.
-
-### Alur quest di dunia game (Fase 2)
-Setiap level adalah satu permintaan dengan tahap yang disimpan di progres (`quest` di `progress.ts`):
-
-1. **talk** — penanda "!" di atas pemberi tugas. Bicara → dialog → kartu materi (bila ada) → tahap berikutnya.
-2. **solve** — "!" pindah ke stasiun. Konsol hanya terbuka di stasiun itu; pemberi tugas hanya mengingatkan.
-3. **report** — setelah jawaban benar (progres tersimpan), "!" kembali ke pemberi tugas, yang mengucapkan kalimat sukses.
-4. Lanjut ke level berikutnya (tahap **talk**); setelah level terakhir tahapnya **done**.
-
-- Bar di bawah header selalu menunjukkan langkah berikutnya (mis. "Talk to Grandma", atau tugas + stasiunnya), dan status "Loading records…" selama database PGlite dimuat di belakang layar. Dunia sudah bisa dijelajahi sebelum database siap; konsol menampilkan bilah loading, atau pesan galat + tombol "Try again" bila gagal.
-- Header berisi 📖 Journal dan pilihan bahasa (ringkas agar muat di HP). Tombol header tidak menahan fokus, jadi Spasi/E tetap dipakai untuk bicara di dunia.
-- Chapter baru dibuka dengan kartu chapter. **Journal** (menu di header) menampilkan daftar level; level yang sudah selesai bisa dimainkan ulang dari tahap *talk*. "Start over" ada di Journal.
-
-## 5. Jenis level
-
-| Jenis (in-game) | Deskripsi | Mulai dari |
-|---|---|---|
-| **Request** | Satu pertanyaan, satu hasil yang benar | Chapter 0 |
-| **Report** | Hasil dengan format kolom tertentu (top-N, KPI) | Chapter 2 |
-| **So what?** 💭 | Pertanyaan interpretasi singkat setelah query benar di sebagian level | Chapter 0 |
-| **Mini Case** 🔍 | Investigasi kecil di akhir tiap chapter (2–4 query, pertanyaan kesimpulan, query bukti) | Chapter 1 |
-| **Analysis Case** 🎯 | Investigasi terbuka besar (lihat di bawah) | Chapter 5 |
-| **Rush Hour** ⏱ | Mode tantangan berwaktu: permintaan datang bertubi-tubi | Terbuka setelah Chapter 2 |
-
-### Rush Hour ⏱ (dibangun di 3.12)
-- Dibuka dari Journal setelah **Chapter 2 tuntas** (`src/sql-core/rushHour.ts`, `src/app/RushHour.tsx`).
-- Satu putaran **150 detik**: pelanggan meminta satu hal demi satu hal (16 permintaan cepat seputar `menu_items`, diacak; permintaan Chapter 3 seperti `COUNT`/`AVG`/`GROUP BY` baru muncul setelah pemain mencapai Chapter 4). Dijalankan dengan role Cash register.
-- Skor: **100 per jawaban benar + 20 untuk setiap jawaban beruntun sebelumnya**; Run yang salah hanya memakan waktu, "Lewati" memutus kombo. ✕ mengakhiri putaran lebih awal (skor tetap dihitung).
-- **Skor terbaik pribadi** disimpan di progres (`rushBest`); leaderboard antar pemain menunggu backend.
-- Tidak memberi koin atau bintang: Rush Hour adalah latihan kecepatan, bukan jalur progres.
-
-### Berpikir seperti analis sejak awal (keputusan Fase 3)
-Masukan akhir Fase 2: nilai jual game ("berpikir seperti analis BI") baru terasa di Chapter 5. Karena itu rasa analis dimunculkan sejak awal lewat dua lapis:
-
-**💭 So what?** — setelah query benar di ±1–2 level per chapter, tokoh bertanya "jadi artinya apa?": satu pertanyaan pilihan ganda (3 pilihan) tentang makna hasil query. Contoh setelah melihat daftar harga: *"If profits were low, which items would you look at first?"*
-- Tidak mempengaruhi bintang dan tidak menghalangi progres; jawaban salah dijelaskan singkat, jawaban benar memberi bonus koin kecil.
-- Di data level: field opsional `soWhat` (`question`, `choices`, `answer`, `explanation`), ikut diterjemahkan.
-
-**🔍 Mini Case** — level terakhir tiap chapter, mulai Chapter 1. Versi kecil Analysis Case dengan **mesin yang sama**, sehingga Chapter 5 tinggal memakai ulang dan memperbesarnya:
-1. Tokoh menyampaikan masalah bisnis kecil (*brief*).
-2. Pemain menjalankan beberapa query bebas di stasiun chapter itu dan **menyematkan (📌)** hasil query ke **catatan investigasi**.
-3. Pemain menjawab 2–3 **pertanyaan kesimpulan** (pilihan ganda atau isian nama/angka). Setiap jawaban harus didukung satu query 📌; query bukti dinilai cukup bila hasilnya memuat data kunci jawaban (mis. baris "Hot Chocolate" dengan `price` kosong).
-4. Bintang: ⭐ kasus selesai · ⭐⭐ tanpa hint · ⭐⭐⭐ tanpa kesimpulan salah.
-- Mini Case selalu memakai **editor ketik bebas**. Di Chapter 1 (pemain belum belajar ketik bebas) catatan investigasi menyediakan **query awal yang bisa diubah** sebagai jembatan menuju Chapter 2.
-
-| Chapter | Mini Case (draf) | Tokoh · stasiun | Pertanyaan kesimpulan (contoh) |
-|---|---|---|---|
-| 1 | **The Menu Audit** — menu baru dicetak besok; apa yang belum siap? | Grandma · Menu board | Berapa item yang datanya belum lengkap? Item mana yang tidak bisa dijual karena tanpa harga? Apa yang harus diperbaiki dulu? |
-| 2 | **What Should We Promote?** — pilih satu item untuk dipromosikan | Barista · Menu board | Item mana dengan margin tertinggi? Apakah item termahal juga paling untung? |
-| 3 | **The Quiet Day** — ada hari yang sepi? | Grandma · Cash register | Hari apa revenue terendah? Sepi karena order sedikit atau karena nilai order kecil (AOV)? |
-| 4 | **Where Did the Regulars Go?** — pelanggan tetap menghilang | Regular · Cash register | Berapa pelanggan yang tidak kembali? Apa yang biasa mereka beli? |
-| 5 | **The Analysis Case** — "October sales dropped 18%. What happened?" | Grandma · Back office | (lihat di bawah) |
-
-Data penjualan (Fase 3) dirancang agar setiap Mini Case punya pola yang bisa ditemukan, tanpa membocorkan cerita Analysis Case.
-
-### Analysis Case (pembeda utama)
-- Pemain diberi masalah bisnis terbuka, mis. **"October sales dropped 18%. What happened?"**
-- Pemain bebas menjalankan **banyak query** untuk menyelidiki (*drill-down* per menu, hari, jam, kanal penjualan, dst.).
-- Pemain menjawab **pertanyaan kesimpulan bertahap** (mis. "Which item dropped the most?", "At what time of day?", "What's the likely cause?").
-- Setiap jawaban harus **didukung query bukti** yang disematkan (📌) ke catatan investigasi.
-- Data disiapkan agar ada satu cerita penyebab yang konsisten (mis. stok susu sering habis di pagi hari → penjualan latte turun).
-
-## 6. Cara input (bertahap)
-
-| Tahap | Level | Cara |
-|---|---|---|
-| Blok | Awal Chapter 0 | Menyusun query dari blok kata yang disediakan (seperti puzzle) |
-| Isi bagian kosong | Chapter 1 | Query sudah sebagian jadi, pemain mengisi bagian yang hilang |
-| Ketik bebas | Chapter 2 dst. | Editor SQL penuh dengan syntax highlighting dan **autocomplete** nama tabel/kolom |
-
-## 7. Peta chapter MVP (± 18–20 level)
-
-| Chapter (in-game) | SQL | Skill bisnis | Input |
-|---|---|---|---|
-| **0. First Day** | Apa itu tabel, `SELECT`, `FROM` | Mengenali data menu & harga | Blok |
-| **1. Cleaning Up the Menu** | `WHERE`, `AND`/`OR`, `IN`, `LIKE`, `IS NULL` | Menyaring data, menemukan **data kotor/kosong** | Isi kosong |
-| **2. First Reports** | `ORDER BY`, `LIMIT`, `DISTINCT`, alias, kolom hitungan | Top-N, margin = price − cost | Bebas |
-| **3. Numbers Talk** | `COUNT`, `SUM`, `AVG`, `MIN`/`MAX`, `GROUP BY`, `HAVING`, dasar tanggal | **KPI**: revenue, jumlah order, average order value | Bebas |
-| **4. Connecting the Dots** | `INNER JOIN`, `LEFT JOIN`, JOIN + agregasi | Penjualan per kategori, pelanggan yang tidak kembali | Bebas |
-| **5. The Analysis Case** 🎯 | Gabungan semua materi | Investigasi "sales dropped, why?" | Bebas, multi-query |
-
-**Chapter 2 (3.4):** 2-1 sandwich termahal (`ORDER BY … DESC`, dengan query awal) · 2-2 tiga dessert termurah (`LIMIT`) · 2-3 kategori untuk buletin Regular (`DISTINCT`) · 2-4 margin per menu (`price - cost AS margin`, nama kolom dinilai) · 2-5 lima margin terbesar — **jebakan sengaja:** saat `DESC`, PostgreSQL menaruh `NULL` paling atas, jadi harus disaring `IS NOT NULL` (atau `NULLS LAST`) · 2-6 Mini Case *What Should We Promote?*. Hasil yang diurutkan sengaja dipilih tanpa nilai kembar, agar urutan jawaban selalu pasti.
-
-**Chapter 3 (3.6, Cash register):** 3-1 jumlah baris pesan antar (`COUNT(*)` + `WHERE`) · 3-2 total revenue (`SUM(quantity * unit_price)`) · 3-3 jumlah order + rata-rata nilai order (`COUNT(DISTINCT order_id)`, `ROUND`; 💭 kenapa bukan `AVG` per baris) · 3-4 revenue per channel (`GROUP BY`) · 3-5 revenue per bulan (`DATE_TRUNC`; 💭 Oktober turun → telusuri dulu, petunjuk pertama Analysis Case) · 3-6 nomor menu yang terjual > 400 porsi (`HAVING`; menu 6 tepat 400 → pelajaran `>` vs `>=`) · 3-7 Mini Case *The Quiet Day* (`EXTRACT(DOW …)`).
-
-**Chapter 4 (3.8, Kitchen → Cash register):** 4-1 menu yang memakai susu (`JOIN … ON`, alias tabel; di Recipe book) · 4-2 menu tanpa resep (`LEFT JOIN … IS NULL` → Secret Cake) · 4-3 porsi terjual per kategori (`JOIN` + `GROUP BY`) · 4-4 lima menu dengan revenue tertinggi (💭 Avocado Toast untung per porsi terbesar, tapi Latte menang karena volume) · 4-5 pelanggan paling setia (`LIMIT 1`; top-5 sengaja dihindari karena ada nilai kembar) · 4-6 pelanggan yang mendaftar tapi tak pernah membeli (`LEFT JOIN`) · 4-7 Mini Case *Where Did the Regulars Go?* (Regular; empat pelanggan tetap pecinta Secret Cake). Jawaban dengan urutan tabel lain, tanpa alias, atau `NOT EXISTS` juga diterima (dites).
-
-**Chapter 5 (3.10, Storeroom → Back office):** 5-1 daftar pemasok, pengiriman paling pagi dulu (Supplier, Stock ledger; Highland Dairy jam 12.00 sudah terlihat di sini sebagai petunjuk) · 5-2 papan bulanan revenue + jumlah order (Grandma's computer; 💭 Oktober: jauh lebih sedikit order, nilai per order hanya sedikit turun) · 5-3 **Analysis Case** *October Sales Dropped*: lima kesimpulan bertahap — berapa persen turun (angka, toleransi ±0,6 → 18 / 18,4 / 18,36% diterima) → menu mana (Latte) → kapan (pagi) → kenapa (susu habis pagi hari karena pemasok baru mengirim siang) → apa yang harus dilakukan (pengiriman susu pagi lagi).
-- **Bukti alternatif (3.10):** sebuah kesimpulan boleh punya beberapa bentuk bukti (`evidence` berupa daftar); cukup satu yang terpenuhi. Contoh: penyebab bisa dibuktikan dengan buku stok (hari-hari susu habis) atau daftar pemasok susu (jam kirim 06.00 → 12.00). Jawaban angka boleh punya `tolerance` dan menerima tanda `%`.
-
-Mulai Fase 3: Chapter 1–4 masing-masing ditutup dengan **Mini Case** 🔍, dan ±1–2 level per chapter (mulai Chapter 0) punya pertanyaan **So what?** 💭 (lihat §5).
-
-Di luar MVP (nanti): subquery, CTE, window function, analisis waktu lanjutan (MoM/YoY), `INSERT`/`UPDATE`, chapter cabang kafe baru.
-
-## 8. Progres & reward
-
-- **XP & level pemain** — dari menyelesaikan level.
-- **Bintang per level**: ⭐ benar · ⭐⭐ benar tanpa hint · ⭐⭐⭐ menyelesaikan bonus challenge (mis. tanpa salah, atau syarat tambahan).
-- **Koin** — untuk upgrade kafe.
-- **Aturan rinci (Fase 3.3):**
-  - ⭐⭐⭐ = tanpa hint **dan** tanpa salah — level biasa: tanpa sekali pun "Run" yang salah (termasuk lupa `;`); Mini Case: tanpa kesimpulan yang tidak didukung data.
-  - Koin per bintang: **10** untuk level biasa, **20** untuk Mini Case. Main ulang hanya membayar selisih dengan rekor terbaik (koin tidak bisa "diternak"). Jawaban **So what?** yang benar memberi **+5** koin, sekali per level.
-  - Layar hasil di konsol menampilkan bintang, koin yang didapat, dan cara mendapat bintang berikutnya. Journal menampilkan bintang tiap level dan total per chapter; saldo koin 🪙 ada di header.
-  - Progres lama (sebelum 3.3) tidak mencatat jumlah salah, jadi level yang selesai tanpa hint dianggap ⭐⭐; koinnya dihitung dari bintang itu saat pertama dimuat.
-- **Daily streak** 🔥 — main minimal satu level per hari.
-- **Hint bertingkat** (maks. 3 per level): arah umum → klausa yang dibutuhkan → hampir jadi. Memakai hint mengurangi bintang, bukan menghalangi progres.
-- **Urutan level terjaga**: level yang sudah selesai dan satu level berikutnya bisa dibuka dari daftar level; sisanya terkunci. Progres (level terakhir + jumlah hint yang dipakai per level) disimpan di browser.
-- **Badge** untuk pencapaian (mis. "First JOIN", "True Analyst" setelah Chapter 5).
-
-## 9. Kafe yang tumbuh
-
-- **Penting, tapi sederhana**: kafe di dunia top-down berubah dalam beberapa tahap visual.
-- Upgrade dengan koin: kursi bertambah, dekorasi, papan menu baru, pelanggan (NPC) makin ramai berjalan di kafe.
-- Ruangan baru (kitchen, storeroom, back office) terbuka mengikuti chapter.
-- Kafe yang tumbuh = bukti visual progres belajar pemain.
-- **Dibangun di 3.11** (`src/app/growth.ts`, `GrowthParts.tsx`, `UPGRADE_LAYOUT` di `rooms/cafe.ts`):
-  - **Toko upgrade** dibuka dengan menekan saldo 🪙 di header. Lima upgrade, sekali beli: 🪴 tanaman tambahan (40), 🧶 karpet hangat (60), 🪑 dua meja tambahan (100), 🖼️ papan menu mewah (120), 🧑‍🤝‍🧑 kafe ramai — dua pelanggan berjalan-jalan di ruang depan (200). Total 520 koin, terjangkau oleh pemain yang teliti sampai Chapter 5. Tes memastikan semua NPC dan stasiun tetap bisa dicapai walau semua upgrade dibeli.
-  - Pelanggan adalah tokoh gaya final yang diwarnai ulang (`art/customers.ts`); hanya dekorasi: tanpa tabrakan, tidak bisa diajak bicara.
-  - **Daily streak 🔥**: bertambah satu untuk setiap hari (kalender lokal pemain) dengan minimal satu level/kasus selesai; terputus bila ada hari terlewat. Tampil di header selama masih hidup (main hari ini atau kemarin).
-  - **Badge 🏅** (tab Badges di Journal, notifikasi singkat saat didapat): Query Pertama, Pembersih Menu (Chapter 1 tuntas), Pemecah Kasus (Mini Case pertama), JOIN Pertama, Tanpa Cela (⭐⭐⭐ di seluruh satu chapter), Sedang Semangat (streak 3 hari), Pemilik Toko (upgrade pertama), **Analis Sejati** (Analysis Case). Badge dihitung dari progres, jadi tidak pernah tidak sinkron.
-
-## 10. Keputusan teknis
-
-| Topik | Keputusan | Alasan |
-|---|---|---|
-| Platform | **Web app** di browser | Mudah diakses, mudah dibagikan |
-| Dunia game | **Phaser 3** + tilemap (diputuskan di perencanaan Fase 2) | Dunia top-down, karakter berjalan, NPC, animasi |
-| Konsol SQL | **UI HTML di atas canvas game** (editor kode di DOM) | Editor, autocomplete, dan tabel hasil jauh lebih mudah dibuat dengan HTML daripada di dalam canvas |
-| Arsitektur | **Inti SQL terpisah dari dunia game** | Inti SQL (database, validasi, data level) bisa dibangun dan dites lebih dulu, lalu dipanggil oleh dunia game |
-| Backend | **Tanpa backend** untuk MVP | Gratis di-hosting, cepat jadi; progres disimpan lokal di browser |
-| Engine SQL | **PostgreSQL di browser via PGlite** | Dialek paling dekat dengan dunia kerja BI (Postgres, Redshift, BigQuery, Snowflake) |
-| Kompetisi | **Rush Hour + skor terbaik pribadi** | Leaderboard antar pemain menyusul setelah ada backend |
-| Bahasa game | **English (utama) + pilihan Bahasa Indonesia** untuk dialog, kartu materi, task, hint, umpan balik, dan UI. **Selalu English:** SQL, nama tabel/kolom, isi data, pesan error PostgreSQL | English untuk pasar global dan sama dengan praktik kerja; Indonesia agar pemula lokal mudah masuk. Isi data tetap English karena query pemain bergantung padanya (`WHERE category = 'coffee'`). Terjemahan di file terpisah (`locales/id/`) dengan fallback ke English. *Uji coba di Fase 1 — dihentikan bila biaya perawatannya terlalu besar.* |
-| Build tool | **Vite** | Server pengembangan cepat, build statis yang mudah di-hosting |
-| Bahasa kode | **TypeScript** | Kesalahan nama field/kolom di data level ketahuan sebelum dijalankan |
-| UI konsol | **React** | Komponen UI yang mudah dipecah-pecah; banyak sumber belajar; mudah ditempel di atas canvas game nanti |
-| Editor SQL | **CodeMirror 6** | Syntax highlighting + autocomplete nama tabel/kolom untuk mode ketik bebas |
-| Tes | **Vitest** | Menguji inti SQL (terutama pengecek jawaban) secara otomatis |
-| Mata uang | **$ (USD)** | Generik dan mudah dipahami pasar global |
-
-### Struktur kode (Fase 1)
-- `src/sql-core/` — database (PGlite), pengecek jawaban, tipe & data level. **Tidak boleh** meng-import React atau game engine.
-- `src/console/` — UI konsol (React): editor, input blok, isi kosong, tabel hasil, hint.
-- `src/app/` — halaman sederhana: daftar level, alur level, progres (localStorage). *(Halaman ini dihapus setelah Fase 2 — lihat §12.)*
-
-### Struktur kode (tambahan Fase 2)
-- `src/sql-core/stations.ts` — daftar stasiun dan tabel yang boleh diakses tiap stasiun (data murni, tanpa engine). Level mendapat field `station`; tes memastikan jawaban resmi tiap level hanya memakai tabel stasiunnya.
-- Konsol di stasiun hanya **menampilkan** tabel milik stasiun itu. *(Fase 3: query ke tabel lain juga diblokir — lihat di bawah.)*
-- Konsol terbuka hanya di stasiun tempat tugas aktif dikerjakan; stasiun lain menampilkan pesan singkat. Konsol tetap tersimpan selama level yang sama, jadi query yang sedang disusun tidak hilang saat konsol ditutup (Esc atau ✕).
-- `src/game/` — Phaser: scene ruangan, pemain, NPC, stasiun, pathfinding. **Tidak boleh** meng-import React.
-- `src/game/bridge.ts` — penghubung kecil (event) antara Phaser dan React: "bicara dengan NPC", "buka stasiun", "overlay ditutup". Saat overlay terbuka, input keyboard Phaser dimatikan agar mengetik SQL tidak menggerakkan karakter.
-- `src/app/` — React membungkus kanvas game dan menampilkan overlay (dialog, konsol, daftar level).
-
-### Struktur kode (tambahan Fase 3)
-- `src/game/art/` — semua aset final: `palette.ts` (32 warna + `paintGrid`), `tiles.ts` (tileset kafe), satu file per tokoh (sprite 16×32 + potret 64×64), `customers.ts` (pelanggan, warna ulang tokoh), `portraits.ts` (`characterPortrait`). Tata letak sheet jalan (`CHAR_W`, `FACINGS`, `frameIndex`) ada di `src/game/sheet.ts`. File placeholder Fase 2 (`placeholderSprites.ts`, `placeholderPortraits.ts`) **dihapus** setelah semua tokoh punya aset final.
-- `src/game/art/characterKit.ts` — alat bersama tokoh gaya final: sheet jalan dari grid (`drawSheet`, sepatu `FEET_FRONT`/`FEET_SIDE`) dan potret 64×64 dari bentuk dasar dengan latar dinding kafe (`finishPortrait`). Tokoh final: `grandma.ts` (3.1), `barista.ts` (3.4), `regular.ts` (3.8), `supplier.ts` (3.10), `player.ts` (3.13 — tubuh seragam kafe Barista dengan warna sendiri: rambut auburn, kemeja biru batu, celemek krem). Tidak ada lagi aset placeholder yang tampil; `placeholderSprites.ts` / `placeholderPortraits.ts` hanya tersisa sebagai cadangan.
-- `src/sql-core/data/recipes.ts` — tabel `recipes` (`recipe_id`, `item_id`, `ingredient`, `amount`, `unit`): satu baris per bahan. Grandma's Secret Cake sengaja **tanpa resep** (rahasia → bahan `LEFT JOIN` di Chapter 4); susu ada di banyak minuman (awal cerita Chapter 5). Stasiun **Recipe book** di Kitchen melihat `recipes` + `menu_items`.
-- `src/app/CafeMap.tsx` — tab **Café map** di Journal: ruangan berderet, yang terkunci bergaris dengan "Opens in Chapter N", posisi pemain (📍) dan ruangan tugas berikutnya (❗).
-- `src/sql-core/cases.ts` — cek kesimpulan Mini Case: jawaban dulu (`answer-wrong` dihitung sebagai kesimpulan salah untuk bintang), lalu bukti 📌 (`checkEvidence`). Pesan EN/ID lewat `formatCaseFeedback`.
-- `src/console/CaseConsole.tsx` — konsol Mini Case: tombol query awal, editor bebas, 📌 sematkan hasil, catatan investigasi, dan daftar kesimpulan (jawaban + pilih sematan sebagai bukti + Periksa). Sematan disimpan selama level yang sama (konsol tetap ter-mount), tapi **belum** disimpan ke browser — hilang bila halaman dimuat ulang.
-- `src/app/SoWhatCard.tsx` — kartu "So what?" setelah ucapan sukses tokoh, sebelum lanjut ke level berikutnya.
-- `src/app/rewards.ts` — aturan bintang & koin (fungsi murni, dites). `progress.ts` menyimpan `stars`, `mistakes`, `coins`, `soWhatRight` dan mengisi data yang belum ada di simpanan lama (`parseProgress`). `Stars.tsx` menampilkan ★ di layar hasil dan Journal.
-- `resumeNewLevels` (`quest.ts`): pemain yang sudah "selesai semua" otomatis lanjut ke level yang baru ditambahkan (mis. Mini Case Ch1).
-
-### Pengecek jawaban
-- Query pemain dan query jawaban resmi dijalankan di database yang sama; **hasilnya** yang dibandingkan.
-- Setiap query pemain berjalan di dalam transaksi **READ ONLY** yang selalu di-*rollback* (data tidak bisa rusak); perintah transaksi (`BEGIN`/`COMMIT`/…) ditolak.
-- Batas waktu query (`statement_timeout`) **tidak berfungsi** di PGlite karena berjalan di satu thread. **Sejak 3.5 database berjalan di Web Worker** (`src/app/db.worker.ts` + `workerDatabase.ts`): selama query berjalan, konsol menampilkan tombol **■ Stop** yang mengakhiri worker, menjawab query itu dengan "stopped" (tidak dihitung salah), lalu memulai worker baru (±1 detik; data dibuat ulang persis sama). Bila browser tidak bisa membuat worker, database jalan di halaman (tanpa Stop). `CafeDatabase` kini antarmuka (`run`, `schema`, `stop?`): `LocalCafeDatabase` dipakai tes dan di dalam worker.
-- **Tanggal dan waktu dikembalikan sebagai teks** persis seperti tulisan PostgreSQL (`2026-08-01 07:16:02`), bukan objek `Date` JavaScript yang bergeser mengikuti zona waktu pemain (3.6).
-- Tabel hasil hanya menampilkan **200 baris pertama** ("Showing the first 200 of 7694 rows") agar halaman tetap ringan; pengecek jawaban tetap memakai semua baris.
-- **Blokir tabel per stasiun (Fase 3, ✅ 3.5):** memakai izin asli PostgreSQL — satu *role* per stasiun dengan `GRANT SELECT` hanya pada tabelnya, lalu `SET LOCAL ROLE` di dalam transaksi READ ONLY. Galat `permission denied for table …` diubah menjadi pesan ramah yang menyebut stasiun pemilik tabel. PGlite terbukti mendukung role (cadangan `EXPLAIN` tidak diperlukan). Celah untuk kembali ke role penuh ditutup: perintah `SET`/`RESET`/`DO` ditolak ("Only questions for the data here"), dan `set_config` dicabut dari role stasiun; tes `db.test.ts` mencoba semua celah itu. Jawaban resmi, query awal, dan bukti Mini Case dites berjalan dengan role stasiunnya. Jawaban resmi sendiri dijalankan tanpa role saat menilai.
-
-### Format data level
-Setiap level adalah objek TypeScript (`src/sql-core/levels/`), satu file per chapter. Isinya:
-- `id` (mis. `ch0-1`; dipakai untuk menyimpan progres, jadi tidak boleh diganti setelah rilis), `title`, `character`
-- `lesson` (opsional): kartu materi singkat untuk konsep SQL baru di level itu
-- `dialogue` (ucapan tokoh) dan `task` (satu kalimat target yang jelas, selalu terlihat saat mengerjakan)
-- `input`: `blocks` (daftar blok, boleh ada pengecoh), `fill-blank` (template dengan `___`), atau `free`
-- `solution` (query jawaban resmi; hanya hasilnya yang dibandingkan), `check` (opsi pengecek), `hints` (tepat 3), `success` (ucapan setelah benar)
-- `soWhat` (opsional, Fase 3): pertanyaan "So what?" — `question`, 3 `choices`, `answer` (indeks), `explanation`
-- **Mini Case** (Fase 3): level dengan `kind: 'case'`, tanpa `input`/`solution`. Isinya `starters` (query awal yang bisa diubah, boleh berisi `___`) dan `questions`: tiap pertanyaan punya `answer` (`number` atau `choice`) dan `evidence` — query rujukan yang semua barisnya harus ada di hasil 📌 pemain. Kolom dicocokkan dengan nama; bila nama tidak ada, dicocokkan lewat **nilainya** (3.6) — jadi `total`, `revenue`, atau `SUM` tanpa nama sama-sama sah, dan hari boleh berupa angka DOW maupun nama hari. `exact: true` = jumlah baris harus sama persis; selain itu hasil maksimal `maxRows` baris (bawaan: baris rujukan + 5) agar "seluruh tabel" tidak dianggap bukti. Id-nya mengikuti pola biasa (Mini Case Ch1 = `ch1-7`).
-
-Tes otomatis memeriksa semua level: jawaban resmi bisa dijalankan, blok yang disediakan cukup untuk menyusun jawaban, dan blok tidak ditampilkan dalam urutan jawaban. Untuk Mini Case: query awal dan bukti hanya memakai tabel stasiunnya, bukti rujukan lolos ceknya sendiri, dan jawaban angka sama dengan jumlah baris bukti yang `exact`.
-
-**Terjemahan:** teks Indonesia per chapter ada di `src/sql-core/levels/locales/id/` (hanya teks; SQL, blok, dan jawaban tidak diterjemahkan). Umpan balik checker dikembalikan sebagai kode terstruktur lalu diubah jadi kalimat EN/ID oleh `formatFeedback`. Tes otomatis memastikan setiap level punya terjemahan dengan struktur yang sama (jumlah baris dialog, ada/tidaknya kartu materi).
-
-## 11. Data game
-
-- Database kafe dibuat **realistis**: `menu_items` (kategori, harga & cost), `sales` per transaksi (dengan tanggal & jam), `customers`, `employees`/shift, `inventory`, `suppliers`, kanal penjualan (dine-in, takeaway, delivery app).
-- Semua nama tabel dan kolom dalam English, gaya `snake_case`.
-- Sengaja diberi **data kotor** (nilai kosong, duplikat, salah ketik) di level tertentu — karena itu kenyataan di dunia kerja.
-- Data Analysis Case dirancang dengan pola tersembunyi yang bisa ditemukan lewat query.
-- **Data gudang (3.10, `src/sql-core/data/stock.ts`):** `suppliers` (`supplier_id`, `name`, `product`, `delivery_time`, `price_per_unit`, `unit`, `since`, `until`) dan `inventory` (satu baris per hari per bahan: `day`, `ingredient`, `supplier_id`, `delivered`, `unit`, `delivered_at`, `sold_out_at`). Sejak 1 Oktober susu dipasok **Highland Dairy** (lebih murah, $0.85/L vs $1.10/L, tapi dikirim **12.00** bukan 06.00). Hari-hari `sold_out_at` terisi sama persis dengan hari-hari tanpa minuman susu di pagi hari pada `sales` (dikunci tes `stock.test.ts`).
-- **Data penjualan (3.5, `src/sql-core/data/sales.ts`):** dibuat oleh generator dengan **seed tetap** (hasil selalu sama, jadi jawaban level stabil dan bisa dites), 1 Agustus – 31 Oktober 2026, buka 07.00–17.59. ±4.600 order, ±7.700 baris.
-  - `customers` (`customer_id`, `name`, `joined_on`): 60 pelanggan — 16 pelanggan tetap, 39 sesekali, 5 yang mendaftar tapi tidak pernah membeli (untuk `LEFT JOIN`).
-  - `sales` satu baris per item terjual: `sale_id`, `order_id`, `sold_at` (TIMESTAMP tanpa zona waktu), `item_id`, `quantity`, `unit_price` (= harga menu), `channel` (`dine-in` / `takeaway` / `delivery`), `customer_id` (kosong untuk pembeli tanpa akun). KPI Chapter 3 tidak butuh JOIN: AOV = revenue ÷ `COUNT(DISTINCT order_id)`.
-  - **Pola tersembunyi** (dikunci oleh tes `sales.test.ts`):
-    - **Chapter 3 – The Quiet Day:** Selasa adalah hari pasar di lembah → revenue terendah karena **jumlah order** sedikit (±40% lebih sedikit), sedangkan nilai per order normal.
-    - **Chapter 4 – Where Did the Regulars Go?:** empat pelanggan tetap (`customer_id` 3, 7, 11, 14) datang untuk *Grandma's Secret Cake*; kue itu dihentikan setelah Agustus, dan mereka tidak pernah kembali.
-    - **Chapter 5 – Analysis Case:** di Oktober susu sering habis di pagi hari (sebabnya baru terlihat di stock ledger saat storeroom dibuka, 3.10). Minuman susu turun tajam, sebagian pelanggan beralih ke kopi hitam, sebagian pergi. Revenue Oktober **18% di bawah September**, dan Latte turun paling banyak. Pola ini memakai aliran acak terpisah agar bisa disetel tanpa mengubah data lain.
-    - Hot Chocolate (tanpa harga) dan Pumpkin Spice Latte (tidak tersedia) tidak pernah terjual; Secret Cake hanya terjual di Agustus.
+### Code structure
+- `src/sql-core/` — database (PGlite), answer checker, cases, levels, data, orders. **Must not** import React or Three.js.
+- `src/console/` — the SQL console (React): blocks, fill-in-the-blank, editor, result table, case notes.
+- `src/game/` — the 3D world (Three.js). **Must not** import React.
+  - `art/riso.ts` — the riso inks.
+  - `truck/world.ts` — sizes, layout, walking, aiming, the queue path (pure logic, tested).
+  - `truck/build.ts` — low-poly models; `truck/looks.ts` — customers' looks.
+  - `truck/risoPass.ts` — the riso shader; `truck/colour.ts` — exact ink colours.
+  - `truck/queue.ts` — the customer queue (pure logic, tested).
+  - `truck/TruckGame.ts` — the game loop, input, customers.
+  - `truck/bridge.ts` — the only link between the game and React (events).
+- `src/app/` — the page: `TruckApp.tsx` (HUD, crosshair, bubble), `useTruckShift.tsx` (the shift's logic: database, orders, tablet), `ConsoleOverlay.tsx`, the database worker, `rewards.ts`.
+- `src/i18n.ts` — UI text in both languages.
 
 ## 12. Roadmap
 
-Dibangun bertahap — setiap fase menghasilkan sesuatu yang bisa dimainkan.
+Built in phases; every phase produces something playable. Every iteration: build → check in the browser → commit and push.
 
-**Status (13 Nov 2026):** ✅ **Fase 1 selesai.** Chapter 0–1 (10 level) bisa dimainkan dalam EN/ID, dengan pengecek jawaban, hint, progres tersimpan, dan 110 tes otomatis. Pemilik project sudah uji main dan menyetujui rasa belajarnya. ✅ **Fase 2 selesai.** Chapter 0–1 dimainkan di dalam dunia game (ruang depan kafe, Phaser): berjalan dengan keyboard atau klik/tap, menerima permintaan dari Grandma, Barista, dan Regular, menyelesaikannya di konsol Menu board, lalu melapor. Ada Journal, zoom manual, dan panah penunjuk; 162 tes otomatis. Pemilik project sudah uji main (desktop + HP) dan menyetujuinya. ✅ **Fase 3 selesai (16 Nov 2026) — MVP lengkap.** Chapter 0–5: 34 level (termasuk 4 Mini Case dan Analysis Case), empat ruangan, semua tokoh dan tile dalam gaya final, bintang/koin/upgrade/streak/badge, Skill Check, dan Rush Hour; 477 tes otomatis. Pemilik project menyetujui penyelesaian **tanpa uji main manual menyeluruh** (waktu terbatas); checklist `docs/PLAYTEST.md` (dihapus 17 Nov 2026 bersama kode v1; ada di tag `v1-cafe-mvp`) tetap tersedia untuk dipakai kapan saja, dan temuan dari uji main nanti diperbaiki sebagai iterasi kecil. Rincian iterasi ada di "Rencana Fase 3" di bawah.
-
-Catatan dari Fase 1 untuk fase berikutnya:
-- Ukuran unduhan pertama PGlite besar (±3,5 MB wasm terkompresi + 6 MB data) — perlu layar loading yang jelas dan dicek saat memilih hosting.
-- ~~PGlite belum di Web Worker~~ — sudah di Web Worker dengan tombol Stop (3.5, lihat §10).
-- ~~Di layar HP, daftar tabel muncul di atas area input~~ — konsol sudah menjadi overlay yang memenuhi layar HP (Fase 2).
-
-Catatan dari Fase 2 untuk fase berikutnya:
-- Semua aset masih placeholder yang digambar lewat kode (`src/game/placeholder*.ts`); keputusan aset final ada di §13. *(Fase 3: semua diganti aset final, file placeholder dihapus.)*
-- Cash register sudah ada di dunia tapi belum dibuka; terbuka otomatis saat tabel `sales`/`customers` dibuat *(3.5: tabelnya sudah ada; stasiun ini dipakai mulai Chapter 3)*. *(Diputuskan di Fase 3: query ke tabel di luar stasiun diblokir — §3, §10.)*
-- Minimap belum dibuat (cukup zoom 1× + panah penunjuk untuk satu ruangan). *(Diputuskan di Fase 3: tanpa minimap, diganti tab Café map di Journal — §3.)*
-- **Mode klasik (`?classic`) dihapus** (keputusan pemilik project setelah Fase 2): mempertahankannya berarti setiap fitur Fase 3 (bintang, koin, Analysis Case, Rush Hour, tabel per stasiun) harus dibuat dua kali. Jalan pintas pengembangan `?level=ch1-3` kini membuka permintaan level itu langsung di dunia game.
-- Belum teruji otomatis: mengubah ukuran jendela/memutar HP saat game berjalan dan tampilan galat database (sudah dicoba manual oleh pemilik project untuk HP).
-- Teks bar tugas English memakai nama tokoh apa adanya ("Talk to Regular") — bisa dirapikan saat menulis teks Chapter 2+.
-
-Catatan dari Fase 3 untuk fase berikutnya:
-- Belum ada uji main manual menyeluruh Chapter 2–5 secara berurutan (pengecekan selama pembangunan memakai jalan pintas `?level=` dan tes otomatis). (Kode v1 sudah dihapus; lihat tag `v1-cafe-mvp`.)
-- Hal yang perlu diperhatikan saat uji main: apakah klik ke stasiun langsung membuka konsol tanpa menekan E; apakah toko 🪙 cukup mudah ditemukan (mungkin perlu petunjuk saat koin pertama cukup untuk membeli upgrade).
-- Hosting belum dipilih (§13) — dibutuhkan agar game bisa dibagikan lewat link.
-
-| Fase | Isi | Selesai jika… |
+| Phase | Contents | Done when… |
 |---|---|---|
-| **1. Inti SQL** ✅ | PGlite + data kafe, pengecek jawaban, format data level, konsol SQL (input blok → isi kosong → bebas), Chapter 0–1, pilihan bahasa EN/ID | Chapter 0–1 bisa dimainkan lengkap di halaman sederhana, dan rasa belajarnya sudah enak |
-| **2. Dunia pertama** ✅ | Game engine, satu ruangan (area depan + front counter), karakter berjalan, Grandma sebagai NPC, dialog, konsol terbuka dari stasiun | Pemain bisa jalan → bicara dengan Grandma → ke menu board → menyelesaikan level Chapter 0–1 di dalam dunia game |
-| **3. Kafe tumbuh** ✅ | Arah visual final; Mini Case & So what?; kitchen, storeroom, back office; Chapter 2–5; koin, upgrade, bintang, streak, Skill Check, Rush Hour, Analysis Case | MVP lengkap Chapter 0–5 |
-| **4–8. Desain v2 (food truck)** | Prototipe satu hari → generator pesanan & pengulangan → kurikulum per minggu → truck tumbuh & visual final → pembersihan & rilis | Lihat §14.9 |
-| **Nanti** | Materi lanjutan, leaderboard (butuh backend), audio, polesan | — |
+| **1. SQL core** ✅ | PGlite + data, checker, level format, console (blocks → fill-in → free), Chapters 0–1, EN/ID | Done 13 Nov 2026 |
+| **2. First world** ✅ | v1's top-down café world (Phaser) | Done; replaced by v2 |
+| **3. The café grows** ✅ | Chapters 2–5, cases, Analysis Case, stars/coins/upgrades, Skill Check, Rush Hour | v1 MVP done 16 Nov 2026; its SQL content is kept |
+| **4. One-day prototype** 🚧 | The look (✅ 3D), the 3D truck, customers with hand-written orders (week 2), the tablet, using the truck's objects, the Data Lens, sales into the database, the clock and end-of-day summary, one manager knock | The owner plays a full day and finds the concept fun |
+| **5. Order generator & repetition** | Parameterised order templates, concept mastery + spaced repetition, patience & tips, the day log saved and replayed | Day 2, day 3… feel different but still practise what needs practice |
+| **6. Six-week curriculum** | Chapters 0–5 become templates + manager cases, lesson cards per week, Skill Check → starting week, the Analysis Case in week 6 | A new player can go from week 1 to the Analysis Case, EN/ID |
+| **7. The truck grows & final art** | Truck upgrades, new locations (park, market, festival), Lunch Rush, per-day streak & badges, all final models | Coins can be spent and the truck/locations visibly change |
+| **8. Release** | Full playtest, phone controls, hosting | The owner approves → v2 done |
 
-### Rencana Fase 2 — Dunia pertama
+### Phase 4 plan — one-day prototype
 
-Keputusan: Phaser 3 · pixel art 16 px (karakter 16×32, potret 64×64) · aset placeholder CC0 · keyboard + klik/tap · stasiun baru **Menu board** di area depan untuk `menu_items` (semua level Chapter 0–1) · NPC **Barista** (di belakang counter) dan **Regular** (dekat meja jendela) ikut ditambahkan di 2.6 karena tiga level Chapter 1 adalah permintaan mereka.
-
-Satu ruangan: area depan kafe (pintu, meja pelanggan, menu board) + front counter (cash register). Cash register sudah ada di dunia, tapi **belum dibuka**: tabel `sales`/`customers` baru dibuat di Fase 3, jadi untuk sementara stasiun ini hanya menampilkan pesan singkat. Stasiun otomatis terbuka begitu tabelnya ada di database.
-
-Iterasi kecil, masing-masing: kerjakan → cek di browser → commit & push.
-
-| # | Iterasi | Selesai jika… |
+| # | Iteration | Done when… |
 |---|---|---|
-| 2.1 ✅ | Pasang Phaser; kanvas game di halaman React; ruangan placeholder dari tilemap 16 px (zoom 3×) | Ruangan kafe tampil tajam di browser; halaman Fase 1 masih bisa dibuka di `?classic` selama transisi |
-| 2.2 ✅ | Pemain 16×32 berjalan dengan WASD/panah; tabrakan dengan dinding & furnitur; kamera mengikuti | Bisa berkeliling ruangan tanpa menembus objek |
-| 2.3 ✅ | Klik/tap untuk berjalan (pathfinding di grid) | Klik/tap lantai → pemain berjalan memutari halangan |
-| 2.4 ✅ | Grandma sebagai NPC + sistem interaksi (gelembung "…" saat dekat; E/Spasi/klik untuk bicara) + kotak dialog React dengan potret 64×64 | Bicara dengan Grandma menampilkan dialog level aktif (EN/ID) |
-| 2.5 ✅ | `stations.ts` + field `station` di level; konsol sebagai overlay yang dibuka dari stasiun; daftar tabel difilter per stasiun; keyboard Phaser dimatikan saat overlay terbuka | Menu board membuka konsol berisi `menu_items`; tes memastikan setiap jawaban level hanya memakai tabel dari stasiunnya |
-| 2.6 ✅ | Alur level di dunia: penanda "!" di atas pemberi tugas (Grandma, Barista, atau Regular) → dialog + kartu materi → penanda di stasiun → konsol → benar → kembali ke Grandma untuk ucapan sukses → level berikutnya. Hint, progres, dan daftar level (sebagai menu "Journal") tetap jalan | Chapter 0–1 bisa diselesaikan seluruhnya di dalam dunia game |
-| 2.7 ✅ | Layar loading (PGlite besar), tata letak overlay di HP, tombol bahasa & menu di HUD | Bisa dimainkan nyaman di desktop dan HP |
-| 2.8 ✅ | Uji main pemilik project, perbaikan (zoom manual + panah penunjuk), README, status | Pemilik project menyetujui → Fase 2 selesai |
+| 4.1–4.5 ✅ | **Finding the look** with 2D prototypes: a static truck, the queue + tablet, a side-view truck to walk around, a first-person panorama in the riso style. Replaced by 4.6; code removed (git tag `v2-prototypes`). Details and screenshots in `docs/JOURNEY.md` | The order → tablet → SQL → served loop works; the riso style is born |
+| 4.6 ✅ | **3D prototype** (Three.js): low-poly truck and park, WASD + mouse, E/click to use, 3D customers queueing, the order tablet, the riso shader → **locked in**; v1 and 2D code removed, `/` opens the 3D truck | The owner tried it and chose 3D ✅ |
+| 4.7 | **Using the truck's objects:** the menu board, fridge and recipe binders open the console with their own tables; an order may need checking another object first | Each object opens its tables; one order uses the fridge (`inventory`) |
+| 4.8 | **Data Lens** (signature feature): a button that shows tables over every object | The Data Lens works on every side of the truck |
+| 4.9 | **Sales into the database** (`INSERT` by the game, `channel = 'truck'`) + the day log in progress, replayed on load | After serving, a `sales` query shows today's sales, also after reloading the page |
+| 4.10 | **The clock** 10:00–17:00, patience → tips, closing time + end-of-day summary | A day can be played from opening to the summary |
+| 4.11 | **The manager's knock:** The Manager (suit) at the back door, one small case using the case engine on today's data | The manager's case can be solved with 📌 evidence |
+| 4.12 | Owner playtest + fixes | Decision: on to Phase 5, or change the concept |
 
-Di luar Fase 2: kitchen/storeroom/back office, koin & upgrade, NPC pelanggan berjalan, aset final, audio, PGlite di Web Worker.
+**4.6 as built (17 Nov 2026):**
+- `src/game/truck/world.ts` (tested, no Three.js): the truck in metres, where things are (`LAYOUT`), where the player may walk (`WALK`), `walkStep` (WASD relative to the view; diagonals are not faster), `rayBox` / `aimedInteractable` (the thing under the crosshair within 1.7 m), and `queuePosition` (the queue path in the park).
+- `src/game/truck/build.ts`: the truck (a wall with the window cut out, counters, a tilted tablet, a fridge full of bottles, stock shelves, a red espresso machine, the menu board, recipe binders, a clock, the back door), the park (striped lawn, path, benches, picnic tables with umbrellas, lamps and string lights, trees, skyline, sun, the truck's awning), and blocky 1.75 m customers with swinging arms and legs.
+- `src/game/truck/risoPass.ts`: the low-resolution render, ink mapping with dither, depth outlines and the red misprint. Without exact ink colours and lights × π, everything turns dark green.
+- `src/game/truck/TruckGame.ts`: WASD/arrows, mouse look (pointer lock; dragging works too), click/E on the thing under the crosshair, head bob, customers turning to walk and then facing the truck, and the front customer's head position sent to React (`anchor`) for the speech bubble. Time stops while the tablet is open (keyboard and pointer lock released).
+- Not yet: phone controls; the fridge, menu board, recipe binders and door only show a "next update" message.
 
-### Rencana Fase 3 — Kafe tumbuh
+**Cleanup (17 Nov 2026):** v1's code (Phaser, the top-down café, Journal, shop, quests, `progress.ts`), the 2D truck prototypes, 72 unused UI strings, 112 unused CSS rules and the Phaser dependency were removed. `src/sql-core/` stays whole because its content is reused in Phase 6. Documents were moved to English for a global audience.
 
-Keputusan (perencanaan Fase 3, 13 Nov 2026), berdasarkan masukan pemilik project di akhir Fase 2:
+## 13. Open questions
 
-| Topik | Keputusan | Detail |
-|---|---|---|
-| Nilai jual muncul lebih awal | **Mini Case** 🔍 di akhir Chapter 1–4 + pertanyaan **So what?** 💭 di sebagian level mulai Chapter 0 | §5. Mesin Mini Case = mesin Analysis Case versi kecil, dibangun lebih dulu (3.2) |
-| Arah visual | **Hangat musim gugur**, satu palet tetap; **tile CC0 + karakter/potret buatan sendiri**; dicek lewat contoh 1 ruangan + 1 karakter, lalu diganti bertahap | §3. Cadangan: beli pack (file asli tidak masuk repo publik) |
-| Skill Check | **Adaptif per chapter** (2 soal/chapter, berhenti di chapter pertama yang gagal), dibuat segera setelah Chapter 4 ada | §2 |
-| Tabel di luar stasiun | **Diblokir** dengan pesan ramah, memakai role PostgreSQL per stasiun | §3, §10 |
-| Minimap | **Tidak ada**; tab **Café map** di Journal + panah penunjuk ke pintu | §3 |
-| Struktur ruangan | **Satu peta terhubung**, pintu terkunci per chapter | §3 |
-| Cash register | Juga melihat `menu_items` (untuk JOIN Chapter 4) | §3 |
+- [ ] Truck name and game title — for now **SQL Valley**, with the truck called *Rolling Roast*
+- [ ] Should `INSERT`/`UPDATE` be taught in later weeks (the player records orders or restocks themselves)?
+- [ ] The right length of a day (8–12 minutes) — decided by the 4.12 playtest
+- [ ] Locations: only visual, or does each have its own customers and data?
+- [ ] Phone controls for 3D: a virtual joystick + drag to look, or turning side by side like prototype 4.5
+- [ ] Hosting (e.g. GitHub Pages / Vercel / Netlify)
+- [ ] Town setting: generic and international, or with a local touch?
 
-Setiap iterasi bisa dimainkan sendiri: kerjakan → cek di browser → commit & push. Urutannya mendahulukan nilai jual (3.2) dan arah visual (3.1), lalu menambah chapter satu per satu.
+## History
 
-| # | Iterasi | Selesai jika… |
-|---|---|---|
-| 3.1 ✅ | **Arah visual:** file palet musim gugur, pilih pack tile CC0, ruang depan + Grandma (sprite & potret) dalam gaya final, `CREDITS.md` | Pemilik project melihat ruang depan + Grandma baru di browser dan menyetujui arahnya (atau memilih cadangan beli pack) |
-| 3.2 ✅ | **Mesin Mini Case + So what?:** catatan investigasi, 📌 sematkan hasil query, pertanyaan kesimpulan dengan cek bukti, field `soWhat`; Mini Case Ch1 **The Menu Audit**; So what? di 1–2 level Ch0–1 (EN/ID) | Setelah level terakhir Ch1, pemain menyelesaikan The Menu Audit di Menu board dengan bukti 📌; So what? muncul di Ch0–1 |
-| 3.3 ✅ | **Bintang & koin:** catat hint + jawaban salah per level/kasus, layar hasil (⭐ + koin), bintang di Journal, penghitung koin di HUD; progres lama tetap terbaca | Menyelesaikan level/kasus menampilkan bintang & koin, tersimpan, dan terlihat di Journal |
-| 3.4 ✅ | **Chapter 2 First Reports** (ketik bebas: `ORDER BY`, `LIMIT`, `DISTINCT`, alias, kolom hitungan) + Mini Case **What Should We Promote?**; Barista dalam gaya final | Chapter 2 bisa dimainkan lengkap di Menu board, EN/ID |
-| 3.5 ✅ | **Data penjualan & stasiun kedua:** generator data `sales`/`customers` dengan seed tetap, Cash register terbuka, blokir tabel per stasiun (role PostgreSQL), PGlite di Web Worker + tombol hentikan query | Cash register membuka konsol berisi `sales`, `customers`, `menu_items`; query ke tabel lain ditolak dengan pesan ramah; query macet bisa dihentikan |
-| 3.6 ✅ | **Chapter 3 Numbers Talk** (`COUNT`/`SUM`/`AVG`/`MIN`/`MAX`, `GROUP BY`, `HAVING`, dasar tanggal) + Mini Case **The Quiet Day** | Chapter 3 bisa dimainkan lengkap di Cash register, EN/ID |
-| 3.7 ✅ | **Kafe berkembang:** peta multi-ruangan dengan pintu terkunci per chapter, **Kitchen** + tabel `recipes` + Recipe book (gaya final), tab **Café map** di Journal, panah penunjuk ke pintu | Kitchen terbuka setelah Ch3; Café map menunjukkan ruangan dan target tugas |
-| 3.8 ✅ | **Chapter 4 Connecting the Dots** (`INNER`/`LEFT JOIN`, JOIN + agregasi) + Mini Case **Where Did the Regulars Go?**; Regular dalam gaya final | Chapter 4 bisa dimainkan lengkap di Kitchen & Cash register, EN/ID |
-| 3.9 ✅ | **Skill Check** adaptif (soal Ch0–4) dari Grandma di hari pertama & dari Journal | Pemain yang sudah bisa SQL dasar bisa langsung mulai di chapter yang sesuai |
-| 3.10 ✅ | **Storeroom + Back office** (`inventory`, `suppliers`, Supplier NPC, Grandma's computer) + **Chapter 5 Analysis Case** "October sales dropped 18%" | Analysis Case bisa diselesaikan lengkap dengan bukti 📌 di Back office |
-| 3.11 ✅ | **Kafe yang tumbuh:** upgrade dengan koin (kursi, dekorasi, papan menu, NPC pelanggan berjalan), daily streak 🔥, badge | Koin bisa dibelanjakan dan kafe berubah terlihat di dunia |
-| 3.12 ✅ | **Rush Hour** ⏱ (terbuka setelah Chapter 2) + skor terbaik pribadi | Satu putaran Rush Hour bisa dimainkan dan skor terbaik tersimpan |
-| 3.13 ✅ | Uji main akhir pemilik project, ganti sisa placeholder, perbaikan, README, status | Pemilik project menyetujui → MVP Chapter 0–5 selesai |
-
-Catatan: isi level tiap chapter (dialog, data, jawaban) ditulis di awal iterasi chapter itu dan ditinjau pemilik project sebelum dibangun. Di luar Fase 3: materi lanjutan (subquery, CTE, window function), leaderboard (butuh backend), audio, hosting (masih pertanyaan terbuka §13).
-
-## 13. Pertanyaan terbuka
-
-- [x] Framework UI konsol — **React** (diputuskan di perencanaan Fase 1)
-- [x] Game engine final — **Phaser 3** (perencanaan Fase 2)
-- [x] Gaya visual — **pixel art 16 px** (karakter 16×32, potret 64×64); sumber aset Fase 2 — **placeholder CC0 + buatan sendiri** (lihat §3)
-- [x] Kontrol — **keyboard + klik/tap** untuk berjalan (lihat §3)
-- [x] Aset final — **tile CC0 + karakter/potret buatan sendiri**, suasana hangat musim gugur dengan satu palet tetap; cadangan beli pack (perencanaan Fase 3, lihat §3)
-- [x] Mini case per chapter — **Mini Case** di akhir Chapter 1–4 + **So what?** di sebagian level (perencanaan Fase 3, lihat §5)
-- [x] Blokir query ke tabel di luar stasiun — **diblokir** dengan pesan ramah (perencanaan Fase 3, lihat §3, §10)
-- [x] Minimap — **tidak**; tab Café map di Journal (perencanaan Fase 3, lihat §3)
-- [x] Mata uang — **$ (USD)**
-- [ ] Nuansa setting kota (generik/internasional, atau ada sentuhan lokal tertentu)
-- [x] Isi detail tiap level (dialog, data, jawaban) per chapter — Chapter 0 (4 level), Chapter 1 (6 level + Mini Case), Chapter 2 (5 level + Mini Case), Chapter 3 (6 level + Mini Case), Chapter 4 (6 level + Mini Case), dan Chapter 5 (2 level + Analysis Case) sudah ditulis, lengkap dengan terjemahan Indonesia
-- [x] **Stasiun untuk Chapter 0–1** — stasiun baru **Menu board** di area depan membaca `menu_items` (cocok dengan cerita "Cleaning Up the Menu"); Kitchen tetap untuk `recipes` di Fase 3
-- [x] Bentuk Skill Check — **adaptif**, 2 soal per chapter, dibuat setelah Chapter 4 ada (perencanaan Fase 3, lihat §2)
-- [ ] Hosting (mis. GitHub Pages / Vercel / Netlify)
-
----
-
-## 14. Desain v2 — Food Truck 🚚 (diputuskan 16 Nov 2026)
-
-Setelah MVP v1 selesai, pemilik project memutuskan mengganti dunia game: dari **kafe top-down yang dijelajahi** menjadi **food truck dengan antrean pelanggan**. Tujuan belajarnya tetap sama (SQL + berpikir seperti analis BI); yang berubah adalah **cara tugas datang ke pemain**.
-
-### 14.1 Alasan perubahan
-- **Fokus ke SQL, bukan berjalan.** Di v1 pemain harus berjalan ke stasiun dulu. Di v2 tugas datang sendiri lewat pelanggan di jendela truck.
-- **Pengulangan alami.** Pesanan sejenis muncul lagi di hari-hari berikutnya dengan detail berbeda, jadi query dilatih berulang tanpa terasa mengulang soal yang sama.
-- **Rasa analis lebih kuat.** Penjualan pemain sendiri masuk ke database, lalu manajer bertanya tentang data itu. Pertanyaan BI terasa "milik sendiri".
-
-### 14.2 Yang dipakai ulang dari v1
-Arsitektur v1 sengaja memisahkan inti SQL dari dunia game, jadi sebagian besar kode tetap dipakai:
-
-| Dipakai ulang | Catatan |
-|---|---|
-| `src/sql-core/` (PGlite di Web Worker, pengecek jawaban, role per stasiun, Mini Case/bukti 📌) | Ditambah: data yang bisa berubah per hari (§14.6) |
-| Isi 34 level Chapter 0–5 (kartu materi, solusi, hint, terjemahan) | Dipecah menjadi **template pesanan** dan **kasus manajer** (§14.5) |
-| Konsol React (blok → isi kosong → ketik bebas, CodeMirror, tabel hasil) | Tampil sebagai **tablet kasir / POS** di truck |
-| Bahasa EN + ID, bintang/koin, streak, badge, Skill Check | Aturannya disesuaikan ke sistem hari |
-| Palet 32 warna + alat gambar (`paintGrid`, format grid teks) | Tokoh v1 **tidak** dipakai: semua tokoh v2 baru (§14.3) |
-
-Yang **tidak** dipakai lagi dan **sudah dihapus dari kode (17 Nov 2026)**: dunia v1 (Phaser, peta top-down, tokoh, Café map, Journal, toko upgrade, alur quest) dan semua prototipe truck 2D (4.1–4.5). Semuanya tetap ada di git: tag `v1-cafe-mvp` dan `v2-prototypes`.
-
-### 14.3 Konsep & cerita
-**Awal yang benar-benar baru** (keputusan pemilik project, 16 Nov 2026): cerita kafe Grandma dan semua tokoh v1 (Grandma, Barista, Regular, Supplier) **tidak dipakai** di v2.
-
-- Pemain adalah **karyawan baru** di food truck **Rolling Roast**, milik perusahaan kecil **Valley Eats Co.** Truck berkeliling kota dan buka **10.00–17.00**.
-- **The Manager** — tokoh atasan berjas rapi, dasi, dan tablet laporan. Ia sesekali mengetuk pintu belakang truck dan menanyakan angka: sales, revenue, stok yang sering habis, target bulan ini. Gaya bicaranya **bossy**: singkat, menuntut angka, tidak suka basa-basi ("Numbers. Now.", "I don't want feelings, I want revenue by day."). Bila jawabannya tepat, ia memberi pujian kecil yang kaku.
-- **Pelanggan** antre di jendela depan: wajah-wajah baru dengan gaya bicara sendiri. Sebagian menjadi pelanggan tetap yang muncul lagi di hari lain.
-- **Kurir pemasok** datang pagi hari mengantar stok, membuka tugas tentang `inventory`.
-- Menu tetap kopi + camilan (struktur data `menu_items` v1), jadi isi SQL level lama tetap cocok. Teks cerita yang menyebut Grandma/kafe ditulis ulang saat dipindah di Fase 6.
-
-### 14.4 Core loop: satu hari kerja
-1. **Pagi (sebelum buka):** ringkasan hari ini, cek stok (kadang tugas dari Supplier), kartu materi bila ada konsep baru.
-2. **Buka 10.00:** pelanggan datang satu per satu dan antre (2–3 orang terlihat).
-3. **Pesanan = tugas SQL.** Pelanggan terdepan menyampaikan permintaan lewat gelembung dialog. Pemain membuka tablet POS dan menjawab dengan SQL. Contoh:
-   - "Anything under $4?" → `SELECT … WHERE price < 4;`
-   - "Do you still have oat milk?" → cek `inventory`
-   - "Which drinks have no milk? I'm lactose intolerant." → `JOIN recipes`
-   - "What's my usual?" → `sales` + `customers`
-4. **Jawaban benar → pesanan dilayani.** Game sendiri yang mencatat penjualan ke database (`INSERT` ke `sales`, stok berkurang); pemain tidak menulis `INSERT` (materi itu baru diajarkan nanti).
-5. **Ketukan manajer 🚪** (1× per hari, di jam acak): pertanyaan BI tentang penjualan hari/minggu ini, stok yang sering habis, dan sebagainya. Ini pengganti **So what?** dan **Mini Case**.
-6. **Tutup 17.00 → ringkasan hari:** pendapatan, tip, pelanggan puas, konsep yang dilatih, bintang hari itu.
-
-**Waktu & tekanan (keputusan):**
-- **Jam berhenti selama tablet POS terbuka.** Menulis SQL tidak pernah dikejar waktu.
-- Kesabaran pelanggan hanya berkurang saat ia menunggu di antrean dan **hanya memengaruhi tip**. Tidak ada kondisi kalah. Pelanggan yang menunggu terlalu lama pergi tanpa tip, tapi tugasnya muncul lagi di hari lain.
-- Satu hari ±8–12 menit waktu nyata (±8–12 pesanan + 1 kasus manajer).
-- Rush Hour v1 berubah menjadi **"Lunch Rush"**: event opsional 12.00–13.00 dengan pesanan cepat dan jam yang tetap berjalan, mulai Minggu 3.
-
-### 14.5 Tugas: template pesanan & pengulangan
-- **Template pesanan** = satu jenis permintaan dengan parameter yang diacak (seed per hari), mis. `price_under(max)`, `items_in_category(category)`, `stock_of(ingredient)`. Setiap template punya `concept` (mis. `where-compare`, `group-by`), dialog EN/ID dengan slot `{max}`, query solusi berparameter, dan 3 hint.
-- **Jawaban dinilai seperti v1:** hasil query pemain dibandingkan dengan hasil query solusi **di atas data saat itu** (termasuk penjualan hari ini).
-- **Pengulangan berjeda (spaced repetition) sederhana:** setiap konsep punya tingkat penguasaan 0–5. Benar tanpa hint → naik dan muncul lagi lebih jarang (1 → 2 → 4 → 7 hari). Salah atau pakai hint → turun dan muncul lagi besok. Pesanan harian dipilih dari: konsep baru minggu ini + konsep yang "jatuh tempo" + sedikit acak.
-- **Kesulitan naik per minggu** (§14.7). Pelanggan tidak pernah meminta konsep yang belum diajarkan.
-- **Kasus manajer** memakai mesin Mini Case v1 (📌 bukti + pertanyaan kesimpulan). Kasus harian kecil (1–2 query); kasus akhir minggu lebih besar; Analysis Case "October sales dropped 18%" menjadi kasus penutup Minggu 6.
-
-### 14.6 Data
-- Data historis v1 (Agustus–Oktober, seed tetap) tetap menjadi **masa lalu truck**, sehingga pola tersembunyi (Selasa sepi, Secret Cake, susu Oktober) tetap bisa dipakai kasus manajer.
-- **Hari-hari permainan** dimulai 1 November 2026. Penjualan pemain ditambahkan ke `sales` dengan `channel = 'truck'`, dan stok harian ke `inventory`.
-- **Penyimpanan:** progres menyimpan *log hari* (pesanan yang dilayani). Saat game dimuat, data dibuat ulang dari seed lalu log diputar ulang, sehingga hasilnya sama persis dan tetap bisa dites.
-- Query pemain **tetap READ ONLY** dan di-rollback. Hanya game yang menulis ke database.
-- Tabel per stasiun v1 menjadi **aplikasi di tablet POS**: Menu, Orders, Stock, Recipes, Back office. Satu aplikasi terbuka bersama satu pelanggan, jadi pelajaran "data tersebar di banyak sistem" tetap ada.
-
-### 14.7 Kurikulum per minggu (pengganti chapter)
-1 minggu = 5 hari kerja. Isi materi v1 dipetakan ulang:
-
-| Minggu | Materi SQL (dari) | Pesanan contoh | Kasus manajer akhir minggu | Input |
-|---|---|---|---|---|
-| 1. Opening Week | `SELECT`, `FROM` (Ch0) | "What's on the menu?" | — (tutorial) | Blok |
-| 2. Picky Customers | `WHERE`, `AND`/`OR`, `IN`, `LIKE`, `IS NULL` (Ch1) | "Vegan and under $5?" | The Menu Audit | Isi kosong |
-| 3. Daily Specials | `ORDER BY`, `LIMIT`, `DISTINCT`, alias, kolom hitungan (Ch2) | "Your 3 cheapest snacks?" | What Should We Promote? | Bebas |
-| 4. Counting the Till | Agregasi, `GROUP BY`, `HAVING`, tanggal (Ch3) | "How many lattes sold today?" | The Quiet Day | Bebas |
-| 5. Regulars & Recipes | `JOIN`, `LEFT JOIN` (Ch4) | "Which drinks have no milk?" | Where Did the Regulars Go? | Bebas |
-| 6. The Big Question | Gabungan | Campuran semua konsep | Analysis Case: October Sales Dropped | Bebas |
-
-Setelah Minggu 6: **mode bebas tanpa akhir**. Hari terus berjalan dengan pengulangan berjeda; tempat baru dan materi lanjutan (subquery, CTE, window function) bisa ditambahkan nanti. Skill Check tetap ada dan menentukan minggu awal.
-
-### 14.8 Tampilan & gaya visual (ditetapkan 17 Nov 2026)
-
-Arah tampilan dicari lewat lima prototipe (4.1–4.6, lihat [`docs/JOURNEY.md`](docs/JOURNEY.md)). Yang **ditetapkan** adalah prototipe terakhir:
-
-- **3D orang pertama** dengan **Three.js**. Pemain berdiri di dalam truck: **WASD/panah** berjalan, **mouse** melihat (*pointer lock*, Esc melepas), arahkan **titik bidik** ke benda lalu tekan **E** atau klik. Ruang gerak hanya di dalam truck agar fokus tetap pada SQL.
-- **Truck** (6 × 2,4 × 2,4 m): jendela saji + counter + tablet di dinding depan; **kulkas & rak stok** di ujung kiri (`inventory`); **counter belakang** dengan mesin espresso merah, jam, **papan menu** (`menu_items`), dan **binder resep** (`recipes`); **pintu belakang** di ujung kanan (The Manager).
-- **Truck parkir di taman kota**: rumput bergaris, jalan setapak tempat pelanggan antre, bangku dan meja piknik berpayung (nanti **terisi pengunjung bila bisnis ramai**, Fase 7), lampu taman dan lampu gantung, pohon, siluet kota di kejauhan, matahari senja. Tanah taman 0,35 m lebih rendah dari lantai truck agar kepala pelanggan pas di jendela.
-- **Gaya "cetak risograf"** (ciri khas, sengaja tidak main aman): adegan dirender beresolusi rendah (±300 baris, piksel besar), lalu shader memetakan setiap piksel ke **tinta riso** (`src/game/art/riso.ts`) dengan **dither Bayer 4×4**, menggambar **garis tepi tinta** dari lompatan kedalaman, dan **garis merah meleset 1 piksel**. Warna tinta dipakai persis (tanpa konversi sRGB→linear) dan lampu netral × π (satuan fisik Three.js).
-- **Ciri khas yang direncanakan: "Data Lens"** — satu tombol mengubah pandangan menjadi "tampilan data": setiap benda menampilkan tabelnya (kulkas → baris `inventory`, pelanggan → `customers`).
-- **Model sementara** dari bentuk dasar (kotak, silinder, bola). Model final dari pack 3D **CC0** (Kenney, Quaternius, Poly Pizza), diwarnai ulang ke tinta riso. Status setiap bagian di [`docs/ASSETS.md`](docs/ASSETS.md); sumber + lisensi di `CREDITS.md`.
-- React tetap untuk overlay (tablet/konsol SQL, gelembung pesanan yang menempel di kepala pelanggan, titik bidik, HUD). Kode 3D tidak meng-import React; keduanya terhubung lewat `src/game/truck/bridge.ts`.
-- Ukuran: kode 3D (Three.js + game) ±128 KB terkompresi, dimuat setelah halaman tampil.
-- Belum: kontrol HP (joystick virtual) — dicatat di §14.10.
-
-
-### 14.9 Roadmap v2
-Setiap fase menghasilkan sesuatu yang bisa dimainkan; setiap iterasi: kerjakan → cek di browser → commit & push.
-
-| Fase | Isi | Selesai jika… |
-|---|---|---|
-| **4. Prototipe satu hari** | Arah tampilan (✅ 3D), truck 3D, antrean pelanggan dengan pesanan tertulis manual (Minggu 2), tablet, interaksi benda, Data Lens, penjualan masuk database, jam & ringkasan hari, 1 ketukan manajer | Pemilik project memainkan satu hari penuh dan menilai konsepnya seru → lanjut |
-| **5. Generator pesanan & pengulangan** | Template pesanan berparameter, penguasaan konsep + pengulangan berjeda, kesabaran & tip, log hari tersimpan dan diputar ulang | Hari ke-2, ke-3, dst. terasa berbeda tapi tetap melatih konsep yang perlu diulang |
-| **6. Kurikulum 6 minggu** | Memindahkan Ch0–5 menjadi template + kasus manajer, kartu materi per minggu, Skill Check → minggu awal, Analysis Case di Minggu 6 | Pemain baru bisa bermain dari Minggu 1 sampai Analysis Case, EN/ID |
-| **7. Truck tumbuh & visual final** | Upgrade truck (dekorasi, kulkas lebih besar, menu baru), lokasi baru (taman, pasar, festival), Lunch Rush, streak & badge versi hari, semua aset final | Koin bisa dibelanjakan dan truck/lokasi berubah terlihat |
-| **8. Rilis** | Uji main menyeluruh, kontrol HP, pilih hosting | Pemilik project menyetujui → v2 selesai |
-
-#### Rencana Fase 4 — Prototipe satu hari
-
-| # | Iterasi | Selesai jika… |
-|---|---|---|
-| 4.1–4.5 ✅ | **Mencari arah tampilan** dengan prototipe 2D: truck statis, antrean + tablet, truck tampak samping yang dijelajahi, panorama orang pertama bergaya risograf. Diganti oleh 4.6; kodenya dihapus (tag `v2-prototypes`). Rincian & screenshot di `docs/JOURNEY.md` | Alur pesanan → tablet → SQL → dilayani terbukti; gaya risograf lahir |
-| 4.6 ✅ | **Prototipe 3D** (Three.js): interior truck & taman low-poly, WASD + mouse, E/klik benda, pelanggan 3D antre, tablet pesanan, shader risograf → **ditetapkan sebagai versi tetap**; kode v1 & 2D dihapus, `/` langsung membuka truck 3D | Pemilik project mencobanya dan menetapkan 3D ✅ |
-| 4.7 | **Interaksi benda:** papan menu, kulkas, binder resep membuka konsol dengan tabelnya sendiri; pesanan bisa butuh mengecek benda lain dulu | Tiap benda membuka tabelnya; satu pesanan memakai kulkas (`inventory`) |
-| 4.8 | **Data Lens** (USP): tombol yang menampilkan tabel di atas setiap benda | Data Lens bisa dinyalakan di semua sisi truck |
-| 4.9 | Penjualan masuk database (`INSERT` oleh game, `channel = 'truck'`) + log hari di progres + putar ulang saat dimuat | Setelah melayani, query `sales` pemain menampilkan penjualan hari ini, juga setelah halaman dimuat ulang |
-| 4.10 | Jam 10.00–17.00, kesabaran → tip, layar tutup + ringkasan hari | Satu hari bisa dimainkan dari buka sampai ringkasan |
-| 4.11 | Ketukan manajer: The Manager (berjas) di pintu belakang, satu kasus kecil memakai mesin Mini Case dengan data hari ini | Kasus manajer bisa diselesaikan dengan bukti 📌 |
-| 4.12 | Uji main pemilik project + perbaikan | Keputusan: lanjut ke Fase 5 atau ubah konsep |
-
-**4.6 dibangun (17 Nov 2026):** (jalur file setelah pembersihan)
-- `src/game/truck/world.ts` (dites, tanpa Three.js): ukuran truck dalam meter (6 × 2,4 × 2,4 m), letak benda (`LAYOUT`), batas berjalan (`WALK`), `walkStep` (WASD relatif arah pandang, diagonal tidak lebih cepat), `rayBox`/`aimedInteractable` (benda di titik bidik dalam jangkauan 1,7 m), dan `queuePosition` (jalur antrean di taman; tanah taman 0,35 m lebih rendah agar kepala pelanggan terlihat di jendela).
-- `src/game/truck/build.ts`: truck (dinding dengan lubang jendela, counter, tablet miring, kulkas berisi botol, rak stok, mesin espresso merah, papan menu, binder resep, jam, pintu belakang), taman (rumput bergaris, jalan setapak, bangku, meja piknik berpayung, lampu taman + lampu gantung, pohon, siluet kota, matahari, awning truck), dan pelanggan kotak-kotak 1,75 m dengan kaki/lengan berayun.
-- `src/game/truck/risoPass.ts`: adegan dirender ±300 baris (piksel besar), lalu shader memetakan setiap piksel ke tinta riso dengan dither Bayer 4×4, menggambar garis tepi tinta dari lompatan kedalaman, dan garis merah "meleset" 1 piksel. `colour.ts` memastikan warna tinta dipakai persis (tanpa konversi sRGB→linear) dan lampu diberi intensitas × π (satuan fisik Three.js) — tanpa itu semua warna menjadi gelap kehijauan.
-- `src/game/truck/TruckGame.ts`: WASD/panah, mouse melihat (*pointer lock*; menyeret juga bisa), klik/E memakai benda di titik bidik, ayunan kepala saat berjalan, pelanggan berbalik ke arah jalan lalu menghadap truck saat menunggu, posisi kepala pelanggan terdepan dikirim ke React (event `anchor`) untuk gelembung pesanan. Waktu berhenti saat tablet terbuka (keyboard dan pointer lock dilepas).
-- `src/app/useTruckShift.tsx`: logika satu shift (database, pesanan, tablet, pesan singkat). `src/app/TruckApp.tsx`: titik bidik, label "E · <benda>", ajakan "Klik untuk melihat sekeliling", gelembung pesanan.
-- Ukuran: kode 3D (Three.js + game) **127 KB** terkompresi, dimuat setelah halaman tampil.
-- Belum: kontrol HP, kulkas/papan menu/binder resep/pintu masih menampilkan pesan "pembaruan berikutnya".
-
-**Pembersihan (17 Nov 2026):** kode v1 (Phaser, kafe top-down, Journal, toko, quest, `progress.ts`), prototipe truck 2D, 72 teks UI dan 112 aturan CSS yang tidak terpakai, serta dependensi Phaser dihapus. `src/game/` kini hanya berisi dunia 3D (`art/riso.ts`, `truck/`). Inti SQL (`src/sql-core/`) tetap utuh karena isinya dipakai ulang di Fase 6.
-
-### 14.10 Pertanyaan terbuka v2
-- [ ] Nama truck dan judul game (tetap "SQL Valley"?) — sementara tetap **SQL Valley**, truck bernama *Rolling Roast*
-- [ ] Apakah `INSERT`/`UPDATE` diajarkan di minggu lanjutan (pemain mencatat sendiri pesanan atau restock)
-- [ ] Panjang hari yang pas (8–12 menit) — ditentukan dari uji main 4.7
-- [ ] Lokasi berkeliling: hanya visual, atau setiap lokasi punya pelanggan/data berbeda
-- [ ] Kontrol HP untuk 3D: joystick virtual + seret untuk melihat, atau mode menoleh per sisi seperti prototipe 4.5
+- **v1 — Grandma's café** (Phases 1–3, 13–16 Nov 2026): a top-down 2D pixel-art café where the player walked to SQL stations. The full v1 design document (written in Indonesian at the time) and its code are in git tag `v1-cafe-mvp`.
+- **v2 prototypes** (4.1–4.6, 16–17 Nov 2026): from a static 2D truck to the 3D first-person truck. Code in git tag `v2-prototypes`; the story with screenshots in [`docs/JOURNEY.md`](docs/JOURNEY.md).

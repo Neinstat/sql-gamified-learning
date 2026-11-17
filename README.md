@@ -42,8 +42,8 @@ Everything is drawn through a **risograph shader**: the 3D scene is rendered at 
 
 The SQL core is complete from the first version of the game: 34 levels in six chapters (from `SELECT` to an analysis case), Mini Cases, a Skill Check and a timed mode. Phase 6 turns them into customer orders and manager questions over six in-game weeks.
 
-- [GAME_DESIGN.md](GAME_DESIGN.md): the full design and roadmap (in Indonesian)
-- [docs/JOURNEY.md](docs/JOURNEY.md): how the game went from a top-down 2D café to a 3D food truck, with screenshots (in Indonesian)
+- [GAME_DESIGN.md](GAME_DESIGN.md): the full design and roadmap
+- [docs/JOURNEY.md](docs/JOURNEY.md): how the game went from a top-down 2D café to a 3D food truck, with screenshots
 
 ## Getting started
 
