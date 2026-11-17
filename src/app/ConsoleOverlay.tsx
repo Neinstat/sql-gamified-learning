@@ -26,16 +26,16 @@ type Props = {
   onRevealHint: () => void;
   /** Correct: `mistakes` = wrong runs (request) or wrong conclusions (Mini Case). */
   onCorrect: (mistakes: number) => void;
-  /** Shown after a correct answer, e.g. "Nice work! Go tell Grandma." */
+  /** Shown after a correct answer. */
   solvedMessage: string;
   /** Stars and coins from the last correct answer. */
   reward: Reward | null;
   onClose: () => void;
-  /** Text on the button after solving (default: back to the café). */
+  /** Text on the button after solving (default: back to the truck). */
   doneLabel?: string;
 };
 
-/** The SQL console opened at a station, over the game world. */
+/** The SQL console (the truck's tablet), over the game world. */
 export function ConsoleOverlay(props: Props) {
   const {
     stationName,
@@ -72,7 +72,7 @@ export function ConsoleOverlay(props: Props) {
       {reward && <RewardLine reward={reward} isCase={isCase(level)} t={t} />}
       <p className="solved-message">{solvedMessage}</p>
       <button className="primary-button" onClick={onClose}>
-        {doneLabel ?? t.backToCafe}
+        {doneLabel ?? t.backToTruck}
       </button>
     </div>
   );

@@ -4,8 +4,8 @@ Third-party assets used in SQL Valley, with their source and licence.
 
 ## Art
 
-| Asset | Used for | Source | Licence |
-|---|---|---|---|
-| **Roguelike Indoors** by Kenney (Kenney Vleugels) | Table, chair, potted plant, counter and painting tiles in the café (`src/game/art/tiles.ts`), recoloured to SQL Valley's palette | https://kenney.nl/assets/roguelike-indoors | [CC0 1.0](https://creativecommons.org/publicdomain/zero/1.0/) — credit not required, given with thanks |
+None yet. Everything in the game is original to SQL Valley: the riso palette (`src/game/art/riso.ts`), the low-poly placeholder models (`src/game/truck/build.ts`) and the risograph shader (`src/game/truck/risoPass.ts`). Final 3D models are planned to come from CC0 packs; each one will be listed here with its source and licence (see [docs/ASSETS.md](docs/ASSETS.md)).
 
-Everything else is original to SQL Valley: the palette (`src/game/art/palette.ts`), the floor, walls, window, shelf, coffee machine, cash register, menu board and door mat tiles, and all characters and portraits.
+## Earlier versions
+
+The first version of the game (the top-down café, git tag `v1-cafe-mvp`) used furniture tiles from [Kenney's Roguelike Indoors](https://kenney.nl/assets/roguelike-indoors) (CC0 1.0). That code has been removed from the current game.

@@ -1,62 +1,49 @@
 # SQL Valley
 
-An interactive top-down game for learning SQL — fun to play, with a gentle learning curve, and built around **thinking like a Business Intelligence (BI) analyst**.
+A first-person 3D game for learning SQL: you run a food truck in a city park, and every customer at the window brings a request you answer with SQL. Built around **thinking like a Business Intelligence (BI) analyst**, in a risograph-print look.
 
-![Grandma's café after every upgrade: a rug, extra tables and plants, a fancy menu board and strolling customers](docs/images/cafe.jpg)
-
-*The front room with every café upgrade bought. A new game starts with a plainer café: you earn coins from stars and spend them in the upgrade shop (tap 🪙) to add the rug, tables, plants and customers.*
+![Looking out of the truck's serving window: customers queue on the park path, the one at the window asks for something under $3](docs/journey/v2-4-6-window.jpg)
 
 ## Why this project exists
 
 - **SQLBolt** has a great, easy-to-follow learning curve, but it isn't very interactive or fun.
 - **LeetCode** is interactive, but many of its case-study problems jump too far in difficulty for beginners.
 
-SQL Valley sits in between: step-by-step lessons like SQLBolt, wrapped in game mechanics that make you want to keep going — and ending with the skill real data jobs need: **answering business questions with data**.
+SQL Valley sits in between: step-by-step lessons like SQLBolt, wrapped in game mechanics that make you want to keep going, and ending with the skill real data jobs need: **answering business questions with data**.
 
 ## The concept
 
-You inherit your grandma's struggling café and become its data analyst. Explore the café in a 2D top-down world, take on requests from the people around you, and solve them with SQL at consoles found at the menu board, the cash register, the kitchen, the storeroom and the back office — from "show me the menu" all the way to "sales dropped last month, why?".
+You are the new hire at **Rolling Roast**, a coffee food truck parked in a city park. Customers walk up the park path and queue at your window. Each one asks for something ("what can I get for under $3?", "which coffees can I actually order today?"), and you answer by writing SQL on the truck's tablet. Later, **The Manager** in a suit knocks on the back door with harder questions: sales this month, what keeps selling out, why revenue dropped.
 
-- Web game that runs entirely in the browser
-- Queries run on a real PostgreSQL database in the browser (PGlite) — no backend needed
-- Progresses from basic `SELECT` to `JOIN`s, aggregation, and real business analysis cases
+- Runs entirely in the browser: real **PostgreSQL** via PGlite, no backend
+- From `SELECT` to `JOIN`s, aggregation and real analysis cases
+- Questions come back on later days, so you practise until queries stick
 - Play in **English** or **Bahasa Indonesia** (SQL, table names and data always stay in English)
 
 ## How to play
 
-1. **Talk** to whoever has a golden **!** above their head. They ask for something — a list, a number, an answer.
-2. **Walk to the station** the "!" moves to. Each station's console only sees its own tables, like real company systems: the menu board sees the menu, the cash register sees the sales.
-3. **Write SQL**, press **Run** (or Ctrl/⌘ + Enter). Your *result* is graded, not your text, with specific feedback when it's not right yet.
-4. **Report back** and earn stars ⭐ and coins 🪙. Spend coins to make the café cosier.
+1. Click the screen to look around (**Esc** frees the mouse).
+2. **WASD** or the arrow keys to walk around the truck, the **mouse** to look.
+3. Aim the crosshair at something and press **E** (or click): the **tablet** on the counter takes orders; the fridge, menu board, recipe binders and back door come next.
+4. Read the customer's request, write SQL, press **Run** (or Ctrl/⌘ + Enter). Your *result* is graded, not your text, with specific feedback when it isn't right yet.
+5. **Hand over the order**, and the next customer steps up. Time stops while the tablet is open.
 
-Controls: WASD / arrow keys or click/tap to walk, **E** / Space to talk or use a station, − / + to zoom. The 📖 Journal has your levels, a café map and your badges.
-
-| Talk to the café's people | Investigate like an analyst |
+| Inside the truck | The tablet |
 |---|---|
-| ![A dialogue with Grandma, with her portrait](docs/images/dialogue.jpg) | ![A Mini Case: a query result pinned to the investigation notes, next to the conclusion questions](docs/images/mini-case.jpg) |
+| ![The truck's interior: a red espresso machine, stock shelves, the fridge and the serving window](docs/journey/v2-4-6-interior.jpg) | ![The SQL tablet open over the 3D world](docs/journey/v2-4-6-tablet.jpg) |
 
-**Mini Cases** have no single right query: run as many queries as you like, pin 📌 the results that prove your answers, and draw conclusions — like a real analyst.
+## The look
 
-![The kitchen, which opens in Chapter 4, with its recipe book station](docs/images/kitchen.jpg)
-
-## What's inside
-
-- **Six chapters, 34 levels**: 0 · First Day · 1 · Cleaning Up the Menu · 2 · First Reports · 3 · Numbers Talk · 4 · Connecting the Dots · 5 · The Analysis Case
-- Input that grows with you: word blocks → fill in the blanks → a full SQL editor with autocomplete
-- **Mini Cases** at the end of Chapters 1–4, and the big **Analysis Case** to finish: *"October sales dropped 18%. What happened?"*
-- **"So what?"** questions after some levels: what does this result actually mean?
-- **Four rooms** that open chapter by chapter: the front room, the kitchen, the storeroom and the back office
-- **A café that grows**: stars, coins, upgrades (plants, a rug, tables, a fancy menu board, strolling customers), a daily streak 🔥 and badges 🏅
-- **Skill Check** for players who already know some SQL, and **Rush Hour** ⏱, a timed challenge
-- Realistic café data made by a seeded generator: about 4,600 orders from August to October, with hidden patterns to discover
-- Warm autumn pixel art: original characters, plus furniture from Kenney's CC0 pack (see [CREDITS.md](CREDITS.md))
+Everything is drawn through a **risograph shader**: the 3D scene is rendered at a low resolution, every pixel is mapped to a small set of riso inks with a 4×4 Bayer dither, ink outlines are drawn where depth jumps, and a red copy of each outline is printed one pixel off, like a riso print whose red layer didn't line up. The models are simple low-poly placeholders for now (see [docs/ASSETS.md](docs/ASSETS.md)).
 
 ## Status
 
-✅ **The MVP is complete**: Phase 1 (SQL core), Phase 2 (the first world) and Phase 3 (the café grows) are done.
-A [playtest checklist](docs/PLAYTEST.md) is kept for checking the whole game by hand.
+🚧 **Phase 4: the one-day prototype.** The 3D truck, the park, the queue, the tablet and the riso look are in. Next: the fridge, menu board and recipe binders opening their own tables, the "Data Lens", sales going into the database, the clock and the end-of-day summary, and The Manager.
 
-See [GAME_DESIGN.md](GAME_DESIGN.md) for the full design and roadmap (written in Indonesian).
+The SQL core is complete from the first version of the game: 34 levels in six chapters (from `SELECT` to an analysis case), Mini Cases, a Skill Check and a timed mode. Phase 6 turns them into customer orders and manager questions over six in-game weeks.
+
+- [GAME_DESIGN.md](GAME_DESIGN.md): the full design and roadmap (in Indonesian)
+- [docs/JOURNEY.md](docs/JOURNEY.md): how the game went from a top-down 2D café to a 3D food truck, with screenshots (in Indonesian)
 
 ## Getting started
 
@@ -70,49 +57,47 @@ npm run build      # typecheck and build for production
 npm run preview    # serve the production build at http://localhost:4173
 ```
 
-While developing, add `?level=` to jump straight to a level's request, e.g. `http://localhost:5173/?level=ch5-3` for the Analysis Case. Journal → **Start over** resets your progress.
-
 ## Tech stack
 
 | Part | Choice |
 |---|---|
-| Game world | [Phaser 3](https://phaser.io/) (2D, pixel art at whole-number zoom) |
-| SQL consoles and overlays | React 19 + [CodeMirror 6](https://codemirror.net/) (SQL highlighting and autocomplete) |
-| Database | [PGlite](https://pglite.dev/) — real PostgreSQL in the browser, running in a Web Worker so a slow query can be stopped |
-| Language and tooling | TypeScript, Vite, Vitest (about 480 automated tests) |
+| 3D world | [Three.js](https://threejs.org/) with a custom risograph post-processing shader (about 130 KB gzipped, loaded on demand) |
+| SQL tablet and overlays | React 19 + [CodeMirror 6](https://codemirror.net/) (SQL highlighting and autocomplete) |
+| Database | [PGlite](https://pglite.dev/): real PostgreSQL in the browser, running in a Web Worker so a slow query can be stopped |
+| Language and tooling | TypeScript, Vite, Vitest |
 
 How answers are kept safe and fair:
 
-- Every query runs in a **read-only transaction** that is always rolled back, so the café's data can never be changed.
-- Each station runs as its own **PostgreSQL role** that may only read its own tables.
+- Every query runs in a **read-only transaction** that is always rolled back, so the data can never be changed.
+- Each part of the truck runs as its own **PostgreSQL role** that may only read its own tables.
 - The checker compares **results**, not query text: any correct way of writing it counts. Row order only matters when the task asks for it.
 
 ## Project structure
 
 ```
 src/
-├── sql-core/      # the SQL "brain" — no UI or game-engine code allowed here
-│   ├── db.ts        # PGlite database, station roles and the safe, read-only query runner
-│   ├── stations.ts  # which tables each station's console can see
+├── sql-core/      # the SQL "brain": no UI or game-engine code allowed here
+│   ├── db.ts        # PGlite database, roles and the safe, read-only query runner
+│   ├── stations.ts  # which tables each console can see
 │   ├── checker.ts   # compares the player's result with the solution
-│   ├── cases.ts     # Mini Case / Analysis Case conclusions and evidence
+│   ├── cases.ts     # case conclusions and evidence
 │   ├── skillCheck.ts, rushHour.ts
 │   ├── feedback.ts  # feedback messages in English and Indonesian
-│   ├── data/        # café data: menu, generated sales, recipes, stock (seeded, always the same)
-│   └── levels/      # chapters, levels and their translations (locales/id)
-├── console/       # SQL console UI (React): blocks, fill-in-the-blank, editor, Mini Case notes
-├── game/          # the 2D world (Phaser) — no React code allowed here
-│   ├── rooms/       # the café map as text (one character = one 16×16 tile), rooms and upgrades
-│   ├── art/         # pixel art as text grids in one 32-colour palette
-│   ├── sheet.ts     # how a character's walking sheet is laid out
-│   └── bridge.ts    # the only link between the game world and the React overlays
-├── app/           # the page around the world: overlays, quests, rewards, growth, the database worker
+│   ├── data/        # the truck's data: menu, generated sales, recipes, stock (seeded, always the same)
+│   ├── levels/      # chapters, levels and their translations (locales/id)
+│   └── truck/       # customer orders (locales/id for translations)
+├── console/       # SQL console UI (React): blocks, fill-in-the-blank, editor, case notes
+├── game/          # the 3D world (Three.js): no React code allowed here
+│   ├── art/riso.ts  # the riso inks
+│   └── truck/       # world layout, models, riso shader, queue, the game loop, and the bridge to React
+├── app/           # the page around the world: HUD, tablet, the shift's logic, the database worker
 └── i18n.ts        # UI text in both languages
 docs/
-├── images/        # screenshots for this README
-└── PLAYTEST.md    # the checklist for playtesting
+├── JOURNEY.md     # the design journey, with screenshots
+├── ASSETS.md      # which art is final and which is a placeholder
+└── journey/       # screenshots
 ```
 
 ## Credits
 
-Furniture tiles from [Kenney's Roguelike Indoors](https://kenney.nl/assets/roguelike-indoors) (CC0). Everything else — the palette, the characters, portraits and the rest of the tiles — is original. See [CREDITS.md](CREDITS.md).
+No third-party art is used yet: the palette, models and shader are original. See [CREDITS.md](CREDITS.md).

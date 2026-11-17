@@ -6,13 +6,13 @@ import type { Lang } from '../sql-core/feedback';
 import { getChapters, isCase, type Level } from '../sql-core/levels';
 import { stationTables } from '../sql-core/stations';
 import { PROTOTYPE_ORDERS, type TruckOrder } from '../sql-core/truck/orders';
-import type { FrontCustomer, TruckBridge } from '../game/truck/truckBridge';
+import type { FrontCustomer, TruckBridge } from '../game/truck/bridge';
 import { ConsoleOverlay } from './ConsoleOverlay';
 import { getDatabase } from './database';
 
 /**
- * A shift in the food truck, shared by the 2D (`?truck`) and 3D (`?truck3d`) views: the database,
- * the customer at the window and their order, the tablet, and what using things in the truck does.
+ * A shift in the food truck: the database, the customer at the window and their order, the
+ * tablet, and what using things in the truck does.
  */
 export function useTruckShift(bridge: TruckBridge, lang: Lang, t: UiText) {
   const [db, setDb] = useState<CafeDatabase | null>(null);

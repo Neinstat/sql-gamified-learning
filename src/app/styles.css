@@ -224,18 +224,6 @@ body {
   background: var(--accent);
 }
 
-/* Level */
-
-.speaker {
-  display: inline-block;
-  margin-bottom: 4px;
-  font-size: 0.8rem;
-  font-weight: 700;
-  color: var(--accent);
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-}
-
 .lesson {
   max-width: 680px;
   margin: 0 0 16px;
@@ -429,86 +417,6 @@ body {
 .fill-input:focus {
   outline: 2px solid var(--accent);
   outline-offset: 1px;
-}
-
-/* Level list */
-.level-nav {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px 24px;
-  margin: -8px 0 24px;
-}
-
-.level-nav-chapter {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: flex-start;
-  gap: 6px;
-}
-
-.level-nav-title {
-  flex-basis: 100%;
-  margin-right: 2px;
-  white-space: nowrap;
-  font-size: 0.8rem;
-  color: var(--muted);
-}
-
-.level-dot {
-  width: 30px;
-  height: 30px;
-  padding: 0;
-  font-size: 0.8rem;
-  font-weight: 600;
-  color: var(--ink);
-  background: var(--surface);
-  border: 1px solid var(--line);
-  border-radius: 50%;
-  cursor: pointer;
-}
-
-.level-dot.done {
-  color: var(--ok-ink);
-  background: var(--ok-bg);
-  border-color: #b9d8ae;
-}
-
-.level-dot.current {
-  outline: 2px solid var(--accent);
-  outline-offset: 1px;
-}
-
-.level-dot:disabled {
-  opacity: 0.4;
-  cursor: default;
-}
-
-/* Chapter card */
-.chapter-card {
-  max-width: 680px;
-  margin: 0 0 16px;
-  padding: 14px 16px;
-  color: var(--accent-ink);
-  background: var(--accent);
-  border-radius: 12px;
-}
-
-.chapter-card-label {
-  font-size: 0.75rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-  opacity: 0.85;
-}
-
-.chapter-card-title {
-  margin: 2px 0;
-  font-size: 1.15rem;
-  font-weight: 700;
-}
-
-.chapter-card-summary {
-  margin: 0;
 }
 
 /* Mini Case: starters, pins, conclusions */
@@ -730,372 +638,10 @@ body {
   color: var(--muted);
 }
 
-.so-what-bonus {
-  margin: 0 0 14px;
-  font-size: 1rem;
-}
-
-.hud-coins {
-  padding: 4px 8px;
-  font-size: 0.95rem;
-  font-weight: 700;
-  color: #9c6b10;
-  white-space: nowrap;
-  background: #fdf3d8;
-  border: 1px solid #ecc995;
-  border-radius: 8px;
-  cursor: pointer;
-}
-
-.hud-streak {
-  font-size: 0.95rem;
-  font-weight: 700;
-  color: #b1532f;
-  white-space: nowrap;
-}
-
-/* Upgrade shop and badges */
-.shop-balance {
-  margin: 0 0 10px;
-  font-weight: 700;
-  color: #9c6b10;
-}
-
-.shop-list,
-.badge-list {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  margin: 0 0 20px;
-  padding: 0;
-  list-style: none;
-}
-
-.shop-item {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 8px 10px;
-  background: var(--surface);
-  border: 1px solid var(--line);
-  border-radius: 10px;
-}
-
-.shop-item.owned {
-  background: var(--ok-bg);
-}
-
-.shop-icon,
-.badge-icon {
-  font-size: 1.6rem;
-}
-
-.shop-text {
-  display: flex;
-  flex: 1;
-  flex-direction: column;
-  min-width: 0;
-  font-size: 0.9rem;
-}
-
-.shop-owned {
-  font-size: 0.85rem;
-  font-weight: 700;
-  color: var(--ok-ink);
-  white-space: nowrap;
-}
-
-.badge-list {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-}
-
-.badge {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  padding: 10px;
-  font-size: 0.8rem;
-  text-align: center;
-  background: var(--surface);
-  border: 1px solid var(--line);
-  border-radius: 10px;
-  opacity: 0.45;
-  filter: grayscale(1);
-}
-
-.badge.earned {
-  opacity: 1;
-  filter: none;
-  background: #fdf3d8;
-  border-color: #ecc995;
-}
-
-.badge-toast {
-  position: absolute;
-  top: 12px;
-  left: 50%;
-  z-index: 40;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 8px 16px;
-  color: var(--ink);
-  background: #fdf3d8;
-  border: 2px solid #eda552;
-  border-radius: 999px;
-  box-shadow: 0 4px 12px rgba(43, 29, 25, 0.3);
-  transform: translateX(-50%);
-  animation: toast-in 0.3s ease-out;
-}
-
-@keyframes toast-in {
-  from {
-    opacity: 0;
-    transform: translate(-50%, -10px);
-  }
-}
-
-.level-slot {
-  display: inline-flex;
-  flex-direction: column;
-  align-items: center;
-  min-height: 44px;
-}
-
-.level-nav-stars {
-  margin-left: 6px;
-  font-weight: 700;
-  color: #9c6b10;
-}
-
-/* Journal tabs and the café map */
-.journal-tabs {
-  display: flex;
-  gap: 6px;
-  margin: 0 0 12px;
-}
-
-.journal-tab {
-  padding: 6px 12px;
-  font-size: 0.9rem;
-  font-weight: 600;
-  color: var(--muted);
-  background: var(--surface);
-  border: 1px solid var(--line);
-  border-radius: 8px;
-  cursor: pointer;
-}
-
-.journal-tab.active {
-  color: var(--accent-ink);
-  background: var(--accent);
-  border-color: var(--accent);
-}
-
-.cafe-map {
-  display: flex;
-  gap: 4px;
-  margin: 4px 0 20px;
-  padding: 6px;
-  background: #4a2c22;
-  border-radius: 10px;
-}
-
-.cafe-map-room {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  min-width: 0;
-  min-height: 110px;
-  padding: 8px 6px;
-  font-size: 0.8rem;
-  background: #ecc995;
-  border-radius: 6px;
-}
-
-.cafe-map-room.locked {
-  color: #f6e7c8;
-  background: repeating-linear-gradient(135deg, #6e4430 0 6px, #93603d 6px 12px);
-}
-
-.cafe-map-room.here {
-  outline: 3px solid #eda552;
-  outline-offset: -3px;
-}
-
-.cafe-map-name {
-  font-weight: 700;
-  overflow-wrap: anywhere;
-}
-
-.cafe-map-note {
-  font-size: 0.75rem;
-  overflow-wrap: anywhere;
-}
-
-.cafe-map-note.task {
-  font-weight: 700;
-  color: #7c3424;
-}
-
-/* Welcome card and Skill Check */
-.welcome-head {
-  display: flex;
-  gap: 16px;
-  align-items: flex-start;
-  margin-bottom: 16px;
-}
-
-.welcome-head p {
-  margin: 0;
-  line-height: 1.5;
-}
-
-.welcome-portrait {
-  flex-shrink: 0;
-  width: 96px;
-  height: 96px;
-  image-rendering: pixelated;
-  border: 3px solid #5b4033;
-  border-radius: 8px;
-}
-
-.welcome-actions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
-}
-
-.skill-steps {
-  display: flex;
-  gap: 6px;
-  margin: 0 0 12px;
-  padding: 0;
-  list-style: none;
-}
-
-.skill-step {
-  width: 28px;
-  height: 28px;
-  line-height: 26px;
-  text-align: center;
-  font-size: 0.8rem;
-  font-weight: 700;
-  color: var(--muted);
-  background: var(--surface);
-  border: 1px solid var(--line);
-  border-radius: 50%;
-}
-
-.skill-step.now {
-  outline: 2px solid var(--accent);
-  outline-offset: 1px;
-}
-
-.skill-step.passed {
-  color: var(--ok-ink);
-  background: var(--ok-bg);
-}
-
-.skill-step.missed {
-  color: var(--error-ink);
-  background: var(--error-bg);
-}
-
-.skill-result {
-  max-width: 640px;
-  line-height: 1.5;
-}
-
-.skill-result-title {
-  font-size: 1.15rem;
-  font-weight: 700;
-}
-
-.level-dot.skipped {
-  border-style: dashed;
-}
-
-@media (max-width: 520px) {
-  .welcome-head {
-    flex-direction: column;
-  }
-}
-
-/* Rush Hour */
-.rush-bar {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 16px;
-  margin-bottom: 10px;
-  font-size: 1.05rem;
-  font-weight: 700;
-}
-
-.rush-time.low {
-  color: var(--error-ink);
-}
-
-.rush-combo {
-  color: #b1532f;
-}
-
-.rush-flash {
-  color: var(--ok-ink);
-  animation: toast-in 0.3s ease-out;
-}
-
 .link-button:disabled {
   color: var(--muted);
   cursor: default;
   text-decoration: none;
-}
-
-/* So what? */
-.so-what-question {
-  margin: 0 0 12px;
-  font-size: 1.05rem;
-  font-weight: 600;
-}
-
-.so-what-choices {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  margin-bottom: 14px;
-}
-
-.so-what-choice {
-  padding: 10px 12px;
-  font-size: 0.95rem;
-  text-align: left;
-  color: var(--ink);
-  background: var(--surface);
-  border: 1px solid var(--line);
-  border-radius: 8px;
-  cursor: pointer;
-}
-
-.so-what-choice.right {
-  color: var(--ok-ink);
-  background: var(--ok-bg);
-  border-color: #b9d8ae;
-}
-
-.so-what-choice.wrong {
-  color: var(--error-ink);
-  background: var(--error-bg);
-}
-
-.so-what-choice:disabled {
-  cursor: default;
-}
-
-.so-what-explanation {
-  margin: 0 0 14px;
-  line-height: 1.5;
 }
 
 /* Hints */
@@ -1123,123 +669,6 @@ body {
   height: 100vh;
   height: 100dvh;
   background: #2b211c;
-}
-
-.world-hud {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 12px;
-  padding: 8px 16px;
-  background: var(--surface);
-  border-bottom: 1px solid var(--line);
-}
-
-.world-title {
-  margin: 0;
-  font-size: 1.25rem;
-  color: var(--accent);
-}
-
-.world-hud-actions {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-}
-
-.game-view {
-  position: relative;
-  flex: 1;
-  min-height: 0;
-  overflow: hidden;
-}
-
-.game-view canvas {
-  display: block;
-}
-
-/* The world is driven by taps, not page gestures: no scrolling, zooming or text selection. */
-.game-view {
-  touch-action: none;
-  user-select: none;
-  -webkit-user-select: none;
-  -webkit-touch-callout: none;
-}
-
-.world-stage {
-  position: relative;
-  display: flex;
-  flex: 1;
-  min-height: 0;
-}
-
-/* Dialogue over the world */
-.dialogue-box {
-  position: absolute;
-  left: 50%;
-  bottom: 16px;
-  z-index: 10;
-  display: flex;
-  gap: 14px;
-  width: min(720px, calc(100% - 32px));
-  padding: 14px;
-  color: var(--ink);
-  background: var(--surface);
-  border: 3px solid #5b4033;
-  border-radius: 10px;
-  box-shadow: 0 6px 0 rgba(0, 0, 0, 0.25);
-  transform: translateX(-50%);
-  cursor: pointer;
-}
-
-.dialogue-portrait {
-  flex: none;
-  width: 96px;
-  height: 96px;
-  image-rendering: pixelated;
-  border: 2px solid #5b4033;
-  border-radius: 6px;
-}
-
-.dialogue-body {
-  display: flex;
-  flex: 1;
-  flex-direction: column;
-  min-width: 0;
-}
-
-.dialogue-line {
-  flex: 1;
-  margin: 4px 0 10px;
-  font-size: 1.05rem;
-  line-height: 1.5;
-}
-
-.dialogue-footer {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 12px;
-}
-
-.dialogue-hint {
-  font-size: 0.8rem;
-  color: var(--muted);
-}
-
-@media (max-width: 520px) {
-  .dialogue-portrait {
-    width: 64px;
-    height: 64px;
-  }
-
-  .dialogue-hint {
-    display: none;
-  }
-
-  .dialogue-footer {
-    justify-content: flex-end;
-  }
 }
 
 /* SQL console over the world */
@@ -1305,86 +734,6 @@ body {
   }
 }
 
-/* What to do next, under the header */
-.quest-bar {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: baseline;
-  gap: 4px 12px;
-  padding: 8px 16px;
-  font-size: 0.95rem;
-  color: var(--ink);
-  background: #f3e6cc;
-  border-bottom: 1px solid var(--line);
-}
-
-.quest-bar-label {
-  font-size: 0.75rem;
-  font-weight: 700;
-  color: var(--muted);
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-}
-
-.quest-bar-text.active::before {
-  content: '❗ ';
-}
-
-/* Cards in the middle of the world: lesson, new chapter, journal */
-.world-modal-backdrop {
-  position: absolute;
-  inset: 0;
-  z-index: 30;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  padding: 16px;
-  overflow-y: auto;
-  background: rgba(43, 33, 28, 0.55);
-}
-
-.world-modal {
-  position: relative;
-  width: min(720px, 100%);
-  max-height: 100%;
-  padding: 20px;
-  overflow-y: auto;
-  color: var(--ink);
-  background: var(--bg);
-  border: 3px solid #5b4033;
-  border-radius: 10px;
-}
-
-.world-modal .lesson,
-.world-modal .chapter-card {
-  margin-bottom: 16px;
-}
-
-.world-modal-close {
-  position: absolute;
-  top: 12px;
-  right: 12px;
-}
-
-.world-modal-title {
-  margin: 0 0 4px;
-  color: var(--accent);
-}
-
-.world-modal-hint {
-  margin: 0 0 16px;
-  color: var(--muted);
-}
-
-.world-modal .level-nav {
-  margin-bottom: 20px;
-}
-
-.world-modal-start-over {
-  display: inline-block;
-  margin: 0 20px 20px 0;
-}
-
 .solved-message {
   margin: 0 0 10px;
   font-weight: 600;
@@ -1407,10 +756,6 @@ body {
   font-size: 2rem;
   font-weight: 700;
   color: #f0c75e;
-}
-
-.world-loading-text {
-  margin: 0;
 }
 
 .loading-bar {
@@ -1457,68 +802,13 @@ body {
   }
 }
 
-.quest-bar-status {
-  margin-left: auto;
-  font-size: 0.8rem;
-  color: var(--muted);
-}
-
-.hud-button {
-  padding: 6px 10px;
-  font-size: 0.9rem;
-  font-weight: 600;
-  color: var(--ink);
-  background: var(--surface);
-  border: 1px solid var(--line);
-  border-radius: 8px;
-  cursor: pointer;
-}
-
 /* Phones */
 @media (max-width: 520px) {
-  .world-hud {
-    padding: 6px 12px;
-  }
-
-  .world-hud-actions {
-    gap: 8px;
-  }
-
-  .quest-bar {
-    padding: 6px 12px;
-    font-size: 0.9rem;
-  }
 
   /* iOS zooms into inputs smaller than 16px; keep the editor at 16px. */
   .editor .cm-editor {
     font-size: 16px;
   }
-}
-
-/* − / + over the world */
-.zoom-controls {
-  position: absolute;
-  right: 12px;
-  bottom: 12px;
-  z-index: 5;
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-
-.zoom-button {
-  width: 40px;
-  height: 40px;
-  font-size: 1.3rem;
-  font-weight: 700;
-  line-height: 1;
-  color: var(--ink);
-  background: var(--surface);
-  border: 2px solid #5b4033;
-  border-radius: 8px;
-  box-shadow: 0 3px 0 rgba(0, 0, 0, 0.25);
-  cursor: pointer;
-  touch-action: manipulation;
 }
 
 /* Food truck v2 (GAME_DESIGN.md §14): the fixed 480×270 scene fills the screen. */
@@ -1554,12 +844,6 @@ body {
 
 .truck-title {
   font-weight: 700;
-}
-
-.truck-hud-right {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
 }
 
 /* The front customer's order, above their head; the tail points down at them. */
@@ -1603,24 +887,6 @@ body {
   margin: 0;
 }
 
-.order-bubble-button {
-  margin-top: 0.4rem;
-  padding: 0.25rem 0.6rem;
-  border: 2px solid #2b1d19;
-  border-radius: 4px;
-  background: #f5cd78;
-  color: #2b1d19;
-  font: inherit;
-  font-size: 0.85rem;
-  font-weight: 700;
-  cursor: pointer;
-  pointer-events: auto;
-}
-
-.order-bubble-button:hover {
-  background: #eda552;
-}
-
 .order-bubble-hint {
   margin: 0.35rem 0 0;
   font-size: 0.8rem;
@@ -1632,11 +898,6 @@ body {
   flex: 1;
   font-size: 0.8rem;
   color: #d7a571;
-}
-
-.hud-button.active {
-  background: #a5494f;
-  color: #fff6e3;
 }
 
 .truck-toast {
@@ -1659,93 +920,12 @@ body {
   }
 }
 
-/* First person (4.5): side name, turn buttons. Riso inks: ink #25304f, paper #f4ead5, red #e4573d, mustard #f2b234. */
-.truck-side-name {
-  position: absolute;
-  top: 0.6rem;
-  left: 50%;
-  transform: translateX(-50%);
-  margin: 0;
-  padding: 0.2rem 0.7rem;
-  border: 2px solid #25304f;
-  border-radius: 999px;
-  background: #f4ead5;
-  color: #25304f;
-  font-size: 0.85rem;
-  font-weight: 700;
-  box-shadow: 2px 2px 0 #e4573d;
-  pointer-events: none;
-  white-space: nowrap;
-}
-
-.truck-turn {
-  position: absolute;
-  top: 50%;
-  transform: translateY(-50%);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 0.15rem;
-  min-width: 3rem;
-  padding: 0.6rem 0.4rem;
-  border: 2px solid #25304f;
-  border-radius: 8px;
-  background: rgba(244, 234, 213, 0.92);
-  color: #25304f;
-  font: inherit;
-  font-size: 1.6rem;
-  line-height: 1;
-  box-shadow: 2px 2px 0 #e4573d;
-  cursor: pointer;
-}
-
-.truck-turn:hover {
-  background: #f2b234;
-}
-
-.truck-turn-left {
-  left: 0.5rem;
-}
-
-.truck-turn-right {
-  right: 0.5rem;
-}
-
-.truck-turn-name {
-  max-width: 5rem;
-  font-size: 0.65rem;
-  font-weight: 700;
-  text-align: center;
-}
-
-.truck-turn-alert {
-  position: absolute;
-  top: -0.5rem;
-  right: -0.5rem;
-  display: grid;
-  place-items: center;
-  width: 1.3rem;
-  height: 1.3rem;
-  border-radius: 50%;
-  background: #e4573d;
-  color: #fffaf0;
-  font-size: 0.85rem;
-  font-weight: 700;
-  animation: alert-bob 0.9s ease-in-out infinite alternate;
-}
-
-@keyframes alert-bob {
-  to {
-    transform: translateY(-3px);
-  }
-}
-
 .truck-view {
   background: #25304f;
 }
 
 /* 3D prototype (4.6): crosshair, aim label, "click to look around". */
-.truck3d-canvas {
+.truck-canvas {
   display: block;
   image-rendering: pixelated;
 }
@@ -1789,7 +969,7 @@ body {
   white-space: nowrap;
 }
 
-.truck3d-start {
+.truck-start {
   position: absolute;
   left: 50%;
   bottom: 12%;
@@ -1804,12 +984,12 @@ body {
   pointer-events: none;
 }
 
-.truck3d-start-title {
+.truck-start-title {
   margin: 0;
   font-weight: 700;
 }
 
-.truck3d-start-hint {
+.truck-start-hint {
   margin: 0.25rem 0 0;
   font-size: 0.85rem;
 }
