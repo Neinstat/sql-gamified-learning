@@ -16,14 +16,17 @@ type Props = {
   schema: Table[];
   lang: Lang;
   t: UiText;
+  /** Start on this table (e.g. one clicked in the Data Lens); default: the first one. */
+  table?: string;
 };
 
 /**
  * Looking around with one object in the truck (the fridge, the menu board…): run any query on its
  * tables. Nothing is graded — this is where players check things before answering an order.
  */
-export function ExploreConsole({ db, station, schema, lang, t }: Props) {
-  const starter = schema[0] ? `SELECT *\nFROM ${schema[0].table}\nLIMIT 10;` : '';
+export function ExploreConsole({ db, station, schema, lang, t, table }: Props) {
+  const first = schema.find((s) => s.table === table)?.table ?? schema[0]?.table;
+  const starter = first ? `SELECT *\nFROM ${first}\nLIMIT 10;` : '';
   const [sql, setSql] = useState(starter);
   const [result, setResult] = useState<QueryResult | null>(null);
   const [running, setRunning] = useState(false);

@@ -25,6 +25,7 @@ const en = {
   hintTitle: (n: number) => `Hint ${n}`,
   levels: 'Levels',
   dialogueClose: 'Close',
+  talkNext: 'Next',
   stations: STATION_NAMES.en as Record<StationId, string>,
   backToTruck: 'Back to the truck',
   retry: 'Try again',
@@ -75,6 +76,8 @@ const en = {
   lensHint: 'See the data behind everything in the truck (L)',
   lensRows: (n: number) => `${n.toLocaleString('en-US')} ${n === 1 ? 'row' : 'rows'}`,
   lensNeeded: 'needed for this order',
+  lensOpen: (table: string) => `Open ${table}`,
+  lensClickHint: 'Click a table to open it · drag to look around · L to close the lens',
   truckThings: {
     fridge: 'Fridge & stock',
     tablet: 'Tablet',
@@ -142,6 +145,7 @@ const id: UiText = {
   hintTitle: (n) => `Petunjuk ${n}`,
   levels: 'Level',
   dialogueClose: 'Tutup',
+  talkNext: 'Lanjut',
   stations: STATION_NAMES.id,
   backToTruck: 'Kembali ke truck',
   retry: 'Coba lagi',
@@ -192,6 +196,8 @@ const id: UiText = {
   lensHint: 'Lihat data di balik semua benda di truck (L)',
   lensRows: (n: number) => `${n.toLocaleString('id-ID')} baris`,
   lensNeeded: 'dibutuhkan pesanan ini',
+  lensOpen: (table: string) => `Buka ${table}`,
+  lensClickHint: 'Klik tabel untuk membukanya · seret untuk melihat sekeliling · L untuk menutup lensa',
   truckThings: {
     fridge: 'Kulkas & stok',
     tablet: 'Tablet',

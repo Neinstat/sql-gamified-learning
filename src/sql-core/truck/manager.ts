@@ -7,9 +7,42 @@
 import { applyText, type CaseLevel, type Level } from '../levels';
 import type { CafeDatabase } from '../db';
 import type { Lang } from '../feedback';
-import { MANAGER_CASE_ID } from './locales/id/manager';
+import { MANAGER_CASE_ID, MANAGER_INTRO_ID } from './locales/id/manager';
 
 export const MANAGER_CASE = 'manager-day-1';
+
+/**
+ * The talk at the back door before the case (GAME_DESIGN.md §4): the Manager's lines one by one,
+ * then the player picks a reply and the Manager answers it — every reply leads to the case.
+ */
+export type ManagerIntro = {
+  lines: string[];
+  replies: { label: string; answer: string }[];
+  /** The button that opens the case after the answer. */
+  open: string;
+};
+
+export const MANAGER_INTRO: ManagerIntro = {
+  lines: [
+    '*Knock knock.*',
+    "Valley Eats Co., regional manager. I don't do small talk.",
+    'Three numbers before I leave: how many orders today, how much revenue today, and our best channel last month.',
+  ],
+  replies: [
+    { label: 'Right away.', answer: "Good. Pin your proof. I don't trust feelings. I trust rows." },
+    {
+      label: 'Can I finish with this customer first?',
+      answer: "No. Numbers first. Your customer's clock is stopped anyway — mine isn't.",
+    },
+    {
+      label: "What's a channel?",
+      answer: 'Dine-in, takeaway, delivery: where the money comes in. It is a column in sales. Look.',
+    },
+  ],
+  open: 'Open the case 📋',
+};
+
+export const managerIntroFor = (lang: Lang): ManagerIntro => (lang === 'id' ? MANAGER_INTRO_ID : MANAGER_INTRO);
 
 /** The October channels, in the order the choices are shown. */
 const CHANNELS = ['dine-in', 'takeaway', 'delivery'] as const;

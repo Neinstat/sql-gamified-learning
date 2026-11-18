@@ -1036,11 +1036,16 @@ body {
   font-size: 0.75rem;
 }
 
+/* The layer lets clicks through to the 3D view (dragging to look); the cards themselves catch them. */
 .lens-layer {
   position: absolute;
   inset: 0;
   overflow: hidden;
   pointer-events: none;
+}
+
+.lens-card {
+  pointer-events: auto;
 }
 
 /* A fixed width (set inline) and nothing wider than it: long names and values end in "…". */
@@ -1063,12 +1068,53 @@ body {
   box-shadow: 3px 3px 0 #f2b234;
 }
 
+/* Each table line is a button: click to open that table. */
 .lens-card-head {
   display: flex;
   align-items: baseline;
-  justify-content: space-between;
   gap: 0.6rem;
+  width: 100%;
   margin: 0;
+  padding: 0.05rem 0.2rem;
+  border: none;
+  border-radius: 3px;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.lens-card-head:hover,
+.lens-card-head:focus-visible {
+  background: #9ad6c8;
+  outline: none;
+}
+
+.lens-card-count {
+  margin-left: auto;
+}
+
+.lens-card-open {
+  font-size: 0.75rem;
+  opacity: 0.6;
+}
+
+.lens-hint {
+  position: absolute;
+  left: 50%;
+  bottom: 1rem;
+  transform: translateX(-50%);
+  margin: 0;
+  padding: 0.35rem 0.8rem;
+  border: 2px solid #1c6b63;
+  border-radius: 999px;
+  background: rgba(244, 234, 213, 0.95);
+  color: #1c6b63;
+  font-size: 0.85rem;
+  font-weight: 700;
+  white-space: nowrap;
+  pointer-events: none;
 }
 
 .lens-card-table {
@@ -1306,4 +1352,82 @@ body {
   9% {
     transform: translateX(-4px);
   }
+}
+
+/* Talking with the Manager at the back door: a box at the bottom of the screen. */
+.talk-box {
+  position: absolute;
+  left: 50%;
+  bottom: 1rem;
+  transform: translateX(-50%);
+  box-sizing: border-box;
+  width: min(40rem, calc(100% - 2rem));
+  padding: 0.8rem 1rem 1rem;
+  border: 2px solid #f2b234;
+  border-radius: 8px;
+  background: #25304f;
+  color: #f4ead5;
+  box-shadow: 4px 4px 0 #e4573d;
+  animation: bubble-pop 0.18s ease-out;
+}
+
+.talk-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.talk-speaker {
+  margin: 0;
+  color: #f2b234;
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.talk-you {
+  margin: 0.4rem 0 0;
+  color: #9ad6c8;
+  font-style: italic;
+}
+
+.talk-line {
+  min-height: 2.8em;
+  margin: 0.45rem 0 0.8rem;
+  font-size: 1.05rem;
+  line-height: 1.45;
+}
+
+.talk-replies {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.talk-reply {
+  padding: 0.45rem 0.7rem;
+  border: 2px solid #9ad6c8;
+  border-radius: 6px;
+  background: transparent;
+  color: #f4ead5;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.talk-reply:hover {
+  background: rgba(154, 214, 200, 0.15);
+}
+
+.talk-reply kbd {
+  margin-right: 0.35rem;
+  padding: 0 0.35rem;
+  border: 1px solid currentColor;
+  border-radius: 3px;
+  font-size: 0.8rem;
+}
+
+.talk-next {
+  float: right;
 }

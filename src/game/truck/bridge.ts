@@ -27,8 +27,11 @@ import type { InteractableId } from './world';
 
 export type FrontCustomer = { orderId: string };
 
-/** A Data Lens card on screen: its tables, where it is (0–1 from the top left), and its distance. */
-export type LensCard = { id: string; tables: string[]; x: number; y: number; distance: number };
+/**
+ * A Data Lens card on screen: its tables, the object that holds them (clicking a table opens it
+ * there), where it is (0–1 from the top left), and its distance.
+ */
+export type LensCard = { id: string; tables: string[]; object: InteractableId; x: number; y: number; distance: number };
 
 type TruckEvents = {
   front: FrontCustomer | null;

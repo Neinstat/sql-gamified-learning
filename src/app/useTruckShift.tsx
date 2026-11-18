@@ -7,13 +7,14 @@ import type { Lang } from '../sql-core/feedback';
 import { isCase, type Level, type RequestLevel } from '../sql-core/levels';
 import { stationTables, tablesInQuery } from '../sql-core/stations';
 import { findOrderLevel } from '../sql-core/truck/levels';
-import { managerCaseFor } from '../sql-core/truck/manager';
+import { managerCaseFor, managerIntroFor } from '../sql-core/truck/manager';
 import { OBJECT_STATION, objectForStation, type TruckObjectId } from '../sql-core/truck/objects';
 import { emptyDay, missOrder, moodFor, parseDayLog, saleSql, serveOrder, TIPS, type DayLog } from '../sql-core/truck/day';
 import { starsFor } from './rewards';
 import { PROTOTYPE_ORDERS, type TruckOrder } from '../sql-core/truck/orders';
 import type { FrontCustomer, TruckBridge } from '../game/truck/bridge';
 import { ConsoleOverlay } from './ConsoleOverlay';
+import { TalkBox } from './TalkBox';
 import { getDayDatabase } from './database';
 
 /**
@@ -55,6 +56,8 @@ export function useTruckShift(bridge: TruckBridge, lang: Lang, t: UiText) {
   const [front, setFront] = useState<FrontCustomer | null>(null);
   const [orderOpen, setOrderOpen] = useState(false);
   const [exploring, setExploring] = useState<TruckObjectId | null>(null);
+  /** The table the look-around console starts on (from a Data Lens card). */
+  const [exploreTable, setExploreTable] = useState<string | undefined>(undefined);
   /** Set once the order's answer is right: how many wrong runs came before it (for stars). */
   const [solved, setSolved] = useState<{ mistakes: number } | null>(null);
   /** Patience left of the customer at the window (0–1), for their mood and tip. */
@@ -65,6 +68,8 @@ export function useTruckShift(bridge: TruckBridge, lang: Lang, t: UiText) {
   const [knocking, setKnocking] = useState(false);
   const [managerLevel, setManagerLevel] = useState<Level | null>(null);
   const [managerOpen, setManagerOpen] = useState(false);
+  /** Talking with the Manager at the door, before the case opens. */
+  const [managerTalk, setManagerTalk] = useState(false);
   const [managerSolved, setManagerSolved] = useState<{ wrong: number } | null>(null);
   const [managerHints, setManagerHints] = useState(0);
   const [hintsUsed, setHintsUsed] = useState(0);
@@ -135,22 +140,29 @@ export function useTruckShift(bridge: TruckBridge, lang: Lang, t: UiText) {
     () =>
       bridge.on('use', (id) => {
         if (order && id === orderObject) setOrderOpen(true);
-        else if (OBJECT_STATION[id]) setExploring(id);
+        else if (OBJECT_STATION[id]) {
+          setExploreTable(undefined);
+          setExploring(id);
+        }
         else if (id === 'back-door' && knocking && db) {
-          // Open the door: the Manager's case is worked out from the data as it is right now.
           bridge.emit('door', true);
+          // Back to a case already started: straight in. Otherwise: talk first, while the case is
+          // worked out from the data as it is right now.
+          if (managerLevel) {
+            setManagerOpen(true);
+            return;
+          }
+          setManagerTalk(true);
           managerCaseFor(db, day.date, lang)
-            .then((level) => {
-              setManagerLevel(level);
-              setManagerOpen(true);
-            })
+            .then(setManagerLevel)
             .catch((err) => {
+              setManagerTalk(false);
               bridge.emit('door', false);
               setToast(String(err));
             });
         } else setToast(day.manager ? t.managerGone : t.truckDoor);
       }),
-    [bridge, order, orderObject, t, knocking, db, day.date, day.manager, lang],
+    [bridge, order, orderObject, t, knocking, db, day.date, day.manager, lang, managerLevel],
   );
 
   const closeManager = useCallback(() => {
@@ -169,7 +181,7 @@ export function useTruckShift(bridge: TruckBridge, lang: Lang, t: UiText) {
   }, [bridge, managerSolved, managerHints, updateDay, t]);
 
   // Time stops while a console is open.
-  const open = orderOpen || exploring !== null || managerOpen;
+  const open = orderOpen || exploring !== null || managerOpen || managerTalk;
   useEffect(() => bridge.emit('pause', open), [bridge, open]);
 
   const closeOrder = useCallback(() => {
@@ -190,6 +202,13 @@ export function useTruckShift(bridge: TruckBridge, lang: Lang, t: UiText) {
   }, [bridge, solved, order, day, db, patience, hintsUsed, updateDay]);
 
   const closeExplore = useCallback(() => setExploring(null), []);
+
+  /** A table clicked in the Data Lens: look around it with the object that holds it. */
+  const openTable = useCallback((object: TruckObjectId, table: string) => {
+    if (!OBJECT_STATION[object]) return;
+    setExploreTable(table);
+    setExploring(object);
+  }, []);
 
   // Esc closes the look-around console (the order console handles its own).
   useEffect(() => {
@@ -244,7 +263,7 @@ export function useTruckShift(bridge: TruckBridge, lang: Lang, t: UiText) {
         solvedMessage={managerLevel.success}
         doneLabel={t.managerHandOver}
         onClose={closeManager}
-        speech={{ speaker: t.managerName, lines: managerLevel.dialogue }}
+        speech={{ speaker: t.managerName, lines: managerLevel.dialogue.slice(-1) }}
       />
     ) : null;
 
@@ -267,7 +286,8 @@ export function useTruckShift(bridge: TruckBridge, lang: Lang, t: UiText) {
           </p>
           {db ? (
             <ExploreConsole
-              key={exploring}
+              key={`${exploring}-${exploreTable ?? ''}`}
+              table={exploreTable}
               db={db}
               station={exploreStation}
               schema={stationTables(exploreStation, schema)}
@@ -308,9 +328,25 @@ export function useTruckShift(bridge: TruckBridge, lang: Lang, t: UiText) {
     mood: front && patience?.orderId === front.orderId ? moodFor(patience.left) : null,
     patienceLeft: front && patience?.orderId === front.orderId ? patience.left : null,
     consoleOpen: open,
+    openTable,
     overlays: (
       <>
         {orderConsole}
+        {managerTalk && (
+          <TalkBox
+            speaker={t.managerName}
+            {...talkScript(managerIntroFor(lang))}
+            onDone={() => {
+              setManagerTalk(false);
+              setManagerOpen(true);
+            }}
+            onClose={() => {
+              setManagerTalk(false);
+              bridge.emit('door', false);
+            }}
+            t={t}
+          />
+        )}
         {managerConsole}
         {exploreConsole}
         {toastView}
@@ -318,3 +354,10 @@ export function useTruckShift(bridge: TruckBridge, lang: Lang, t: UiText) {
     ),
   };
 }
+
+const talkScript = (intro: ReturnType<typeof managerIntroFor>) => ({
+  lines: intro.lines,
+  replies: intro.replies,
+  openLabel: intro.open,
+});
+

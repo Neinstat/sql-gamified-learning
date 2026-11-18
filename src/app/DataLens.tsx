@@ -64,6 +64,7 @@ export function DataLens({
   summaries,
   needed,
   view,
+  onOpen,
   t,
 }: {
   cards: LensCard[];
@@ -72,6 +73,8 @@ export function DataLens({
   needed: string[];
   /** The 3D view's size in pixels. */
   view: { width: number; height: number };
+  /** A table name was clicked: open it with the object that holds it. */
+  onOpen: (object: LensCard['object'], table: string) => void;
   t: UiText;
 }) {
   const laid = cards.map((card) => {
@@ -109,13 +112,22 @@ export function DataLens({
             }}
           >
             {card.tables.map((table) => (
-              <p key={table} className={needed.includes(table) ? 'lens-card-head lens-card-head-needed' : 'lens-card-head'}>
+              <button
+                key={table}
+                type="button"
+                className={needed.includes(table) ? 'lens-card-head lens-card-head-needed' : 'lens-card-head'}
+                onClick={() => onOpen(card.object, table)}
+                title={t.lensOpen(table)}
+              >
                 <code className="lens-card-table">
                   {needed.includes(table) ? '★ ' : ''}
                   {table}
                 </code>
                 {summaries[table] && <span className="lens-card-count">{t.lensRows(summaries[table].count)}</span>}
-              </p>
+                <span className="lens-card-open" aria-hidden="true">
+                  ↗
+                </span>
+              </button>
             ))}
             {anyNeeded && <p className="lens-card-needed-label">{t.lensNeeded}</p>}
             {summary && (

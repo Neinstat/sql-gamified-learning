@@ -3,7 +3,7 @@ import { checkConclusion } from '../cases';
 import { createCafeDatabase, type LocalCafeDatabase } from '../db';
 import { BLANK } from '../levels';
 import { daySalesSql, emptyDay, OPENING, serveOrder } from './day';
-import { buildManagerCase, managerCaseFor } from './manager';
+import { buildManagerCase, MANAGER_INTRO, managerCaseFor, managerIntroFor } from './manager';
 import { MANAGER_CASE_ID } from './locales/id/manager';
 import { PROTOTYPE_ORDERS } from './orders';
 
@@ -66,3 +66,23 @@ describe("The Manager's case", () => {
     await expect(buildManagerCase(db, "x'; --")).rejects.toThrow();
   });
 });
+
+describe("The Manager's talk at the door", () => {
+  it('has lines, a few replies that each get an answer, and a way into the case, in both languages', () => {
+    for (const lang of ['en', 'id'] as const) {
+      const intro = managerIntroFor(lang);
+      expect(intro.lines.length).toBeGreaterThan(0);
+      expect(intro.replies.length).toBeGreaterThanOrEqual(2);
+      for (const r of intro.replies) {
+        expect(r.label.length).toBeGreaterThan(0);
+        expect(r.answer.length).toBeGreaterThan(0);
+      }
+      expect(intro.open.length).toBeGreaterThan(0);
+    }
+    const id = managerIntroFor('id');
+    expect(id.lines).toHaveLength(MANAGER_INTRO.lines.length);
+    expect(id.replies).toHaveLength(MANAGER_INTRO.replies.length);
+    expect(id.lines[1]).not.toBe(MANAGER_INTRO.lines[1]);
+  });
+});
+

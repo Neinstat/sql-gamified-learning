@@ -35,7 +35,7 @@ export function TruckApp() {
     observer.observe(el);
     return () => observer.disconnect();
   }, []);
-  const { front, order, answerWhere, orderTables, db, day, dayDone, knocking, mood, patienceLeft, consoleOpen, overlays } =
+  const { front, order, answerWhere, orderTables, db, day, dayDone, knocking, mood, patienceLeft, consoleOpen, openTable, overlays } =
     useTruckShift(bridge, lang, t);
   // The orders served before this page load: the game skips those customers.
   /** Closing time, or the day ended early because nobody else is coming. */
@@ -125,7 +125,10 @@ export function TruckApp() {
           <DaySummary db={db} day={day} dateLabel={t.dateLabel(day.date)} t={t} onNewDay={restartDay} />
         )}
         {ready && !consoleOpen && lens && (
-          <DataLens cards={lensCards} summaries={summaries} needed={orderTables} view={view} t={t} />
+          <>
+            <DataLens cards={lensCards} summaries={summaries} needed={orderTables} view={view} onOpen={openTable} t={t} />
+            <p className="lens-hint">🔍 {t.lensClickHint}</p>
+          </>
         )}
         {ready && !consoleOpen && !dayDone && (
           <>
@@ -133,7 +136,7 @@ export function TruckApp() {
             {aimed && <p className="aim-label">E · {t.truckThings[aimed]}</p>}
           </>
         )}
-        {ready && !consoleOpen && !locked && !dayDone && (
+        {ready && !consoleOpen && !locked && !dayDone && !lens && (
           <div className="truck-start" aria-hidden="true">
             <p className="truck-start-title">🖱 {t.truckStart}</p>
             <p className="truck-start-hint">{t.truckStartHint}</p>

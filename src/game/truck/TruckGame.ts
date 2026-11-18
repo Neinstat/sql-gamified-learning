@@ -133,7 +133,11 @@ export class TruckGame {
     this.offs.push(
       bridge.on('serve', () => this.queue.serveFront()),
       bridge.on('pause', (paused) => this.setPaused(paused)),
-      bridge.on('lens', (on) => (this.lensOn = on)),
+      bridge.on('lens', (on) => {
+        this.lensOn = on;
+        // The lens frees the mouse so its cards can be clicked; dragging still looks around.
+        if (on && document.pointerLockElement) document.exitPointerLock();
+      }),
       bridge.on('door', (open) => (this.doorTarget = open ? 1 : 0)),
       bridge.on('managerDone', () => {
         this.managerDone = true;
@@ -199,9 +203,10 @@ export class TruckGame {
         this.use();
         return;
       }
-      // First click captures the mouse; until then, dragging looks around too.
+      // First click captures the mouse; until then, dragging looks around too. With the Data Lens
+      // on, the mouse stays free (to click its cards) and dragging is how you look around.
       this.dragging = true;
-      canvas.requestPointerLock?.();
+      if (!this.lensOn) canvas.requestPointerLock?.();
       e.preventDefault();
     };
     const onUp = () => (this.dragging = false);
@@ -382,21 +387,22 @@ export class TruckGame {
   private emitLensCards(): void {
     const cards: LensCard[] = [];
     if (this.lensAmount > 0.5) {
-      const place = (id: string, tables: string[], point: THREE.Vector3) => {
+      const place = (id: string, tables: string[], object: InteractableId, point: THREE.Vector3) => {
         const distance = point.distanceTo(this.camera.position);
         const p = point.clone().project(this.camera);
         if (distance <= LENS_MAX_DISTANCE && p.z < 1 && Math.abs(p.x) < 1 && Math.abs(p.y) < 1) {
-          cards.push({ id, tables, x: (p.x + 1) / 2, y: (1 - p.y) / 2, distance });
+          cards.push({ id, tables, object, x: (p.x + 1) / 2, y: (1 - p.y) / 2, distance });
         }
       };
       for (const spot of LENS_SPOTS) {
         const at = lensPoint(spot.box);
-        place(spot.id, spot.tables, new THREE.Vector3(at.x, at.y, at.z));
+        place(spot.id, spot.tables, spot.object, new THREE.Vector3(at.x, at.y, at.z));
       }
       const front = this.queue.front();
       if (front) {
         const p = queuePosition(front.x);
-        place('customer', ['customers'], new THREE.Vector3(p.x - 0.55, GROUND_Y + 1.6, p.z));
+        // Customers live in the till's data: the tablet opens their table.
+        place('customer', ['customers'], 'tablet', new THREE.Vector3(p.x - 0.55, GROUND_Y + 1.6, p.z));
       }
     }
     const key = cards.map((c) => `${c.id}:${c.x.toFixed(3)},${c.y.toFixed(3)}`).join('|');
