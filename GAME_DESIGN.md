@@ -234,6 +234,8 @@ Built in phases; every phase produces something playable. Every iteration: build
 | 4.11 ✅ | **The manager's knock:** The Manager (suit) at the back door, one small case using the case engine on today's data | The manager's case can be solved with 📌 evidence |
 | 4.12 | Owner playtest + fixes | Decision: on to Phase 5, or change the concept |
 
+**4.12 playtest fixes so far (18 Nov 2026):** the park's furniture now lives in `PARK` (`world.ts`), and tests keep every bench, picnic table, lamp and tree off the path customers walk (in and out) and apart from each other — a bench had been standing right on the path, and a lamp post on the exit route. Picnic tables got legs under both seats and low cross-bars, so the seats no longer float.
+
 **4.6 as built (17 Nov 2026):**
 - `src/game/truck/world.ts` (tested, no Three.js): the truck in metres, where things are (`LAYOUT`), where the player may walk (`WALK`), `walkStep` (WASD relative to the view; diagonals are not faster), `rayBox` / `aimedInteractable` (the thing under the crosshair within 1.7 m), and `queuePosition` (the queue path in the park).
 - `src/game/truck/build.ts`: the truck (a wall with the window cut out, counters, a tilted tablet, a fridge full of bottles, stock shelves, a red espresso machine, the menu board, recipe binders, a clock, the back door), the park (striped lawn, path, benches, picnic tables with umbrellas, lamps and string lights, trees, skyline, sun, the truck's awning), and blocky 1.75 m customers with swinging arms and legs.

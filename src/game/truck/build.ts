@@ -7,7 +7,7 @@ import type { Ink } from '../art/riso';
 import { inkColour } from './colour';
 import type { CustomerLook } from '../../sql-core/truck/orders';
 import { LOOKS } from './looks';
-import { CLOCK3D, GROUND_Y, LAYOUT, QUEUE_PATH_3D, TRUCK, type Box3 } from './world';
+import { CLOCK3D, GROUND_Y, LAYOUT, PARK, QUEUE_PATH_3D, TRUCK, type Box3 } from './world';
 
 const materials = new Map<Ink, THREE.MeshLambertMaterial>();
 export function mat(ink: Ink): THREE.MeshLambertMaterial {
@@ -237,8 +237,14 @@ function picnicTable(g: THREE.Group, x: number, z: number): void {
   block(p, 'wood', [-0.9, 0.72, -0.4, 0.9, 0.78, 0.4]);
   block(p, 'woodDark', [-0.9, 0.42, -0.85, 0.9, 0.46, -0.6]);
   block(p, 'woodDark', [-0.9, 0.42, 0.6, 0.9, 0.46, 0.85]);
+  // Table legs, and a leg under each end of both seats, tied together low down like a real
+  // picnic table (so the seats never float).
   block(p, 'ink', [-0.7, 0, -0.06, -0.62, 0.72, 0.06]);
   block(p, 'ink', [0.62, 0, -0.06, 0.7, 0.72, 0.06]);
+  for (const x of [-0.7, 0.62]) {
+    for (const z of [-0.77, 0.69]) block(p, 'ink', [x, 0, z, x + 0.08, 0.42, z + 0.08]);
+    block(p, 'inkSoft', [x, 0.16, -0.77, x + 0.08, 0.22, 0.77]);
+  }
   block(p, 'ink', [-0.02, 0.78, -0.02, 0.02, 2.1, 0.02]);
   const umbrella = new THREE.Mesh(new THREE.ConeGeometry(1.2, 0.5, 8), mat('red'));
   umbrella.position.set(0, 2.1, 0);
@@ -283,15 +289,11 @@ export function buildPark(): THREE.Group {
   }
 
   // Seats that will fill with visitors when business is good (Phase 7).
-  bench(g, -4.5, -7, 0.4);
-  bench(g, 5, -8, -0.5);
-  bench(g, 8.5, -14, -0.2);
-  picnicTable(g, 3.6, -5.2);
-  picnicTable(g, -5.5, -12);
-  picnicTable(g, 7, -11);
+  for (const b of PARK.benches) bench(g, b.x, b.z, b.yaw);
+  for (const p of PARK.picnicTables) picnicTable(g, p.x, p.z);
 
   // Lamp posts with string lights between them.
-  const lamps = [lampPost(g, -3, -4.2), lampPost(g, 2.6, -3.4), lampPost(g, 6.5, -7)];
+  const lamps = PARK.lamps.map((l) => lampPost(g, l.x, l.z));
   for (let i = 1; i < lamps.length; i++) {
     const a = lamps[i - 1];
     const b = lamps[i];
@@ -308,9 +310,7 @@ export function buildPark(): THREE.Group {
   }
 
   // Trees: a few near, a row further back.
-  tree(g, -7, -6, 1.2);
-  tree(g, 9, -4.5, 1.1);
-  tree(g, -2, -16, 1.3);
+  for (const t of PARK.trees) tree(g, t.x, t.z, t.size);
   for (let x = -40; x <= 40; x += 5) tree(g, x + ((x * 7) % 3), -24 - ((x * 13) % 4), 1.5);
 
   // The far-away city skyline and a low sun.

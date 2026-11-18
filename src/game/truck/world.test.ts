@@ -13,6 +13,10 @@ import {
   INTERACTABLE_BOXES,
   LENS_SPOTS,
   lensPoint,
+  distanceToQueuePath,
+  PARK,
+  PARK_RADIUS,
+  PATH_CLEARANCE,
   LAYOUT,
   lookDirection,
   queuePosition,
@@ -144,6 +148,35 @@ describe('the Data Lens', () => {
       const p = lensPoint(box);
       expect(p.y, id).toBeLessThan(TRUCK.height);
       expect(Math.abs(p.x), id).toBeLessThanOrEqual(TRUCK.length / 2);
+    }
+  });
+});
+
+describe('the park', () => {
+  const pieces = [
+    ...PARK.benches.map((p) => ({ name: `bench ${p.x},${p.z}`, ...p, r: PARK_RADIUS.bench })),
+    ...PARK.picnicTables.map((p) => ({ name: `picnic table ${p.x},${p.z}`, ...p, r: PARK_RADIUS.picnicTable })),
+    ...PARK.lamps.map((p) => ({ name: `lamp ${p.x},${p.z}`, ...p, r: PARK_RADIUS.lamp })),
+    ...PARK.trees.map((p) => ({ name: `tree ${p.x},${p.z}`, ...p, r: PARK_RADIUS.tree })),
+  ];
+
+  it('keeps every bench, table, lamp and tree off the path customers walk', () => {
+    for (const p of pieces) {
+      expect(distanceToQueuePath(p.x, p.z), p.name).toBeGreaterThanOrEqual(p.r + PATH_CLEARANCE);
+    }
+  });
+
+  it('would catch a bench standing on the path (the bug this test was written for)', () => {
+    // The old bench at (−4.5, −7) stood right on the path.
+    expect(distanceToQueuePath(-4.5, -7)).toBeLessThan(PARK_RADIUS.bench + PATH_CLEARANCE);
+  });
+
+  it('keeps the pieces apart from each other', () => {
+    for (const a of pieces) {
+      for (const b of pieces) {
+        if (a === b) continue;
+        expect(Math.hypot(a.x - b.x, a.z - b.z), `${a.name} / ${b.name}`).toBeGreaterThanOrEqual(a.r + b.r);
+      }
     }
   });
 });

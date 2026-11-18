@@ -182,3 +182,53 @@ export function queuePosition(progress: number): { x: number; z: number; yaw: nu
 
 /** Customers waiting face the truck (towards +z, i.e. yaw π). */
 export const FACING_TRUCK = Math.PI;
+
+// ── The park around the truck ─────────────────────────────────────────────────────────
+
+/**
+ * Where the park's furniture stands (build.ts draws it), with how much room each piece takes
+ * (radius, m). Nothing may stand on the path customers walk: tested against QUEUE_PATH_3D.
+ * The seats fill with visitors when business is good (Phase 7).
+ */
+export const PARK = {
+  benches: [
+    { x: -5.2, z: -3.2, yaw: 0.4 },
+    { x: 5.6, z: -8.8, yaw: -0.5 },
+    { x: 8.5, z: -14, yaw: -0.2 },
+  ],
+  picnicTables: [
+    { x: 3.9, z: -6.2 },
+    { x: -5.5, z: -12 },
+    { x: 7, z: -11 },
+  ],
+  lamps: [
+    { x: -3.6, z: -3.6 },
+    { x: 2.4, z: -4.4 },
+    { x: 6.5, z: -7 },
+  ],
+  trees: [
+    { x: -7, z: -6, size: 1.2 },
+    { x: 9, z: -4.5, size: 1.1 },
+    { x: -2, z: -16, size: 1.3 },
+  ],
+} as const;
+
+/** Room each kind of furniture needs around its centre (m). */
+export const PARK_RADIUS = { bench: 1.0, picnicTable: 1.3, lamp: 0.3, tree: 1.3 } as const;
+/** Half the path's width, plus a little room for customers' shoulders (m). */
+export const PATH_CLEARANCE = 0.9;
+
+/** Shortest distance from a point to the path customers walk (in to the window, and off again). */
+export function distanceToQueuePath(x: number, z: number): number {
+  let best = Infinity;
+  for (let i = 1; i < QUEUE_PATH_3D.length; i++) {
+    const a = QUEUE_PATH_3D[i - 1];
+    const b = QUEUE_PATH_3D[i];
+    const dx = b.x - a.x;
+    const dz = b.z - a.z;
+    const t = Math.max(0, Math.min(1, ((x - a.x) * dx + (z - a.z) * dz) / (dx * dx + dz * dz)));
+    best = Math.min(best, Math.hypot(x - (a.x + dx * t), z - (a.z + dz * t)));
+  }
+  return best;
+}
+
