@@ -847,10 +847,11 @@ body {
 }
 
 /* The front customer's order, above their head; the tail points down at them. */
+/* A fixed width (set inline), so it never squeezes into a column near the edge of the screen. */
 .order-bubble {
   position: absolute;
+  box-sizing: border-box;
   transform: translateX(-50%);
-  max-width: min(18rem, 80vw);
   padding: 0.5rem 0.75rem;
   border: 2px solid #2b1d19;
   border-radius: 6px;
@@ -866,7 +867,8 @@ body {
 .order-bubble::after {
   content: '';
   position: absolute;
-  left: 50%;
+  /* The tail points at the customer even when the bubble slides to stay on screen. */
+  left: calc(50% + var(--tail, 0px));
   bottom: -9px;
   width: 12px;
   height: 12px;
@@ -1041,10 +1043,11 @@ body {
   pointer-events: none;
 }
 
+/* A fixed width (set inline) and nothing wider than it: long names and values end in "…". */
 .lens-card {
   position: absolute;
-  min-width: 9rem;
-  max-width: 17rem;
+  box-sizing: border-box;
+  overflow: hidden;
   padding: 0.35rem 0.5rem 0.45rem;
   border: 2px solid #1c6b63;
   border-radius: 4px;
@@ -1069,8 +1072,12 @@ body {
 }
 
 .lens-card-table {
+  min-width: 0;
+  overflow: hidden;
   font-size: 0.9rem;
   font-weight: 700;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .lens-card-count {
@@ -1089,15 +1096,19 @@ body {
   width: 100%;
   margin-top: 0.3rem;
   border-collapse: collapse;
+  /* Columns share the card's width instead of pushing past it. */
+  table-layout: fixed;
   font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
   font-size: 0.62rem;
 }
 
 .lens-card-rows th,
 .lens-card-rows td {
+  overflow: hidden;
   padding: 0.1rem 0.25rem;
   border-top: 1px dashed #9ad6c8;
   text-align: left;
+  text-overflow: ellipsis;
   white-space: nowrap;
 }
 

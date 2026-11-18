@@ -5,6 +5,7 @@ import { orderLine, PROTOTYPE_ORDERS } from '../sql-core/truck/orders';
 import { TruckBridge, type LensCard } from '../game/truck/bridge';
 import { STATIONS } from '../sql-core/stations';
 import { DataLens, useTableSummaries } from './DataLens';
+import { placeOnScreen } from './overlayLayout';
 import { restartDay, useTruckShift } from './useTruckShift';
 import { DaySummary } from './DaySummary';
 import { CLOSING, formatClock } from '../sql-core/truck/day';
@@ -23,6 +24,17 @@ export function TruckApp() {
   const [locked, setLocked] = useState(false);
   const [aimed, setAimed] = useState<string | null>(null);
   const [anchor, setAnchor] = useState<{ x: number; y: number } | null>(null);
+  // The 3D view's size in pixels, to keep the bubble and the lens cards on screen.
+  const [view, setView] = useState({ width: 0, height: 0 });
+  useEffect(() => {
+    const el = parentRef.current;
+    if (!el) return;
+    const measure = () => setView({ width: el.clientWidth, height: el.clientHeight });
+    measure();
+    const observer = new ResizeObserver(measure);
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
   const { front, order, answerWhere, orderTables, db, day, dayDone, knocking, mood, patienceLeft, consoleOpen, overlays } =
     useTruckShift(bridge, lang, t);
   // The orders served before this page load: the game skips those customers.
@@ -113,7 +125,7 @@ export function TruckApp() {
           <DaySummary db={db} day={day} dateLabel={t.dateLabel(day.date)} t={t} onNewDay={restartDay} />
         )}
         {ready && !consoleOpen && lens && (
-          <DataLens cards={lensCards} summaries={summaries} needed={orderTables} t={t} />
+          <DataLens cards={lensCards} summaries={summaries} needed={orderTables} view={view} t={t} />
         )}
         {ready && !consoleOpen && !dayDone && (
           <>
@@ -127,12 +139,12 @@ export function TruckApp() {
             <p className="truck-start-hint">{t.truckStartHint}</p>
           </div>
         )}
-        {front && order && anchor && !consoleOpen && (
+        {front && order && anchor && !consoleOpen && !lens && view.width > 0 && (
           <div
             className="order-bubble"
             role="status"
             aria-label={t.truckOrder}
-            style={{ left: `${anchor.x * 100}%`, bottom: `${(1 - anchor.y) * 100}%` }}
+            style={bubbleStyle(anchor, view.width, view.height)}
           >
             {mood && patienceLeft !== null && (
               <p className={`order-mood order-mood-${mood}`} title={t.moodLabels[mood]}>
@@ -151,3 +163,17 @@ export function TruckApp() {
     </div>
   );
 }
+
+/** The order bubble: a fixed width, kept on screen, with its tail pointing at the customer's head. */
+const BUBBLE_WIDTH = 288;
+function bubbleStyle(anchor: { x: number; y: number }, viewWidth: number, viewHeight: number): React.CSSProperties {
+  const width = Math.min(BUBBLE_WIDTH, viewWidth * 0.8);
+  const { centre, tail } = placeOnScreen(anchor.x * viewWidth, width, viewWidth);
+  return {
+    left: centre,
+    width,
+    bottom: viewHeight * (1 - anchor.y),
+    ['--tail' as string]: `${tail}px`,
+  };
+}
+

@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import type { UiText } from '../i18n';
 import { runQuery, type CafeDatabase, type CellValue } from '../sql-core/db';
 import type { LensCard } from '../game/truck/bridge';
+import { placeOnScreen, stackBoxes } from './overlayLayout';
 
 /** What a card shows about one table. */
 type TableSummary = { columns: string[]; rows: CellValue[][]; count: number };
@@ -10,6 +11,11 @@ type TableSummary = { columns: string[]; rows: CellValue[][]; count: number };
 const MAX_COLUMNS = 4;
 const SAMPLE_ROWS = 2;
 const MAX_CELL = 14;
+/** Every card has the same width (px, before its distance scale): it never squeezes near the edge. */
+const CARD_WIDTH = 240;
+/** Rough heights (px) of a card's parts, to stack cards without measuring them. */
+const LINE = 18;
+const PADDING = 16;
 
 /**
  * Loads a short summary of each table for the Data Lens: its row count and first rows.
@@ -57,30 +63,50 @@ export function DataLens({
   cards,
   summaries,
   needed,
+  view,
   t,
 }: {
   cards: LensCard[];
   summaries: Record<string, TableSummary>;
   /** Tables the order at the window needs. */
   needed: string[];
+  /** The 3D view's size in pixels. */
+  view: { width: number; height: number };
   t: UiText;
 }) {
+  const laid = cards.map((card) => {
+    // Nearer cards are a little bigger, so the one you look at stands out.
+    const scale = Math.max(0.62, Math.min(1, 1.7 / Math.max(card.distance, 0.1)));
+    const anyNeeded = card.tables.some((table) => needed.includes(table));
+    // Sample rows for the table the order needs, otherwise for the card's first table.
+    const focus = card.tables.find((table) => needed.includes(table)) ?? card.tables[0];
+    const summary = summaries[focus];
+    const height =
+      (PADDING + LINE * card.tables.length + (anyNeeded ? LINE : 0) + (summary ? LINE * (summary.rows.length + 1) + 6 : 0)) * scale;
+    const width = CARD_WIDTH * scale;
+    const { centre } = placeOnScreen(card.x * view.width, width, view.width, 8);
+    return { card, scale, anyNeeded, summary, box: { id: card.id, centre, bottom: card.y * view.height, width, height } };
+  });
+  // Cards that would overlap move up out of each other's way, but never off the top of the view.
+  const stacked = stackBoxes(laid.map((l) => l.box));
+
   return (
     <div className="lens-layer" aria-label={t.dataLens}>
-      {cards.map((card) => {
-        // Nearer cards are a little bigger, so the one you look at stands out.
-        const scale = Math.max(0.62, Math.min(1, 1.7 / Math.max(card.distance, 0.1)));
-        const anyNeeded = card.tables.some((table) => needed.includes(table));
-        // Sample rows for the table the order needs, otherwise for the card's first table.
-        const focus = card.tables.find((table) => needed.includes(table)) ?? card.tables[0];
-        const summary = summaries[focus];
+      {laid.map(({ card, scale, anyNeeded, summary }, i) => {
+        const box = stacked[i];
+        const bottom = Math.max(box.bottom, box.height + 8);
         const columns = summary?.columns ?? [];
         const shown = columns.slice(0, MAX_COLUMNS);
         return (
           <div
             key={card.id}
             className={anyNeeded ? 'lens-card lens-card-needed' : 'lens-card'}
-            style={{ left: `${card.x * 100}%`, top: `${card.y * 100}%`, transform: `translate(-50%, -100%) scale(${scale})` }}
+            style={{
+              left: box.centre,
+              top: bottom,
+              width: CARD_WIDTH,
+              transform: `translate(-50%, -100%) scale(${scale})`,
+            }}
           >
             {card.tables.map((table) => (
               <p key={table} className={needed.includes(table) ? 'lens-card-head lens-card-head-needed' : 'lens-card-head'}>
