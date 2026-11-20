@@ -160,6 +160,9 @@ export function useTruckShift(bridge: TruckBridge, lang: Lang, t: UiText) {
               bridge.emit('door', false);
               setToast(String(err));
             });
+        } else if (id === 'back-door' && knocking) {
+          // The records are still loading (just after a reload): say so instead of ignoring the knock.
+          setToast(t.stillLoading);
         } else setToast(day.manager ? t.managerGone : t.truckDoor);
       }),
     [bridge, order, orderObject, t, knocking, db, day.date, day.manager, lang, managerLevel],
