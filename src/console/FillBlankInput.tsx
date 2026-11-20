@@ -5,6 +5,8 @@ import type { UiText } from '../i18n';
 type Props = {
   /** Query with gaps; each `___` becomes a text box. */
   template: string;
+  /** The smallest width of each gap, in characters. */
+  blankSize?: number;
   /** Called with the full query (template with the gaps filled in). */
   onChange: (sql: string) => void;
   /** Enter in a gap runs the query. */
@@ -13,7 +15,7 @@ type Props = {
 };
 
 /** Fill in the missing parts of a query (Chapter 1). */
-export function FillBlankInput({ template, onChange, onRun, t }: Props) {
+export function FillBlankInput({ template, blankSize = 6, onChange, onRun, t }: Props) {
   const parts = template.split(BLANK);
   const [values, setValues] = useState<string[]>(() => parts.slice(1).map(() => ''));
 
@@ -32,7 +34,7 @@ export function FillBlankInput({ template, onChange, onRun, t }: Props) {
               <input
                 className="fill-input"
                 value={values[i - 1]}
-                size={Math.max(6, values[i - 1].length + 1)}
+                size={Math.max(blankSize, values[i - 1].length + 1)}
                 onChange={(e) => update(i - 1, e.target.value)}
                 onKeyDown={(e) => {
                   if (e.key === 'Enter') {

@@ -68,7 +68,7 @@ export function Console({ db, schema, level, lang, t, onCorrect, solvedPanel }: 
         {level.input.kind === 'blocks' ? (
           <BlockInput blocks={level.input.blocks} onChange={setSql} t={t} />
         ) : level.input.kind === 'fill-blank' ? (
-          <FillBlankInput template={level.input.template} onChange={setSql} onRun={run} t={t} />
+          <FillBlankInput template={level.input.template} blankSize={level.input.blankSize} onChange={setSql} onRun={run} t={t} />
         ) : (
           <SqlEditor
             initialValue={starter}

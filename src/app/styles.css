@@ -294,6 +294,12 @@ body {
   font-weight: 600;
 }
 
+.task-note {
+  margin: 0 0 6px;
+  font-size: 0.85rem;
+  color: var(--accent);
+}
+
 .task .lesson {
   margin-top: 10px;
 }

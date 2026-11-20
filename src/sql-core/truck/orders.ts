@@ -5,7 +5,7 @@
  * and how they say it are picked from the day's seed, so a reload shows the same day.
  */
 import type { Lang } from '../feedback';
-import type { RequestLevel } from '../levels';
+import type { InputMode, RequestLevel } from '../levels';
 import { conceptLesson, type ConceptId } from './concepts';
 import { TEMPLATES_ID } from './locales/id/templates';
 import { templateById, type OrderTemplate, type Purchase, type TemplateText, type TemplateVariant } from './templates';
@@ -102,10 +102,34 @@ export function orderLine(order: TruckOrder, lang: Lang): string {
 }
 
 /**
- * The order as a level the console can run: the task, the fill-in-the-blank query, the hints,
- * and the concept's lesson card.
+ * How much of the query the player writes, by their mastery of the order's concept
+ * (GAME_DESIGN.md §5 "Input grows with the player"):
+ * - keyword (level 0–1): fill in one word or value, as the template gives it;
+ * - condition (level 2–3): fill in the whole WHERE condition;
+ * - free (level 4–5): type the whole query in the editor.
  */
-export function orderLevel(order: TruckOrder, lang: Lang): RequestLevel {
+export type InputStage = 'keyword' | 'condition' | 'free';
+
+export function inputStage(level: number | undefined): InputStage {
+  if (level === undefined || level < 2) return 'keyword';
+  return level < 4 ? 'condition' : 'free';
+}
+
+/** The input for an order at a stage. Every solution is `SELECT … FROM … WHERE condition;`. */
+export function stagedInput(template: OrderTemplate, variant: TemplateVariant, stage: InputStage): InputMode {
+  const solution = template.solution(variant.params);
+  if (stage === 'free') return { kind: 'free' };
+  const where = solution.lastIndexOf(' WHERE ');
+  if (stage === 'keyword' || where < 0) return template.input(variant.params);
+  const condition = solution.slice(where + ' WHERE '.length).replace(/;\s*$/, '');
+  return { kind: 'fill-blank', template: `${solution.slice(0, where)} WHERE ___;`, answers: [condition], blankSize: 28 };
+}
+
+/**
+ * The order as a level the console can run: the task, the query to complete (more of it as the
+ * concept is mastered), the hints, and the concept's lesson card.
+ */
+export function orderLevel(order: TruckOrder, lang: Lang, stage: InputStage = 'keyword'): RequestLevel {
   const { template, variant } = order;
   const p = variant.params;
   const text = textFor(template, lang);
@@ -117,7 +141,7 @@ export function orderLevel(order: TruckOrder, lang: Lang): RequestLevel {
     lesson: conceptLesson(template.concept, lang),
     dialogue: [orderLine(order, lang)],
     task: text.task(p),
-    input: template.input(p),
+    input: stagedInput(template, variant, stage),
     solution: template.solution(p),
     hints: [text.hints[0](p), text.hints[1](p), text.hints[2](p)],
     success: text.success(p),

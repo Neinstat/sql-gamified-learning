@@ -29,6 +29,8 @@ export type InputMode =
        * result is graded) — tests use it to check the template is solvable.
        */
       answers: string[];
+      /** The smallest width of each gap, in characters (default 6): wider when a whole condition goes in. */
+      blankSize?: number;
     }
   | { kind: 'free'; starter?: string };
 

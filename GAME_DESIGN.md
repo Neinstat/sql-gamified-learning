@@ -292,7 +292,7 @@ Patience & tips (4.10) and the saved, replayed day log (4.9) were already built 
 | # | Iteration | Done when… |
 |---|---|---|
 | 5.1 ✅ | **Order templates, mastery and days that follow:** templates with variants replace the hand-written orders; concept mastery + spaced repetition plan each day; "Open the next day" | Day 2, day 3… bring different orders, and weak concepts come back sooner |
-| 5.2 | **Input grows with mastery:** a well-known concept gets more blanks (a whole condition), then free typing | A level-4 concept is answered without a template |
+| 5.2 ✅ | **Input grows with mastery:** a well-known concept gets more blanks (a whole condition), then free typing | A level-4 concept is answered without a template |
 | 5.3 | Owner playtest of several days + fixes | The owner plays three days and they feel different |
 
 **5.1 as built (20 Nov 2026):**
@@ -303,6 +303,8 @@ Patience & tips (4.10) and the saved, replayed day log (4.9) were already built 
 - The end-of-day summary shows **Practised today**: each concept with its level (●●○○○, ▲/▼ or *new*) and when it comes back, then **Open the next day →** (or play the same day again). The HUD shows "Day 2 · Nov 2 · 0/7 served".
 - Checked in the browser: Day 1 plans 7 orders from the first three concepts and opens the lesson card; a served order is saved; a finished day shows the summary; the next day is Nov 2 with the weak concepts and three new ones, also in Indonesian.
 - Not yet: weekends and weeks (every calendar day is a working day for now; weeks come with the curriculum in Phase 6).
+
+**5.2 as built (21 Nov 2026):** how much of the query the player writes follows their mastery of the order's concept **before today** (so it stays the same all day and after a reload): level 0–1 → fill in one word or value (the template's own gap); level 2–3 → fill in **the whole condition** after `WHERE` (a wider gap); level 4–5 → **free typing** in the editor with autocomplete. `inputStage` and `stagedInput` in `orders.ts`; every order's solution has the form `SELECT … FROM … WHERE condition;`, so one rule builds the condition gap for all templates (tested: every variant is solvable at every stage). A short note under the task says why ("You know this one well: write the whole condition after WHERE."). Checked in the browser with a made-up history: a level-4 concept opened the editor and was served, a level-2 concept asked for the whole condition, and a new concept kept its one-word gap and lesson card.
 
 ## 13. Open questions
 

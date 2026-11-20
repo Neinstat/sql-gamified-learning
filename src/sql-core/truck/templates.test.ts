@@ -7,7 +7,7 @@ import { CONCEPTS, conceptLesson, conceptName } from './concepts';
 import { CONCEPT_NAMES_ID } from './locales/id/concepts';
 import { TEMPLATES_ID } from './locales/id/templates';
 import { OBJECT_STATION, objectForStation } from './objects';
-import { dayOrders, orderFromId, orderId, orderLevel, orderLine, parseOrderId } from './orders';
+import { dayOrders, inputStage, orderFromId, orderId, orderLevel, orderLine, parseOrderId } from './orders';
 import { TEMPLATES } from './templates';
 
 let db: CafeDatabase;
@@ -76,6 +76,18 @@ describe.each(ALL)('order %s', (id, template, variant) => {
     expect(verdict).toEqual({ correct: true });
   });
 
+  it('can be solved at every input stage: the whole condition, then free typing', async () => {
+    const order = orderFromId(id)!;
+    const condition = orderLevel(order, 'en', 'condition');
+    if (condition.input.kind !== 'fill-blank') throw new Error('expected fill-blank');
+    expect(condition.input.template).toMatch(/ WHERE ___;$/);
+    expect(condition.input.answers).toHaveLength(1);
+    const sql = condition.input.template.replace(BLANK, condition.input.answers[0]);
+    expect(sql).toBe(condition.solution);
+    expect((await checkAnswer(db, sql, condition.solution, condition.check, condition.station)).verdict).toEqual({ correct: true });
+    expect(orderLevel(order, 'en', 'free').input).toEqual({ kind: 'free' });
+  });
+
   it('ends its SQL with a semicolon and has three hints and a lesson, in both languages', () => {
     for (const lang of ['en', 'id'] as const) {
       const order = dayOrders('2026-11-01', [id])[0];
@@ -98,6 +110,14 @@ describe.each(ALL)('order %s', (id, template, variant) => {
     const onSale = new Set(r.rows.map((row) => Number(row[0])));
     expect(variant.buys.length).toBeGreaterThan(0);
     for (const b of variant.buys) expect(onSale.has(b.itemId), `item ${b.itemId}`).toBe(true);
+  });
+});
+
+describe('input stages', () => {
+  it('grow with mastery: one word, then the whole condition, then free typing', () => {
+    expect([undefined, 0, 1, 2, 3, 4, 5].map(inputStage)).toEqual([
+      'keyword', 'keyword', 'keyword', 'condition', 'condition', 'free', 'free',
+    ]);
   });
 });
 

@@ -79,6 +79,10 @@ const en = {
   summaryBackIn: (days: number) => (days <= 1 ? 'back tomorrow' : `back in ${days} days`),
   newDay: 'Open the next day →',
   replayDay: 'Play this day again',
+  inputStageNote: {
+    condition: 'You know this one well: write the whole condition after WHERE.',
+    free: 'You know this one by heart: write the whole query.',
+  } as Record<'condition' | 'free', string>,
   lensHint: 'See the data behind everything in the truck (L)',
   lensRows: (n: number) => `${n.toLocaleString('en-US')} ${n === 1 ? 'row' : 'rows'}`,
   lensNeeded: 'needed for this order',
@@ -205,6 +209,10 @@ const id: UiText = {
   summaryBackIn: (days: number) => (days <= 1 ? 'kembali besok' : `kembali ${days} hari lagi`),
   newDay: 'Buka hari berikutnya →',
   replayDay: 'Ulangi hari ini',
+  inputStageNote: {
+    condition: 'Kamu sudah paham yang ini: tulis seluruh syarat setelah WHERE.',
+    free: 'Kamu sudah hafal yang ini: tulis seluruh query-nya.',
+  },
   lensHint: 'Lihat data di balik semua benda di truck (L)',
   lensRows: (n: number) => `${n.toLocaleString('id-ID')} baris`,
   lensNeeded: 'dibutuhkan pesanan ini',

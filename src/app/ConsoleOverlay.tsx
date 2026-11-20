@@ -37,6 +37,8 @@ type Props = {
   speech?: { speaker: string; lines: string[] };
   /** Start with the lesson card open (a concept the player meets for the first time). */
   lessonOpen?: boolean;
+  /** A short note under the task (e.g. why the player writes more of the query this time). */
+  note?: string;
 };
 
 /** The SQL console (the truck's tablet), over the game world. */
@@ -104,6 +106,7 @@ export function ConsoleOverlay(props: Props) {
         <div className="task">
           <span className="task-label">{t.task}</span>
           <p className="task-text">{level.task}</p>
+          {props.note && <p className="task-note">{props.note}</p>}
           {level.lesson && (
             <button className="link-button" onClick={() => setLessonOpen((o) => !o)}>
               {lessonOpen ? t.hideLesson : t.showLesson}
