@@ -2,7 +2,7 @@
 
 > A first-person 3D web game for learning SQL while learning to **think like a Business Intelligence (BI) analyst**. You run a coffee food truck parked in a city park; customers at the window bring requests you answer with SQL on the truck's tablet, and a bossy manager knocks on the back door with business questions.
 >
-> **Status:** 🚚 Version 2 (3D food truck) was locked in on 17 Nov 2026. **Phase 4 (the one-day prototype) is in progress.** Version 1 (a top-down 2D café, MVP finished 16 Nov 2026) has been removed from the code; it lives in git tag `v1-cafe-mvp`. How the design got here, with screenshots: [`docs/JOURNEY.md`](docs/JOURNEY.md).
+> **Status:** 🚚 Version 2 (3D food truck) was locked in on 17 Nov 2026. Phase 4 (the one-day prototype) is done; **Phase 5 (order generator & repetition) is in progress.** Version 1 (a top-down 2D café, MVP finished 16 Nov 2026) has been removed from the code; it lives in git tag `v1-cafe-mvp`. How the design got here, with screenshots: [`docs/JOURNEY.md`](docs/JOURNEY.md).
 >
 > This document is the single source of truth for design decisions. Update it whenever a new decision is made.
 >
@@ -140,7 +140,7 @@ The look was found through six prototypes (see [`docs/JOURNEY.md`](docs/JOURNEY.
   - **The Quiet Day:** Tuesday is market day → the lowest revenue, because of **fewer orders** (about 40% fewer), not smaller ones.
   - **Where Did the Regulars Go?:** four regulars came for *Grandma's Secret Cake*; it was dropped after August and they never came back. *(Item names from v1 stay until the data is rewritten.)*
   - **The Analysis Case:** in October milk often ran out in the morning (`inventory.sold_out_at`), because the new cheaper supplier delivers at 12:00 instead of 06:00. Milk drinks fell, some customers switched to black coffee, some left; October revenue is **18% below September**, and Latte dropped the most.
-- **v2 additions (Phase 4–5):** this history becomes the truck's **past**, so the manager can still ask about it. **Play days** start on 1 November 2026: the player's sales are added to `sales` with `channel = 'truck'`, and daily stock to `inventory`. Progress stores a **day log** (orders served); on load, the data is rebuilt from the seed and the log is replayed, so it is exactly the same every time and stays testable.
+- **v2 additions (Phase 4–5):** this history becomes the truck's **past**, so the manager can still ask about it. **Play days** start on 1 November 2026: the player's sales are added to `sales` with `channel = 'truck'`, and daily stock to `inventory`. Progress stores a **day log** per day (its planned orders, orders served and missed); on load, the data is rebuilt from the seed and every saved day is replayed (past days, then today), so it is exactly the same every time and stays testable.
 - Player queries are **always read-only** and rolled back. Only the game writes to the database.
 - Each part of the truck sees its own tables (like v1's stations): the tablet sees `menu_items`, `sales` and `customers`; the fridge sees `inventory` and `suppliers`; the menu board sees `menu_items`; the recipe binders see `recipes` + `menu_items`; the manager's cases see everything. This keeps the lesson "company data lives in many systems".
 
@@ -170,7 +170,7 @@ Each level is a TypeScript object (`src/sql-core/levels/`, one file per chapter)
 
 Indonesian text lives in `src/sql-core/levels/locales/id/` (text only — SQL, blocks and answers are never translated). Checker feedback comes back as structured codes and becomes EN/ID sentences in `formatFeedback`. Tests check that every level runs, that blocks are enough to build the answer, that cases' evidence passes its own check, and that every level has a translation with the same structure.
 
-**Orders** (`src/sql-core/truck/orders.ts`): in the Phase 4 prototype, five hand-written orders reuse Chapter 1 levels; each has an `id`, a `levelId`, a customer `look`, and the customer's `line` (Indonesian in `locales/id/orders.ts`, falling back to English).
+**Orders** (Phase 5): an order is an **order template** + one **variant** of its parameters (`src/sql-core/truck/templates.ts`, Indonesian in `locales/id/templates.ts`). Its id, `template:variant` (e.g. `price-under:3.5`), is all that is saved: it rebuilds the task, the SQL, the hints and what the customer buys. The customer's look and which line they say come from the day's seed (`orders.ts`). Template and variant ids are saved in progress, so they are never renamed.
 
 ## 10. Rewards (rules kept from v1)
 
@@ -201,6 +201,7 @@ Indonesian text lives in `src/sql-core/levels/locales/id/` (text only — SQL, b
   - `truck/build.ts` — low-poly models; `truck/looks.ts` — customers' looks.
   - `truck/risoPass.ts` — the riso shader; `truck/colour.ts` — exact ink colours.
   - `truck/queue.ts` — the customer queue (pure logic, tested).
+- `src/sql-core/truck/` — the truck's rules: `objects.ts` (what each object sees), `templates.ts` + `orders.ts` (orders), `concepts.ts` + `repetition.ts` (mastery and day planning), `day.ts` (the clock, the day log, sales), `manager.ts` (the Manager's case).
   - `truck/TruckGame.ts` — the game loop, input, customers.
   - `truck/bridge.ts` — the only link between the game and React (events).
 - `src/app/` — the page: `TruckApp.tsx` (HUD, crosshair, bubble), `useTruckShift.tsx` (the shift's logic: database, orders, tablet), `ConsoleOverlay.tsx`, the database worker, `rewards.ts`.
@@ -215,8 +216,8 @@ Built in phases; every phase produces something playable. Every iteration: build
 | **1. SQL core** ✅ | PGlite + data, checker, level format, console (blocks → fill-in → free), Chapters 0–1, EN/ID | Done 13 Nov 2026 |
 | **2. First world** ✅ | v1's top-down café world (Phaser) | Done; replaced by v2 |
 | **3. The café grows** ✅ | Chapters 2–5, cases, Analysis Case, stars/coins/upgrades, Skill Check, Rush Hour | v1 MVP done 16 Nov 2026; its SQL content is kept |
-| **4. One-day prototype** 🚧 | The look (✅ 3D), the 3D truck, customers with hand-written orders (week 2), the tablet, using the truck's objects, the Data Lens, sales into the database, the clock and end-of-day summary, one manager knock | The owner plays a full day and finds the concept fun |
-| **5. Order generator & repetition** | Parameterised order templates, concept mastery + spaced repetition, patience & tips, the day log saved and replayed | Day 2, day 3… feel different but still practise what needs practice |
+| **4. One-day prototype** ✅ | The look (✅ 3D), the 3D truck, customers with hand-written orders (week 2), the tablet, using the truck's objects, the Data Lens, sales into the database, the clock and end-of-day summary, one manager knock | The owner plays a full day and finds the concept fun |
+| **5. Order generator & repetition** 🚧 | Parameterised order templates, concept mastery + spaced repetition, patience & tips, the day log saved and replayed | Day 2, day 3… feel different but still practise what needs practice |
 | **6. Six-week curriculum** | Chapters 0–5 become templates + manager cases, lesson cards per week, Skill Check → starting week, the Analysis Case in week 6 | A new player can go from week 1 to the Analysis Case, EN/ID |
 | **7. The truck grows & final art** | Truck upgrades, new locations (park, market, festival), Lunch Rush, per-day streak & badges, all final models | Coins can be spent and the truck/locations visibly change |
 | **8. Release** | Full playtest, phone controls, hosting | The owner approves → v2 done |
@@ -232,7 +233,7 @@ Built in phases; every phase produces something playable. Every iteration: build
 | 4.9 ✅ | **Sales into the database** (`INSERT` by the game, `channel = 'truck'`) + the day log in progress, replayed on load | After serving, a `sales` query shows today's sales, also after reloading the page |
 | 4.10 ✅ | **The clock** 10:00–17:00, patience → tips, closing time + end-of-day summary | A day can be played from opening to the summary |
 | 4.11 ✅ | **The manager's knock:** The Manager (suit) at the back door, one small case using the case engine on today's data | The manager's case can be solved with 📌 evidence |
-| 4.12 | Owner playtest + fixes | Decision: on to Phase 5, or change the concept |
+| 4.12 ✅ | Owner playtest + fixes | The owner chose to go on to Phase 5 (20 Nov 2026) |
 
 **4.12 playtest fixes so far (18 Nov 2026):** the park's furniture now lives in `PARK` (`world.ts`), and tests keep every bench, picnic table, lamp and tree off the path customers walk (in and out) and apart from each other — a bench had been standing right on the path, and a lamp post on the exit route. Picnic tables got legs under both seats and low cross-bars, so the seats no longer float. The order bubble and the Data Lens cards keep a **fixed width** and slide to stay on screen (`src/app/overlayLayout.ts`, tested) — near the right edge the bubble had squeezed to 76 px and grown 422 px tall; its tail still points at the customer. Lens cards no longer let long values spill out (cut with "…"), cards that would overlap move up out of each other's way, and the order bubble hides while the lens is on.
 
@@ -283,6 +284,25 @@ Built in phases; every phase produces something playable. Every iteration: build
 **4.11 as built (17 Nov 2026):** The Manager knocks at 13:30 (`KNOCK_TIME`), or as soon as every customer has been handled; the back door rattles and a "Knock knock!" alert shows. Using the door swings it open (the end wall now has a real opening) and shows the Manager (suit, red tie, glasses, report tablet) on a step outside. `src/sql-core/truck/manager.ts` builds the case when the door opens, working out today's answers from the database: today's orders, today's revenue, and October's best channel, each backed by pinned evidence (tested on a played day and on an empty day; Indonesian in `locales/id/manager.ts`). The console shows the Manager's lines above the task. Answering records `manager: { stars }` in the day log; the summary shows it. The day only closes once the Manager has been answered (or at 17:00). Checked in the browser end to end: knock at 13:30, three answers backed by data (2 orders, $8.75, dine-in), the Manager leaves, stars saved.
 
 **Cleanup (17 Nov 2026):** v1's code (Phaser, the top-down café, Journal, shop, quests, `progress.ts`), the 2D truck prototypes, 72 unused UI strings, 112 unused CSS rules and the Phaser dependency were removed. `src/sql-core/` stays whole because its content is reused in Phase 6. Documents were moved to English for a global audience.
+
+### Phase 5 plan — order generator & repetition
+
+Patience & tips (4.10) and the saved, replayed day log (4.9) were already built in Phase 4.
+
+| # | Iteration | Done when… |
+|---|---|---|
+| 5.1 ✅ | **Order templates, mastery and days that follow:** templates with variants replace the hand-written orders; concept mastery + spaced repetition plan each day; "Open the next day" | Day 2, day 3… bring different orders, and weak concepts come back sooner |
+| 5.2 | **Input grows with mastery:** a well-known concept gets more blanks (a whole condition), then free typing | A level-4 concept is answered without a template |
+| 5.3 | Owner playtest of several days + fixes | The owner plays three days and they feel different |
+
+**5.1 as built (20 Nov 2026):**
+- `concepts.ts`: the six week-2 concepts in teaching order (`where-compare`, `where-text`, `and`, `in`, `like`, `is-null`), their names (EN/ID) and their lesson cards (taken from the Chapter 1 levels).
+- `templates.ts`: 11 templates with 2–5 variants each (36 orders): under/at least a price, a category, available items, a category under a price, two categories (`IN`), name and description patterns (`LIKE`), missing values and the current supplier (`IS NULL`, at the fridge), and recipe ingredients (at the recipe binders). Price limits are always an exact price of some item, so `<=` instead of `<` shows extra rows. Tests run every variant: its solution returns rows on its own station, the blanks filled with the reference answers are graded correct, it buys only items on sale, and its Indonesian text has the same shape.
+- `repetition.ts`: **mastery** per concept (level 0–5, due day, times practised), never saved but **worked out again from the saved day logs**, so playing a day again never counts twice. ⭐⭐⭐ → up one level, back in 1/2/4/7/14 days; hints or wrong runs → down one, back tomorrow; a customer who gave up → same level, back tomorrow. **Planning a day** (seeded by the date): due concepts first (weakest first), then up to 3 new concepts, then a draw where weaker concepts are more likely; 7 orders, at most 3 per concept, never the same order twice in a day, yesterday's orders avoided when possible. A day with new concepts opens with the first of them, and an order of a concept met for the first time opens its lesson card.
+- The day log now holds the day's planned `orders`; logs saved before templates start a fresh Day 1. Finished days are kept in `sql-valley.truck-past`.
+- The end-of-day summary shows **Practised today**: each concept with its level (●●○○○, ▲/▼ or *new*) and when it comes back, then **Open the next day →** (or play the same day again). The HUD shows "Day 2 · Nov 2 · 0/7 served".
+- Checked in the browser: Day 1 plans 7 orders from the first three concepts and opens the lesson card; a served order is saved; a finished day shows the summary; the next day is Nov 2 with the weak concepts and three new ones, also in Indonesian.
+- Not yet: weekends and weeks (every calendar day is a working day for now; weeks come with the curriculum in Phase 6).
 
 ## 13. Open questions
 
