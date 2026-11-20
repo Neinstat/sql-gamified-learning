@@ -6,7 +6,7 @@
  *
  * Times are minutes since midnight (10:00 = 600).
  */
-import { PROTOTYPE_ORDERS, type TruckOrder } from './orders';
+import { isOrderId, orderFromId, type TruckOrder } from './orders';
 
 /** The first play day: the truck's history (Aug–Oct 2026) ends the day before. */
 export const FIRST_PLAY_DATE = '2026-11-01';
@@ -27,7 +27,7 @@ export const QUIET_SPEEDUP = 4;
 export const PATIENCE_MINUTES = 60;
 
 /**
- * When each prototype order's customer turns up (minutes after opening), spread over the day.
+ * When each of the day's customers turns up (minutes after opening), spread over the day.
  * One per order, in order.
  */
 export const ARRIVALS = [0, 35, 75, 120, 170, 230, 300] as const;
@@ -59,6 +59,8 @@ export type ServedOrder = { orderId: string; at: number; tip: number; stars: num
 
 export type DayLog = {
   date: string;
+  /** The day's order ids (planned when the day starts), in the order customers arrive. */
+  orders: string[];
   /** The truck's clock (minutes since midnight), so a reload carries on from here. */
   clock: number;
   served: ServedOrder[];
@@ -68,7 +70,15 @@ export type DayLog = {
   manager: { stars: number } | null;
 };
 
-export const emptyDay = (): DayLog => ({ date: FIRST_PLAY_DATE, clock: OPENING, served: [], missed: [], manager: null });
+/** A day that has not started yet: opening time, nothing served. */
+export const newDay = (date: string, orders: readonly string[]): DayLog => ({
+  date,
+  orders: [...orders],
+  clock: OPENING,
+  served: [],
+  missed: [],
+  manager: null,
+});
 
 export function serveOrder(log: DayLog, served: ServedOrder): DayLog {
   if (isHandled(log, served.orderId)) return log;
@@ -85,16 +95,22 @@ export const isHandled = (log: DayLog, orderId: string) =>
 
 /** The day is over once it is closing time and every customer has been served or has left. */
 export function isDayOver(log: DayLog): boolean {
-  return log.clock >= CLOSING || log.served.length + log.missed.length >= PROTOTYPE_ORDERS.length;
+  return log.clock >= CLOSING || log.served.length + log.missed.length >= log.orders.length;
 }
 
-/** Read a saved day; anything broken or unknown falls back to a fresh day. */
-export function parseDayLog(raw: string | null): DayLog {
-  if (!raw) return emptyDay();
+/**
+ * Read a saved day. A day that cannot be read (broken, or saved before order templates, with no
+ * plan of its own) gives null: the caller starts a fresh day. Unknown entries are dropped.
+ */
+export function parseDayLog(raw: string | null): DayLog | null {
+  if (!raw) return null;
   try {
-    const data = JSON.parse(raw) as Partial<DayLog> & { served?: unknown[]; missed?: unknown[] };
-    if (typeof data.date !== 'string' || !Array.isArray(data.served)) return emptyDay();
-    const known = new Set(PROTOTYPE_ORDERS.map((o) => o.id));
+    const data = JSON.parse(raw) as Partial<DayLog> & { served?: unknown[]; missed?: unknown[]; orders?: unknown[] };
+    if (typeof data.date !== 'string' || !/^\d{4}-\d\d-\d\d$/.test(data.date) || !Array.isArray(data.served)) return null;
+    if (!Array.isArray(data.orders)) return null;
+    const orders = [...new Set(data.orders.filter((id): id is string => typeof id === 'string' && isOrderId(id)))];
+    if (orders.length === 0) return null;
+    const known = new Set(orders);
     const minutes = (v: unknown) => typeof v === 'number' && Number.isFinite(v) && v >= 0 && v < 24 * 60;
     const served: ServedOrder[] = [];
     for (const s of data.served as Partial<ServedOrder>[]) {
@@ -111,7 +127,8 @@ export function parseDayLog(raw: string | null): DayLog {
       (id): id is string => typeof id === 'string' && known.has(id) && !served.some((s) => s.orderId === id),
     );
     return {
-      date: /^\d{4}-\d\d-\d\d$/.test(data.date) ? data.date : FIRST_PLAY_DATE,
+      date: data.date,
+      orders,
       clock: minutes(data.clock) ? Math.max(OPENING, Math.floor(data.clock as number)) : OPENING,
       served,
       missed: [...new Set(missed)],
@@ -121,7 +138,7 @@ export function parseDayLog(raw: string | null): DayLog {
           : null,
     };
   } catch {
-    return emptyDay();
+    return null;
   }
 }
 
@@ -155,7 +172,7 @@ ORDER BY line.n;`;
 /** Every INSERT for a day log, in the order the orders were served. */
 export function daySalesSql(log: DayLog): string[] {
   return log.served.flatMap((s) => {
-    const order = PROTOTYPE_ORDERS.find((o) => o.id === s.orderId);
+    const order = orderFromId(s.orderId);
     return order ? [saleSql(order, log.date, s.at)] : [];
   });
 }

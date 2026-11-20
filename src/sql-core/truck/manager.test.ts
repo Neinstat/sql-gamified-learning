@@ -2,10 +2,9 @@ import { beforeAll, describe, expect, it } from 'vitest';
 import { checkConclusion } from '../cases';
 import { createCafeDatabase, type LocalCafeDatabase } from '../db';
 import { BLANK } from '../levels';
-import { daySalesSql, emptyDay, OPENING, serveOrder } from './day';
+import { daySalesSql, newDay, OPENING, serveOrder } from './day';
 import { buildManagerCase, MANAGER_INTRO, managerCaseFor, managerIntroFor } from './manager';
 import { MANAGER_CASE_ID } from './locales/id/manager';
-import { PROTOTYPE_ORDERS } from './orders';
 
 const DATE = '2026-11-01';
 /** What a player would type in each starter's blank. */
@@ -14,11 +13,10 @@ const FILLS = ["'truck'", `'${DATE}'`, "'2026-11-01'"];
 let db: LocalCafeDatabase;
 beforeAll(async () => {
   db = await createCafeDatabase();
-  let log = emptyDay();
-  // Two orders served: Green Tea, and 2 × Americano.
-  for (const [i, o] of PROTOTYPE_ORDERS.slice(0, 2).entries()) {
-    log = serveOrder(log, { orderId: o.id, at: OPENING + i * 30, tip: 1, stars: 3 });
-  }
+  // Two orders served: Green Tea ($2.75), then Earl Grey + Apple Pie ($7.50).
+  const orders = ['price-under:3', 'two-categories:tea-dessert'];
+  let log = newDay(DATE, orders);
+  for (const [i, id] of orders.entries()) log = serveOrder(log, { orderId: id, at: OPENING + i * 30, tip: 1, stars: 3 });
   for (const sql of daySalesSql(log)) await db.write(sql);
 });
 
@@ -26,7 +24,7 @@ describe("The Manager's case", () => {
   it("works out today's answers from the data", async () => {
     const level = await buildManagerCase(db, DATE);
     expect(level.questions[0].answer).toEqual({ kind: 'number', value: 2 });
-    expect(level.questions[1].answer).toEqual({ kind: 'number', value: 8.75, tolerance: 0.01 });
+    expect(level.questions[1].answer).toEqual({ kind: 'number', value: 10.25, tolerance: 0.01 });
     const channel = level.questions[2].answer;
     expect(channel.kind).toBe('choice');
   });

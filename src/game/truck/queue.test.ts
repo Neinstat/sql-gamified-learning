@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { PROTOTYPE_ORDERS } from '../../sql-core/truck/orders';
+import { dayOrders } from '../../sql-core/truck/orders';
+import { addDays, planDay } from '../../sql-core/truck/repetition';
 import { QUEUE, spotX, TruckQueue } from './queue';
 
 const settle = (q: TruckQueue, seconds = 20) => {
@@ -103,11 +104,15 @@ describe('giving up', () => {
   });
 });
 
-describe('the prototype day', () => {
+describe('a planned day', () => {
   it('never puts two people who look the same in the queue at once', () => {
-    for (let i = 0; i + QUEUE.maxWaiting <= PROTOTYPE_ORDERS.length; i++) {
-      const looks = PROTOTYPE_ORDERS.slice(i, i + QUEUE.maxWaiting).map((o) => o.look);
-      expect(new Set(looks).size, looks.join(', ')).toBe(looks.length);
+    for (let d = 0; d < 20; d++) {
+      const date = addDays('2026-11-01', d);
+      const orders = dayOrders(date, planDay(date, {}));
+      for (let i = 0; i + QUEUE.maxWaiting <= orders.length; i++) {
+        const looks = orders.slice(i, i + QUEUE.maxWaiting).map((o) => o.look);
+        expect(new Set(looks).size, `${date}: ${looks.join(', ')}`).toBe(looks.length);
+      }
     }
   });
 });

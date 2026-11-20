@@ -4,14 +4,14 @@ import { ExploreConsole } from '../console/ExploreConsole';
 import type { Table } from '../console/SchemaPanel';
 import { getSchema, type CafeDatabase } from '../sql-core/db';
 import type { Lang } from '../sql-core/feedback';
-import { isCase, type Level, type RequestLevel } from '../sql-core/levels';
+import type { Level } from '../sql-core/levels';
 import { stationTables, tablesInQuery } from '../sql-core/stations';
-import { findOrderLevel } from '../sql-core/truck/levels';
 import { managerCaseFor, managerIntroFor } from '../sql-core/truck/manager';
 import { OBJECT_STATION, objectForStation, type TruckObjectId } from '../sql-core/truck/objects';
-import { emptyDay, missOrder, moodFor, parseDayLog, saleSql, serveOrder, TIPS, type DayLog } from '../sql-core/truck/day';
+import { missOrder, moodFor, newDay, parseDayLog, saleSql, serveOrder, TIPS, type DayLog } from '../sql-core/truck/day';
 import { starsFor } from './rewards';
-import { PROTOTYPE_ORDERS, type TruckOrder } from '../sql-core/truck/orders';
+import { dayOrders, orderLevel, type TruckOrder } from '../sql-core/truck/orders';
+import { masteryFrom, nextDay, parsePastDays } from '../sql-core/truck/repetition';
 import type { FrontCustomer, TruckBridge } from '../game/truck/bridge';
 import { ConsoleOverlay } from './ConsoleOverlay';
 import { TalkBox } from './TalkBox';
@@ -25,31 +25,54 @@ import { getDayDatabase } from './database';
  * - the back door has nothing yet (The Manager comes in 4.11).
  */
 const DAY_KEY = 'sql-valley.truck-day';
+/** Every finished day, oldest first: their sales are replayed, and mastery is worked out from them. */
+const PAST_KEY = 'sql-valley.truck-past';
 
-function loadDay(): DayLog {
+function read(key: string): string | null {
   try {
-    return parseDayLog(localStorage.getItem(DAY_KEY));
+    return localStorage.getItem(key);
   } catch {
-    return emptyDay();
+    return null;
   }
 }
 
-function saveDay(log: DayLog): void {
+function write(key: string, value: unknown): void {
   try {
-    localStorage.setItem(DAY_KEY, JSON.stringify(log));
+    localStorage.setItem(key, JSON.stringify(value));
   } catch {
-    // Private windows may refuse storage: the day just isn't kept after a reload.
+    // Private windows may refuse storage: progress just isn't kept after a reload.
   }
 }
 
-/** Throw away today's progress and start the day again (the page reloads to rebuild the data). */
-export function restartDay(): void {
-  saveDay(emptyDay());
+/** The finished days and today. Today must come after the last finished day, or a new one starts. */
+function loadProgress(): { past: DayLog[]; day: DayLog } {
+  const past = parsePastDays(read(PAST_KEY));
+  const saved = parseDayLog(read(DAY_KEY));
+  const last = past[past.length - 1];
+  const day = saved && (!last || saved.date > last.date) ? saved : nextDay(past);
+  return { past, day };
+}
+
+const saveDay = (log: DayLog) => write(DAY_KEY, log);
+
+/** Throw away today's progress and play the same day again (the page reloads to rebuild the data). */
+export function restartDay(day: DayLog): void {
+  saveDay(newDay(day.date, day.orders));
+  window.location.reload();
+}
+
+/** Close the books on today and open the next day, planned from everything practised so far. */
+export function startNextDay(past: readonly DayLog[], day: DayLog): void {
+  const done = [...past, day];
+  write(PAST_KEY, done);
+  saveDay(nextDay(done));
   window.location.reload();
 }
 
 export function useTruckShift(bridge: TruckBridge, lang: Lang, t: UiText) {
-  const [day, setDay] = useState<DayLog>(loadDay);
+  const [progressOnLoad] = useState(loadProgress);
+  const past = progressOnLoad.past;
+  const [day, setDay] = useState<DayLog>(progressOnLoad.day);
   const [db, setDb] = useState<CafeDatabase | null>(null);
   const [dbError, setDbError] = useState<string | null>(null);
   const [schema, setSchema] = useState<Table[]>([]);
@@ -77,23 +100,26 @@ export function useTruckShift(bridge: TruckBridge, lang: Lang, t: UiText) {
 
   // Load the database (with today's sales replayed) while the first customers walk up.
   // Only the day as it was on load is replayed; later sales are written as they happen.
-  const [dayOnLoad] = useState(day);
   useEffect(() => {
-    getDayDatabase(dayOnLoad)
+    getDayDatabase([progressOnLoad.past, progressOnLoad.day].flat())
       .then(async (database) => {
         setSchema(await getSchema(database));
         setDb(database);
       })
       .catch((err) => setDbError(String(err)));
-  }, [dayOnLoad]);
+  }, [progressOnLoad]);
+  // A fresh day is saved straight away, so a reload keeps its plan.
+  useEffect(() => saveDay(progressOnLoad.day), [progressOnLoad]);
 
   useEffect(() => bridge.on('front', setFront), [bridge]);
 
-  const order = front ? PROTOTYPE_ORDERS.find((o) => o.id === front.orderId) : undefined;
-  const level = useMemo(() => {
-    const found = order ? findOrderLevel(order.levelId, lang) : undefined;
-    return found && !isCase(found) ? (found as RequestLevel) : undefined;
-  }, [order, lang]);
+  /** Today's orders, in the order customers arrive (who they are, and what they ask). */
+  const orders = useMemo(() => dayOrders(day.date, day.orders), [day.date, day.orders]);
+  /** What the player had practised before today: a concept met for the first time opens its lesson. */
+  const masteryBefore = useMemo(() => masteryFrom(past), [past]);
+  const order = front ? orders.find((o) => o.id === front.orderId) : undefined;
+  const level = useMemo(() => (order ? orderLevel(order, lang) : undefined), [order, lang]);
+  const newConcept = order ? masteryBefore[order.concept] === undefined : false;
   /** Where the current order is answered. */
   const orderObject = level ? objectForStation(level.station) : null;
 
@@ -243,6 +269,7 @@ export function useTruckShift(bridge: TruckBridge, lang: Lang, t: UiText) {
         solvedMessage={t.truckServed}
         doneLabel={t.truckServe}
         onClose={closeOrder}
+        lessonOpen={newConcept}
       />
     ) : null;
 
@@ -323,6 +350,10 @@ export function useTruckShift(bridge: TruckBridge, lang: Lang, t: UiText) {
     db,
     /** Today so far: the date, and the orders served (each one is in `sales`). */
     day,
+    /** Today's customers, in the order they arrive. */
+    orders,
+    /** The days played before today. */
+    past,
     /** Every order of the day has been served. */
     dayDone: closed,
     /** The Manager is knocking and has not been answered yet. */

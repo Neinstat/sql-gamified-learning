@@ -6,12 +6,13 @@ let dbPromise: Promise<CafeDatabase> | null = null;
 let dayPromise: Promise<CafeDatabase> | null = null;
 
 /**
- * The database with today's sales already in it: the saved day log is replayed once, before
- * anyone can query, so `sales` always shows what the player served (GAME_DESIGN.md §8).
+ * The database with every play day's sales already in it: the saved day logs (past days, then
+ * today) are replayed once, before anyone can query, so `sales` always shows what the player
+ * served (GAME_DESIGN.md §8).
  */
-export function getDayDatabase(log: DayLog): Promise<CafeDatabase> {
+export function getDayDatabase(days: readonly DayLog[]): Promise<CafeDatabase> {
   dayPromise ??= getDatabase().then(async (db) => {
-    for (const sql of daySalesSql(log)) await db.write(sql);
+    for (const sql of days.flatMap(daySalesSql)) await db.write(sql);
     return db;
   });
   return dayPromise;

@@ -1304,6 +1304,72 @@ body {
   font-size: 0.85rem;
 }
 
+/* Phase 5: each concept practised today, its mastery (●○), and when it comes back. */
+.day-summary-concepts {
+  margin: 0 0 0.9rem;
+  padding: 0;
+  list-style: none;
+  border: 1px solid #25304f;
+  border-radius: 4px;
+  background: #fffaf0;
+}
+
+.day-summary-concepts li {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 0 0.75rem;
+  padding: 0.35rem 0.55rem;
+  font-size: 0.82rem;
+}
+
+.day-summary-concepts li + li {
+  border-top: 1px dashed #25304f55;
+}
+
+.concept-name {
+  font-weight: 700;
+}
+
+.concept-level {
+  justify-self: end;
+  color: #2a8a8a;
+  letter-spacing: 0.08em;
+}
+
+.concept-due {
+  grid-column: 1 / -1;
+  font-size: 0.74rem;
+  opacity: 0.8;
+}
+
+.concept-new {
+  margin-right: 0.35rem;
+  padding: 0 0.3rem;
+  border-radius: 3px;
+  background: #e8b43a;
+  color: #25304f;
+  font-style: normal;
+  font-size: 0.7rem;
+  letter-spacing: 0;
+}
+
+.concept-up {
+  margin-right: 0.25rem;
+  color: #2a8a8a;
+}
+
+.concept-down {
+  margin-right: 0.25rem;
+  color: #e4573d;
+}
+
+.day-summary-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem;
+}
+
 /* The Manager (4.11): their words above the case, and the knock alert. */
 .console-speech {
   margin: 0 0 0.9rem;

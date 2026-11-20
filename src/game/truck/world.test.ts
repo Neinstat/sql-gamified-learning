@@ -1,9 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import { OBJECT_STATION } from '../../sql-core/truck/objects';
 import { STATIONS, tablesInQuery } from '../../sql-core/stations';
-import { findOrderLevel } from '../../sql-core/truck/levels';
 import { objectForStation } from '../../sql-core/truck/objects';
-import { PROTOTYPE_ORDERS } from '../../sql-core/truck/orders';
+import { TEMPLATES } from '../../sql-core/truck/templates';
 import { QUEUE, spotX } from './queue';
 import {
   aimedInteractable,
@@ -134,12 +133,12 @@ describe('the Data Lens', () => {
   });
 
   it('shows every table an order needs on the card of the object where it is answered', () => {
-    for (const order of PROTOTYPE_ORDERS) {
-      const level = findOrderLevel(order.levelId, 'en');
-      if (!level || !('solution' in level)) throw new Error(order.levelId);
-      const object = objectForStation(level.station);
+    for (const template of TEMPLATES) {
+      const object = objectForStation(template.station);
       const onCards = LENS_SPOTS.filter((s) => s.object === object).flatMap((s) => s.tables);
-      for (const table of tablesInQuery(level.solution)) expect(onCards, `${order.id}: ${table}`).toContain(table);
+      for (const v of template.variants) {
+        for (const table of tablesInQuery(template.solution(v.params))) expect(onCards, `${template.id}: ${table}`).toContain(table);
+      }
     }
   });
 

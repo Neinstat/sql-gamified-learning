@@ -1,18 +1,17 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { ui, useLang } from '../i18n';
 import { LANGS } from '../sql-core/feedback';
-import { orderLine, PROTOTYPE_ORDERS } from '../sql-core/truck/orders';
+import { orderLine } from '../sql-core/truck/orders';
 import { TruckBridge, type LensCard } from '../game/truck/bridge';
 import { STATIONS } from '../sql-core/stations';
 import { DataLens, useTableSummaries } from './DataLens';
 import { placeOnScreen } from './overlayLayout';
-import { restartDay, useTruckShift } from './useTruckShift';
+import { restartDay, startNextDay, useTruckShift } from './useTruckShift';
 import { DaySummary } from './DaySummary';
 import { CLOSING, formatClock } from '../sql-core/truck/day';
 
 /** Every table in the truck, for the Data Lens cards. */
 const ALL_TABLES = [...new Set(Object.values(STATIONS).flatMap((s) => s.tables))];
-const TOTAL_ORDERS = PROTOTYPE_ORDERS.length;
 
 /** SQL Valley: the food truck, first person in 3D (GAME_DESIGN.md §14). */
 export function TruckApp() {
@@ -35,12 +34,13 @@ export function TruckApp() {
     observer.observe(el);
     return () => observer.disconnect();
   }, []);
-  const { front, order, answerWhere, orderTables, db, day, dayDone, knocking, mood, patienceLeft, consoleOpen, openTable, overlays } =
+  const { front, order, answerWhere, orderTables, db, day, orders, past, dayDone, knocking, mood, patienceLeft, consoleOpen, openTable, overlays } =
     useTruckShift(bridge, lang, t);
   // The orders served before this page load: the game skips those customers.
   /** Closing time, or the day ended early because nobody else is coming. */
   const shut = day.clock >= CLOSING || dayDone;
   const startOnLoad = useRef({
+    orders: orders.map((o) => ({ id: o.id, look: o.look })),
     handled: [...day.served.map((s) => s.orderId), ...day.missed],
     clock: day.clock,
     managerDone: day.manager !== null,
@@ -84,7 +84,7 @@ export function TruckApp() {
           {shut && ` · ${t.closedLabel}`}
         </span>
         <span className="truck-day" title={t.dayTitle}>
-          📅 {t.dayLabel(day.date, day.served.length, TOTAL_ORDERS)}
+          📅 {t.dayLabel(past.length + 1, day.date, day.served.length, day.orders.length)}
         </span>
         <span className="truck-controls">{t.truckControls}</span>
         <button
@@ -122,7 +122,16 @@ export function TruckApp() {
           </p>
         )}
         {ready && dayDone && !front && !consoleOpen && (
-          <DaySummary db={db} day={day} dateLabel={t.dateLabel(day.date)} t={t} onNewDay={restartDay} />
+          <DaySummary
+            db={db}
+            day={day}
+            past={past}
+            dateLabel={t.dateLabel(day.date)}
+            lang={lang}
+            t={t}
+            onNewDay={() => startNextDay(past, day)}
+            onReplay={() => restartDay(day)}
+          />
         )}
         {ready && !consoleOpen && lens && (
           <>

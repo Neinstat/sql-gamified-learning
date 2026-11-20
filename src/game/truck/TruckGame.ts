@@ -13,7 +13,7 @@ import {
   PATIENCE_MINUTES,
   QUIET_SPEEDUP,
 } from '../../sql-core/truck/day';
-import { PROTOTYPE_ORDERS, type CustomerLook } from '../../sql-core/truck/orders';
+import type { CustomerLook } from '../../sql-core/truck/orders';
 import { inkColour } from './colour';
 import type { LensCard, TruckBridge } from './bridge';
 import { TruckQueue, type QueueCustomer } from './queue';
@@ -42,6 +42,9 @@ const MAX_PITCH = 1.25;
 const LENS_SECONDS = 0.45;
 /** Cards further away than this (m) are hidden: the truck is small, the park is not. */
 const LENS_MAX_DISTANCE = 6;
+
+/** One of today's customers: their order id, and how they look. */
+export type DayCustomer = { id: string; look: CustomerLook };
 
 export class TruckGame {
   private readonly renderer: THREE.WebGLRenderer;
@@ -84,17 +87,20 @@ export class TruckGame {
   private lensAmount = 0;
   private lastCards = '';
 
+  /** All of today's customers, in the order they arrive (their place sets their arrival time). */
+  private readonly allOrders: readonly DayCustomer[];
   /** Today's orders still to come (orders already served or missed today are skipped). */
-  private readonly orders: typeof PROTOTYPE_ORDERS;
+  private readonly orders: readonly DayCustomer[];
 
   constructor(
     private readonly parent: HTMLElement,
     private readonly bridge: TruckBridge,
-    /** Where the day stands on load: orders already handled, and the clock. */
-    start: { handled: readonly string[]; clock: number; managerDone?: boolean } = { handled: [], clock: OPENING },
+    /** Today's customers, and where the day stands on load: orders already handled, and the clock. */
+    start: { orders: readonly DayCustomer[]; handled: readonly string[]; clock: number; managerDone?: boolean },
   ) {
     this.managerDone = start.managerDone ?? false;
-    this.orders = PROTOTYPE_ORDERS.filter((o) => !start.handled.includes(o.id));
+    this.allOrders = start.orders;
+    this.orders = start.orders.filter((o) => !start.handled.includes(o.id));
     this.clock = Math.max(OPENING, start.clock);
     // Colours are used exactly as written (colour.ts); no conversion on output either.
     this.renderer = new THREE.WebGLRenderer({ antialias: false, powerPreference: 'high-performance' });
@@ -300,11 +306,11 @@ export class TruckGame {
     const gameMinutes = this.updateClock(seconds);
     // Customers arrive at their time of day, until closing.
     const next = this.orders[this.nextOrder];
-    if (next && this.clock < CLOSING && this.clock >= arrivalTime(PROTOTYPE_ORDERS.indexOf(next)) && this.queue.canJoin() && seconds > 0) {
+    if (next && this.clock < CLOSING && this.clock >= arrivalTime(this.allOrders.indexOf(next)) && this.queue.canJoin() && seconds > 0) {
       const order = this.orders[this.nextOrder++];
       const customer = this.queue.join(order.id);
       if (customer) {
-        const model = buildCustomer(order.look as CustomerLook);
+        const model = buildCustomer(order.look);
         this.scene.add(model.root);
         this.customers.set(customer, model);
       }

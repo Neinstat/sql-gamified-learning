@@ -35,6 +35,8 @@ type Props = {
   doneLabel?: string;
   /** Who is asking, and what they say, shown above the task (e.g. The Manager). */
   speech?: { speaker: string; lines: string[] };
+  /** Start with the lesson card open (a concept the player meets for the first time). */
+  lessonOpen?: boolean;
 };
 
 /** The SQL console (the truck's tablet), over the game world. */
@@ -58,7 +60,7 @@ export function ConsoleOverlay(props: Props) {
     speech,
   } = props;
   const [solved, setSolved] = useState(false);
-  const [lessonOpen, setLessonOpen] = useState(false);
+  const [lessonOpen, setLessonOpen] = useState(props.lessonOpen ?? false);
 
   useEffect(() => {
     if (!visible) return;
